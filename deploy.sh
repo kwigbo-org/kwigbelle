@@ -26,8 +26,8 @@ cd build
 if [ $DEPLOY_PROD -eq 1 ]
 then
    echo "Push to Production"
-   aws s3 sync . s3://www.kwigbelle.com --delete
-   aws cloudfront create-invalidation --distribution-id EMDM091I7VR9X --paths "/*"
+   aws s3 sync s3://kwigbelle-stage s3://kwigbelle --delete
+   aws cloudfront create-invalidation --distribution-id ETU79Z47QN0GQ --paths "/*"
 else
    echo "Push to Stage"
    aws s3 sync . s3://kwigbelle-stage --delete
