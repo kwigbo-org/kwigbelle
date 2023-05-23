@@ -9,4 +9,13 @@ export default class Point {
     this.x = x;
     this.y = y;
   }
+  /// Calculate the distance from the current point to another
+  ///
+  /// - Parameter point: The point to get the distance to
+  /// - Returns: The distance between the two points
+  distanceTo(point) {
+    var a = this.x - point.x;
+    var b = this.y - point.y;
+    return Math.sqrt(a * a + b * b);
+  }
 }

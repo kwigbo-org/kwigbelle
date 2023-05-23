@@ -21,6 +21,7 @@ mkdir build
 # Copy Phase
 cp index.html build
 cp manifest.json build
+cp style.css build
 cp -r Lib build
 cp -r GameSDK build
 cp -r SVG build

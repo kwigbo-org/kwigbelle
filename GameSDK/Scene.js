@@ -84,14 +84,14 @@ export default class Scene {
 	/// - Parameter event: The event that triggered the call
 	mouseDown(event) {
 		this.isTouchDown = true;
-		this.touchFrame.origin = new Point(event.offsetX, event.offsetY);
+		this.touchFrame.origin = new Point(event.pageX, event.pageY);
 	}
 
 	/// Method called when a mouse is moved in the scene
 	///
 	/// - Parameter event: The event that triggered the call
 	mouseMove(event) {
-		this.touchFrame.origin = new Point(event.offsetX, event.offsetY);
+		this.touchFrame.origin = new Point(event.pageX, event.pageY);
 	}
 
 	/// Method called when a mouse is lifted in the scene

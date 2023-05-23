@@ -1,16 +1,24 @@
 import Scene from "../GameSDK/Scene.js";
 import Util from "../GameSDK/Util.js";
+import Point from "../GameSDK/Geometry/Point.js";
 
 export default class MainScene extends Scene {
 	constructor(rootContainer) {
 		super(rootContainer);
 		this.display();
+		this.isLoading = true;
 	}
 
 	resize() {
 		this.canvas.width = window.innerWidth;
 		this.canvas.height = window.innerHeight;
-		this.loadAvastarSVG();
+		if (this.currentAvastar) {
+			this.parseAvastarSVG(this.currentAvastar);
+		} else if (!this.isLoading) {
+			this.isLoading = true;
+			this.preloader.style.opacity = 1;
+			this.loadAvastarSVG();
+		}
 	}
 
 	display() {
@@ -22,39 +30,100 @@ export default class MainScene extends Scene {
 			this.rootContainer.appendChild(this.canvas);
 			this.displayLoop.start(60);
 		}
+		// Preloader Container
+		this.preloader = document.createElement("div");
+		this.preloader.setAttribute("id", "preloader");
+		this.preloader.setAttribute("class", "centeredContainer");
 
-		this.loadAvastarSVG();
+		// Spinner
+		const spinner = document.createElement("div");
+		spinner.setAttribute("class", "lds-circle");
+		const innerDiv = document.createElement("div");
+		spinner.appendChild(innerDiv);
+		this.preloader.appendChild(spinner);
+
+		this.rootContainer.appendChild(this.preloader);
+
+		this.loadAvastarsContract(
+			function () {
+				this.loadAvastarSVG();
+			}.bind(this)
+		);
+		// this.loadLocalAvastarSVG();
+	}
+
+	async loadAvastarsContract(complete) {
+		const web3 = new Web3(window.ethereum);
+		// await window.ethereum.enable();
+		const contractAddress = "0xF3E778F839934fC819cFA1040AabaCeCBA01e049";
+		let response = await fetch("./Lib/Avastars-ABI.json");
+		let avastarsABI = await response.json();
+		this.contract = new web3.eth.Contract(avastarsABI, contractAddress);
+		complete();
 	}
 
 	async loadAvastarSVG() {
+		// 25505 - Green
+		// 25470 - Blue
+		// 25495 - Pink Scale Check
+		// 21022 - Orange Background Pink
 		const avastars = [25495, 25470, 25505, 21022];
 		const randomAvastar = avastars[Util.getRandomInt(avastars.length - 1)];
-		let myAvastar = await fetch(`./SVG/Avastar-${randomAvastar}.svg`);
-		let svgString = await myAvastar.text();
+		this.contract.methods.renderAvastar(randomAvastar).call(
+			function (error, result) {
+				this.currentAvastar = result;
+				this.parseAvastarSVG(result);
+			}.bind(this)
+		);
+	}
 
+	async loadLocalAvastarSVG() {
+		// 25505 - Green
+		// 25470 - Blue
+		// 25495 - Pink Scale Check
+		// 21022 - Orange Background Pink
+		const avastars = [25495, 25470, 25505, 21022];
+		const randomAvastar = avastars[Util.getRandomInt(avastars.length - 1)];
+		let myAvastar = await fetch(`./SVG/Avastar-${25505}.svg`);
+		let svgString = await myAvastar.text();
+		this.currentAvastar = svgString;
+		this.parseAvastarSVG(svgString);
+	}
+
+	parseAvastarSVG(svgString) {
 		this.parser = new DOMParser();
 		this.avastarSVG = this.parser.parseFromString(svgString, "text/xml");
 
-		const svgChildren = this.avastarSVG.children[0].children;
-
-		const paths = [];
+		this.styles = [];
 		this.patterns = [];
 		this.gradients = [];
-		this.styles = [];
+
+		this.backgroundObjects = [];
+		this.paths = [];
+
+		const svgChildren = this.avastarSVG.children[0].children;
 		for (const index in svgChildren) {
 			const child = svgChildren[index];
-			if (child.tagName === "path") {
-				paths.push(child);
+			if (child.tagName === "style") {
+				this.styles.push(child);
+			} else if (this.objectIsBackground(child)) {
+				this.backgroundObjects.push(child);
 			} else if (child.tagName === "pattern") {
 				this.patterns.push(child);
 			} else if (child.tagName === "linearGradient") {
 				this.gradients.push(child);
-			} else if (child.tagName === "style") {
-				this.styles.push(child);
-			} else if (child.tagName === "g") {
-				paths.push(child);
+			} else if (child.tagName === "path" || child.tagName === "g") {
+				this.paths.push(child);
 			}
 		}
+
+		this.layers = [];
+		for (const index in this.paths) {
+			const path = this.paths[index];
+			this.layers.push(this.pathsToLayer([path]));
+		}
+
+		this.backgroundLayer = this.pathsToLayer(this.backgroundObjects, true);
 
 		const parser = new cssjs();
 		this.styleObjects = [];
@@ -64,30 +133,31 @@ export default class MainScene extends Scene {
 			this.styleObjects.push(parsed);
 		}
 
-		this.layers = [];
-		this.backgroundLayers = [];
-		for (const index in paths) {
-			const path = paths[index];
-			const classString = path.getAttribute("class");
-			const isBackgroundGroup = this.pathIsBackground(path);
-			const isBackground = classString && classString.includes("bg_");
-			const fillValue = path.getAttribute("fill");
-			const isBackdrop = fillValue && fillValue.includes("backdrop");
-			if (isBackground || isBackgroundGroup || isBackdrop) {
-				this.backgroundLayers.push(this.pathToLayer(path, true));
-			} else {
-				this.layers.push(this.pathToLayer(path));
-			}
+		this.layerPoints = [];
+		for (const index in this.layers) {
+			this.layerPoints.push(
+				new Point(this.canvas.width / 2, this.canvas.height / 2)
+			);
 		}
 		this.updateBackgroundColor();
+		this.isLoading = false;
+		this.preloader.style.opacity = 0;
 	}
 
-	pathIsBackground(path) {
-		for (const index in path.children) {
-			const child = path.children[index];
-			if (typeof child === "object") {
-				const classString = child.getAttribute("class");
-				const isBackground = classString && classString.includes("bg_");
+	objectIsBackground(item) {
+		const isNode = item.getAttribute !== undefined;
+		if (isNode && typeof item.getAttribute === "function") {
+			const classString = item.getAttribute("class");
+			const fillString = item.getAttribute("fill");
+			if (classString && classString.includes("bg_")) {
+				return true;
+			}
+			if (fillString && fillString.includes("backdrop")) {
+				return true;
+			}
+			for (const index in item.children) {
+				const child = item.children[index];
+				const isBackground = this.objectIsBackground(child);
 				if (isBackground) {
 					return true;
 				}
@@ -108,6 +178,7 @@ export default class MainScene extends Scene {
 						const rule = rules[ruleIndex];
 						if (rule["directive"] === "fill") {
 							contentView.style.backgroundColor = rule["value"];
+							return;
 						}
 					}
 				}
@@ -130,16 +201,15 @@ export default class MainScene extends Scene {
 		return string;
 	}
 
-	pathToLayer(path, isBackground) {
-		const viewBox = `viewBox="0 0 1000 1000"`;
-		const viewPort = isBackground
-			? `width="100%" height="100%"`
-			: `width="${this.canvas.width}" height="${this.canvas.height}"`;
-		let svg = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" ${viewPort} ${viewBox}>`;
+	pathsToLayer(paths, isBackground) {
+		let svg = this.createHeader(isBackground);
 		svg += this.nodeArrayToString(this.styles);
 		svg += this.nodeArrayToString(this.gradients);
 		svg += this.nodeArrayToString(this.patterns);
-		svg += this.nodeContents(path);
+		for (const index in paths) {
+			const path = paths[index];
+			svg += this.nodeContents(path);
+		}
 		svg += "</svg>";
 		let blob = new Blob([svg], { type: "image/svg+xml" });
 		let url = URL.createObjectURL(blob);
@@ -151,22 +221,86 @@ export default class MainScene extends Scene {
 		return image;
 	}
 
+	createHeader(isBackground) {
+		const svgXMLNS = `xmlns="http://www.w3.org/2000/svg"`;
+		const xlinkXMLNS = `xmlns:xlink="http://www.w3.org/1999/xlink"`;
+		const svgVersion = `version="1.1"`;
+		if (isBackground) {
+			const xmin = 0;
+			const ymin = 0;
+			const boxWidth = 1000;
+			const boxHeight = 1000;
+			const portWidth = "100%";
+			const portHeight = "100%";
+
+			const aspect = `preserveAspectRatio="xMidYMid meet"`;
+			const viewPort = `width="${portWidth}" height="${portHeight}"`;
+			const viewBox = `viewBox="${xmin} ${ymin} ${boxWidth} ${boxHeight}"`;
+			return `<svg ${aspect} ${svgXMLNS} ${xlinkXMLNS} ${svgVersion} ${viewPort} ${viewBox}>`;
+		} else {
+			const aspect = `preserveAspectRatio="xMidYMid meet"`;
+			const viewPort = `width="${this.canvas.width}" height="${this.canvas.height}"`;
+			const viewBox = `viewBox="0 0 1000 1000"`;
+			return `<svg ${aspect} ${svgXMLNS} ${xlinkXMLNS} ${svgVersion} ${viewPort} ${viewBox}>`;
+		}
+	}
+
 	render() {
 		const context = this.canvas.getContext("2d");
 		context.clearRect(0, 0, this.canvas.width, this.canvas.height);
-		for (const index in this.backgroundLayers) {
-			const layer = this.backgroundLayers[index];
-			context.drawImage(
-				layer,
-				0,
-				0,
-				this.canvas.width,
-				this.canvas.height
-			);
+		if (this.isLoading) {
+			return;
 		}
+
+		context.drawImage(
+			this.backgroundLayer,
+			0,
+			0,
+			this.canvas.width,
+			this.canvas.height
+		);
+
+		let centerPoint = new Point(
+			this.canvas.width / 2,
+			this.canvas.height / 2
+		);
 		for (const index in this.layers) {
 			const layer = this.layers[index];
-			context.drawImage(layer, 0, 0);
+			let touchPoint = this.touchFrame.origin;
+			if (!this.isTouchDown) {
+				touchPoint = centerPoint;
+			}
+			const avastarPoint = this.layerPoints[index];
+			// Calculate direction towards mouse
+			let toMouseX = Math.floor(touchPoint.x - avastarPoint.x);
+			let toMouseY = Math.floor(touchPoint.y - avastarPoint.y);
+
+			if (Math.abs(toMouseX) > 1 || Math.abs(toMouseY) > 1) {
+				// Normalize
+				let toMouseLength = Math.sqrt(
+					toMouseX * toMouseX + toMouseY * toMouseY
+				);
+				toMouseX = toMouseX / toMouseLength;
+				toMouseY = toMouseY / toMouseLength;
+
+				let factor = 3;
+				let newX = avastarPoint.x + toMouseX * factor;
+				let newY = avastarPoint.y + toMouseY * factor;
+				let newPoint = new Point(newX, newY);
+				let distance = centerPoint.distanceTo(newPoint);
+				avastarPoint.x += toMouseX * factor;
+				avastarPoint.y += toMouseY * factor;
+				this.layerPoints[index] = avastarPoint;
+			} else {
+				avastarPoint.x = centerPoint.x;
+				avastarPoint.y = centerPoint.y;
+				this.layerPoints[index] = avastarPoint;
+			}
+			context.drawImage(
+				layer,
+				avastarPoint.x - this.canvas.width / 2,
+				avastarPoint.y - this.canvas.height / 2
+			);
 		}
 	}
 }
