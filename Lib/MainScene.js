@@ -44,12 +44,16 @@ export default class MainScene extends Scene {
 
 		this.rootContainer.appendChild(this.preloader);
 
-		this.loadAvastarsContract(
-			function () {
-				this.loadAvastarSVG();
-			}.bind(this)
-		);
-		// this.loadLocalAvastarSVG();
+		if (window.ethereum) {
+			this.loadAvastarsContract(
+				function () {
+					this.loadAvastarSVG();
+				}.bind(this)
+			);
+		} else {
+			this.loadLocalAvastarSVG();
+			this.preloader.style.opacity = 0;
+		}
 	}
 
 	async loadAvastarsContract(complete) {
@@ -92,7 +96,7 @@ export default class MainScene extends Scene {
 		// 21022 - Orange Background Pink
 		const avastars = [25495, 25470, 25505, 21022];
 		const randomAvastar = avastars[Util.getRandomInt(avastars.length - 1)];
-		let myAvastar = await fetch(`./SVG/Avastar-${25505}.svg`);
+		let myAvastar = await fetch(`./SVG/Avastar-${randomAvastar}.svg`);
 		let svgString = await myAvastar.text();
 		this.currentAvastar = svgString;
 		this.parseAvastarSVG(svgString);
