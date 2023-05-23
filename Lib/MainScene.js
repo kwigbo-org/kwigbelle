@@ -63,16 +63,24 @@ export default class MainScene extends Scene {
 	}
 
 	async loadAvastarSVG() {
-		// 25505 - Green
-		// 25470 - Blue
-		// 25495 - Pink Scale Check
-		// 21022 - Orange Background Pink
-		const avastars = [25495, 25470, 25505, 21022];
-		const randomAvastar = avastars[Util.getRandomInt(avastars.length - 1)];
-		this.contract.methods.renderAvastar(randomAvastar).call(
+		const urlParams = new URLSearchParams(window.location.search);
+		let tokenId = urlParams.get("tokenId");
+		if (!tokenId) {
+			// 25505 - Green
+			// 25470 - Blue
+			// 25495 - Pink Scale Check
+			// 21022 - Orange Background Pink
+			const avastars = [25495, 25470, 25505, 21022];
+			tokenId = avastars[Util.getRandomInt(avastars.length - 1)];
+		}
+		this.contract.methods.renderAvastar(tokenId).call(
 			function (error, result) {
-				this.currentAvastar = result;
-				this.parseAvastarSVG(result);
+				if (!error) {
+					this.currentAvastar = result;
+					this.parseAvastarSVG(result);
+				} else {
+					alert(`Avastar not found ${tokenId}`);
+				}
 			}.bind(this)
 		);
 	}
