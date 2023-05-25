@@ -303,10 +303,6 @@ export default class MainScene extends Scene {
 				avastarPoint.x += toMouseX * factor;
 				avastarPoint.y += toMouseY * factor;
 				this.layerPoints[index] = avastarPoint;
-			} else {
-				avastarPoint.x = centerPoint.x;
-				avastarPoint.y = centerPoint.y;
-				this.layerPoints[index] = avastarPoint;
 			}
 			context.drawImage(
 				layer,

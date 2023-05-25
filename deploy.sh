@@ -55,3 +55,8 @@ then
    aws s3 sync s3://kwigbelle-stage s3://kwigbelle --delete
    aws cloudfront create-invalidation --distribution-id EMDM091I7VR9X --paths "/*"
 fi
+
+echo "Push to Local"
+WEB_PATH=~/Sites
+rm -r $WEB_PATH/*
+cp -r * $WEB_PATH
