@@ -9,7 +9,7 @@ export default class MainScene extends Scene {
 	/// Overridden constructor
 	constructor(rootContainer) {
 		super(rootContainer);
-		console.log("kwigbelle build 2026-08-21.5 (review round 2 fixes)");
+		console.log("kwigbelle build 2026-08-21.6 (review round 3 fixes)");
 		// Build the UI
 		this.buildUI();
 		// Start loading
@@ -154,31 +154,44 @@ export default class MainScene extends Scene {
 	/// every wallet allows): switch to mainnet and/or connect, then
 	/// swap in the picker
 	async continueConnect() {
-		// Wrong network: ask the wallet to switch. The page reloads
-		// into the working state via the chainChanged listener.
-		const onMainnet = await this.avastarLoader.isMainnet();
-		if (!onMainnet) {
-			const switched = await this.avastarLoader.switchToMainnet();
-			if (switched) {
-				// Fallback for wallets that do not emit chainChanged
-				window.location.reload();
-			}
+		// Reentrancy guard: a second tap while the flow is mid
+		// flight would run two connects and build two pickers
+		if (this.isConnecting) {
 			return;
 		}
-		let ownedTokenIds = [];
+		this.isConnecting = true;
 		try {
-			ownedTokenIds = await this.avastarLoader.getOwnedTokenIds(true);
-		} catch (error) {
-			console.error("Wallet connect failed", error);
-			return;
+			// Wrong network: ask the wallet to switch. The page
+			// reloads into the working state via the chainChanged
+			// listener.
+			const onMainnet = await this.avastarLoader.isMainnet();
+			if (!onMainnet) {
+				const switched = await this.avastarLoader.switchToMainnet();
+				if (switched) {
+					// Fallback for wallets that do not emit chainChanged
+					window.location.reload();
+				}
+				return;
+			}
+			let ownedTokenIds = [];
+			try {
+				ownedTokenIds = await this.avastarLoader.getOwnedTokenIds(
+					true
+				);
+			} catch (error) {
+				console.error("Wallet connect failed", error);
+				return;
+			}
+			if (ownedTokenIds.length === 0) {
+				return;
+			}
+			this.connectContainer.remove();
+			this.connectContainer = null;
+			this.buildAvastarPicker(ownedTokenIds);
+			this.selectAvastar(ownedTokenIds[0], false);
+		} finally {
+			this.isConnecting = false;
 		}
-		if (ownedTokenIds.length === 0) {
-			return;
-		}
-		this.connectContainer.remove();
-		this.connectContainer = null;
-		this.buildAvastarPicker(ownedTokenIds);
-		this.selectAvastar(ownedTokenIds[0], false);
 	}
 
 	/// Keep taps on an overlay element from reaching the Scene's
@@ -342,9 +355,11 @@ export default class MainScene extends Scene {
 		const url = URL.createObjectURL(blob);
 		const image = document.createElement("img");
 		image.src = url;
-		image.addEventListener("load", () => URL.revokeObjectURL(url), {
-			once: true,
-		});
+		// Revoke on error too: a malformed SVG fires error instead
+		// of load and would otherwise leak the URL
+		const revoke = () => URL.revokeObjectURL(url);
+		image.addEventListener("load", revoke, { once: true });
+		image.addEventListener("error", revoke, { once: true });
 		return image;
 	}
 
