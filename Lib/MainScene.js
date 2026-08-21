@@ -256,30 +256,47 @@ export default class MainScene extends Scene {
 			this.finishLoad(generation);
 		}.bind(this);
 		if (this.isTraitComposeEnabled && tokenId != null) {
-			this.traitComposer
-				.compose(
-					tokenId,
-					new Size(this.canvas.width, this.canvas.height)
-				)
-				.then((composed) => {
-					if (generation !== this.loadGeneration) {
-						return;
-					}
-					// Keep the loader's state coherent: thumbnails
-					// and the same-token guard read from it
-					this.avastarLoader.tokenId = tokenId;
-					this.avastarLoader.currentAvastar = composed.fullSVG;
-					this.avastar = composed;
-					this.setupLayerSprings();
-					this.finishLoad(generation);
-				})
-				.catch((error) => {
-					console.warn(
-						`trait composition failed for ${tokenId}, using legacy path`,
-						error
-					);
-					loadFunction(complete);
-				});
+			const composeAttempt = () => {
+				const width = this.canvas.width;
+				const height = this.canvas.height;
+				this.traitComposer
+					.compose(tokenId, new Size(width, height))
+					.then((composed) => {
+						if (generation !== this.loadGeneration) {
+							return;
+						}
+						if (
+							width !== this.canvas.width ||
+							height !== this.canvas.height
+						) {
+							// Canvas resized mid flight: recompose at
+							// the current size (fragments are cached)
+							composeAttempt();
+							return;
+						}
+						// Keep the loader's state coherent: thumbnails
+						// and the same-token guard read from it
+						this.avastarLoader.tokenId = tokenId;
+						this.avastarLoader.currentAvastar = composed.fullSVG;
+						this.avastar = composed;
+						this.setupLayerSprings();
+						this.finishLoad(generation);
+					})
+					.catch((error) => {
+						// A stale failure must not fire the fallback:
+						// loadToken mutates loader state even though
+						// its completion would be discarded
+						if (generation !== this.loadGeneration) {
+							return;
+						}
+						console.warn(
+							`trait composition failed for ${tokenId}, using legacy path`,
+							error
+						);
+						loadFunction(complete);
+					});
+			};
+			composeAttempt();
 			return;
 		}
 		loadFunction(complete);
@@ -307,17 +324,23 @@ export default class MainScene extends Scene {
 		if (this.isTraitComposeEnabled && this.avastar && this.avastar.layerInfo) {
 			// Composed path: rebuild layer images at the new size
 			// (fragments are cached in the composer, no refetch).
-			// Bump the generation so any older in-flight compose -
-			// sized for the previous canvas - is discarded.
-			this.loadGeneration = (this.loadGeneration || 0) + 1;
+			// The load generation is NOT bumped - a resize must not
+			// invalidate a pending token load. Staleness is guarded
+			// by captured size (a newer resize wins) and generation
+			// (a newer token load wins).
 			const generation = this.loadGeneration;
+			const width = this.canvas.width;
+			const height = this.canvas.height;
 			this.traitComposer
-				.compose(
-					this.avastarLoader.tokenId,
-					new Size(this.canvas.width, this.canvas.height)
-				)
+				.compose(this.avastarLoader.tokenId, new Size(width, height))
 				.then((composed) => {
 					if (generation !== this.loadGeneration) return;
+					if (
+						width !== this.canvas.width ||
+						height !== this.canvas.height
+					) {
+						return;
+					}
 					this.avastar = composed;
 					this.setupLayerSprings();
 				})
