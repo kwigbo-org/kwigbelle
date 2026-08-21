@@ -238,10 +238,17 @@ export default class AvastarLoader {
 		} catch (error) {
 			console.error("Wallet connect failed", error);
 		}
-		if (onChain) {
-			this.loadOnChainAvastarSVG(complete);
-		} else {
-			this.loadLocalAvastarSVG(complete);
+		try {
+			if (onChain) {
+				await this.loadOnChainAvastarSVG(complete);
+			} else {
+				await this.loadLocalAvastarSVG(complete);
+			}
+		} catch (error) {
+			// A rejected fetch (offline, server down) must not
+			// strand the preloader: recover the UI
+			console.error(`Avastar load failed for ${this.tokenId}`, error);
+			complete();
 		}
 	}
 
@@ -259,16 +266,21 @@ export default class AvastarLoader {
 	///
 	/// - Parameter complete: The Method called when the Avastar is loaded
 	async loadLocalAvastarSVG(complete) {
-		let myAvastar = await fetch(`./SVG/Avastar-${this.tokenId}.svg`);
+		const requestedToken = this.tokenId;
+		let myAvastar = await fetch(`./SVG/Avastar-${requestedToken}.svg`);
 		if (!myAvastar.ok) {
-			alert(`Avastar not found ${this.tokenId}`);
+			alert(`Avastar not found ${requestedToken}`);
 			// Recover the UI (hide the preloader, keep the
 			// previously loaded Avastar on screen)
 			complete();
 			return;
 		}
 		let svgString = await myAvastar.text();
-		this.currentAvastar = svgString;
+		// A newer loadToken may have started while this fetch was in
+		// flight: never let a stale load overwrite the current Avastar
+		if (String(this.tokenId) === String(requestedToken)) {
+			this.currentAvastar = svgString;
+		}
 		complete();
 	}
 
@@ -278,17 +290,24 @@ export default class AvastarLoader {
 	///
 	/// - Parameter complete: The Method called when the Avastar is loaded
 	async loadOnChainAvastarSVG(complete) {
+		const requestedToken = this.tokenId;
+		let svgString = null;
 		try {
-			this.currentAvastar = await this.renderTokenSVG(this.tokenId);
+			svgString = await this.renderTokenSVG(requestedToken);
 		} catch (error) {
 			console.error(
-				`On chain render failed for Avastar ${this.tokenId}`,
+				`On chain render failed for Avastar ${requestedToken}`,
 				error
 			);
-			this.loadLocalAvastarSVG(complete);
+			await this.loadLocalAvastarSVG(complete);
 			return;
 		}
-		complete(this.currentAvastar);
+		// A newer loadToken may have started while the render was in
+		// flight: never let a stale load overwrite the current Avastar
+		if (String(this.tokenId) === String(requestedToken)) {
+			this.currentAvastar = svgString;
+		}
+		complete(svgString);
 	}
 
 	/// Render a token's SVG from the contract without changing

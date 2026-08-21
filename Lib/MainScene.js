@@ -9,7 +9,7 @@ export default class MainScene extends Scene {
 	/// Overridden constructor
 	constructor(rootContainer) {
 		super(rootContainer);
-		console.log("kwigbelle build 2026-08-21.4 (review round 1 fixes)");
+		console.log("kwigbelle build 2026-08-21.5 (review round 2 fixes)");
 		// Build the UI
 		this.buildUI();
 		// Start loading
@@ -186,13 +186,15 @@ export default class MainScene extends Scene {
 	///
 	/// - Parameter element: The element to isolate
 	stopSceneEvents(element) {
+		// Release events (mouseup/touchend) deliberately propagate:
+		// they only clear the scene's touch state, and swallowing
+		// them would leave isTouchDown stuck when a drag that began
+		// on the canvas releases over this element
 		const eventNames = [
 			"mousedown",
-			"mouseup",
 			"mousemove",
 			"touchstart",
 			"touchmove",
-			"touchend",
 		];
 		for (const eventName of eventNames) {
 			element.addEventListener(eventName, (event) =>

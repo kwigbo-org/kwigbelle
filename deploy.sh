@@ -89,15 +89,22 @@ if [ -e .git ]; then
    exit 1
 fi
 # Validate the destination too: WEB_PATH is env-overridable, and the wipe
-# below is recursive. Refuse catastrophic values and anything that doesn't
-# look like a web root we previously deployed (empty dir or has index.html —
-# ~/Sites is shared with the kwigbo site, so a repo-specific sentinel
-# wouldn't work here).
-if [ -z "$WEB_PATH" ] || [ "$WEB_PATH" = "/" ] || [ "$WEB_PATH" = "$HOME" ]; then
-   echo "Refusing to deploy: WEB_PATH ('$WEB_PATH') is not a safe web root" >&2
+# below is recursive. Canonicalize (resolves symlinks, trailing slashes)
+# before comparing so equivalents of / or $HOME can't slip past, then
+# refuse anything that doesn't look like a web root we previously deployed
+# (empty dir or has index.html — ~/Sites is shared with the kwigbo site,
+# so a repo-specific sentinel wouldn't work here).
+if [ -z "$WEB_PATH" ]; then
+   echo "Refusing to deploy: WEB_PATH is empty" >&2
    exit 1
 fi
 mkdir -p "$WEB_PATH"
+WEB_PATH=$(cd "$WEB_PATH" && pwd -P) || exit 1
+HOME_REAL=$(cd "$HOME" && pwd -P)
+if [ "$WEB_PATH" = "/" ] || [ "$WEB_PATH" = "$HOME_REAL" ]; then
+   echo "Refusing to deploy: WEB_PATH ('$WEB_PATH') is not a safe web root" >&2
+   exit 1
+fi
 if [ -n "$(ls -A "$WEB_PATH")" ] && [ ! -f "$WEB_PATH/index.html" ]; then
    echo "Refusing to wipe $WEB_PATH: non-empty and has no index.html," >&2
    echo "so it doesn't look like a deployed web root." >&2
