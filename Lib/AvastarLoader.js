@@ -9,7 +9,20 @@ export default class AvastarLoader {
 		// announced providers are the reliable way to find a wallet.
 		this.announcedProviders = [];
 		window.addEventListener("eip6963:announceProvider", (event) => {
-			this.announcedProviders.push(event.detail);
+			const detail = event.detail;
+			// Wallets re-announce on every requestProvider dispatch:
+			// dedupe at insertion so the list stays bounded
+			const isDuplicate = this.announcedProviders.some(
+				(existing) =>
+					existing.provider === detail.provider ||
+					(detail.info &&
+						detail.info.uuid &&
+						existing.info &&
+						existing.info.uuid === detail.info.uuid)
+			);
+			if (!isDuplicate) {
+				this.announcedProviders.push(detail);
+			}
 		});
 		window.dispatchEvent(new Event("eip6963:requestProvider"));
 	}
@@ -24,19 +37,7 @@ export default class AvastarLoader {
 			await new Promise((resolve) => setTimeout(resolve, 300));
 			this.announceWaitDone = true;
 		}
-		const wallets = [];
-		for (const detail of this.announcedProviders) {
-			const isDuplicate = wallets.some(
-				(wallet) =>
-					wallet.provider === detail.provider ||
-					(detail.info &&
-						detail.info.uuid &&
-						wallet.info.uuid === detail.info.uuid)
-			);
-			if (!isDuplicate) {
-				wallets.push(detail);
-			}
-		}
+		const wallets = [...this.announcedProviders];
 		if (
 			window.ethereum &&
 			!wallets.some((wallet) => wallet.provider === window.ethereum)
@@ -60,9 +61,11 @@ export default class AvastarLoader {
 	/// - Parameter wallet: A { info, provider } entry from getWallets
 	selectWallet(wallet) {
 		this.provider = wallet.provider;
-		// The contract is bound to the previous provider
+		// The contract and any in-flight connect are bound to the
+		// previous provider
 		this.avastarContract = null;
 		this.web3 = null;
+		this.connectPromise = null;
 		this.watchChain(this.provider);
 		try {
 			localStorage.setItem("kwigbelle.wallet", this.walletKey(wallet.info));
@@ -179,13 +182,28 @@ export default class AvastarLoader {
 	}
 
 	/// One time setup of web3 and the Avastars contract.
-	/// Safe to call repeatedly, later calls reuse the contract.
-	/// The contract only lives on mainnet, so any other chain is
-	/// treated the same as having no wallet at all.
+	/// Safe to call repeatedly and concurrently: callers share a
+	/// single in-flight initialization. The contract only lives on
+	/// mainnet, so any other chain is treated the same as having
+	/// no wallet at all.
 	///
 	/// - Returns: True when a mainnet wallet is available and the
 	///		contract is ready
-	async connect() {
+	connect() {
+		if (!this.connectPromise) {
+			this.connectPromise = this.establishConnection().catch(
+				(error) => {
+					// Allow a retry after a failed initialization
+					this.connectPromise = null;
+					throw error;
+				}
+			);
+		}
+		return this.connectPromise;
+	}
+
+	/// The actual initialization behind connect()
+	async establishConnection() {
 		const provider = await this.getProvider();
 		if (!provider) {
 			return false;
@@ -313,13 +331,16 @@ export default class AvastarLoader {
 		const balance = await this.avastarContract.methods
 			.balanceOf(owner)
 			.call();
-		const tokenIds = [];
-		for (let index = 0; index < Number(balance); index++) {
-			const tokenId = await this.avastarContract.methods
-				.tokenOfOwnerByIndex(owner, index)
-				.call();
-			tokenIds.push(tokenId.toString());
-		}
-		return tokenIds;
+		// Pure reads: safe to fetch in parallel so large
+		// collections don't serialize wallet round-trips
+		const indexes = Array.from({ length: Number(balance) }, (_, i) => i);
+		const tokenIds = await Promise.all(
+			indexes.map((index) =>
+				this.avastarContract.methods
+					.tokenOfOwnerByIndex(owner, index)
+					.call()
+			)
+		);
+		return tokenIds.map((tokenId) => tokenId.toString());
 	}
 }

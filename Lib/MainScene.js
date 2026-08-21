@@ -9,7 +9,7 @@ export default class MainScene extends Scene {
 	/// Overridden constructor
 	constructor(rootContainer) {
 		super(rootContainer);
-		console.log("kwigbelle build 2026-08-21.3 (depth-normalized springs)");
+		console.log("kwigbelle build 2026-08-21.4 (review round 1 fixes)");
 		// Build the UI
 		this.buildUI();
 		// Start loading
@@ -35,17 +35,16 @@ export default class MainScene extends Scene {
 	async initialLoad(tokenParam) {
 		const hasWallet = await this.avastarLoader.hasWallet();
 		if (tokenParam && hasWallet) {
-			this.avastarLoader.loadToken(
-				tokenParam,
-				this.firstLoadComplete.bind(this)
+			this.beginLoad((complete) =>
+				this.avastarLoader.loadToken(tokenParam, complete)
 			);
 		} else {
 			// Instant display from the bundled SVGs
 			const avastars = [8014, 25495, 25470, 25505, 21022];
 			this.avastarLoader.tokenId =
 				avastars[Math.floor(Math.random() * avastars.length)];
-			this.avastarLoader.loadLocalAvastarSVG(
-				this.firstLoadComplete.bind(this)
+			this.beginLoad((complete) =>
+				this.avastarLoader.loadLocalAvastarSVG(complete)
 			);
 		}
 		if (!hasWallet) {
@@ -187,19 +186,40 @@ export default class MainScene extends Scene {
 	///
 	/// - Parameter element: The element to isolate
 	stopSceneEvents(element) {
-		for (const eventName of ["mousedown", "mouseup", "touchstart"]) {
+		const eventNames = [
+			"mousedown",
+			"mouseup",
+			"mousemove",
+			"touchstart",
+			"touchmove",
+			"touchend",
+		];
+		for (const eventName of eventNames) {
 			element.addEventListener(eventName, (event) =>
 				event.stopPropagation()
 			);
 		}
 	}
 
-	/// Completion handler for the first Avastar load
-	firstLoadComplete() {
-		this.parseAvastarSVG();
-		this.isLoading = false;
-		this.preloader.style.opacity = 0;
-		this.updateSelectedThumbnail();
+	/// Start a load through the given function, ignoring stale
+	/// completions: an older load finishing after a newer one
+	/// started must not overwrite the newer Avastar
+	///
+	/// - Parameter loadFunction: Called with the completion handler
+	beginLoad(loadFunction) {
+		this.loadGeneration = (this.loadGeneration || 0) + 1;
+		const generation = this.loadGeneration;
+		loadFunction(
+			function () {
+				if (generation !== this.loadGeneration) {
+					return;
+				}
+				this.parseAvastarSVG();
+				this.isLoading = false;
+				this.preloader.style.opacity = 0;
+				this.updateSelectedThumbnail();
+			}.bind(this)
+		);
 	}
 
 	// MARK: Overridden Methods
@@ -214,7 +234,9 @@ export default class MainScene extends Scene {
 	render() {
 		const context = this.canvas.getContext("2d");
 		context.clearRect(0, 0, this.canvas.width, this.canvas.height);
-		if (this.isLoading) {
+		// The avastar guard covers failed loads: isLoading clears on
+		// completion even when no Avastar could be parsed
+		if (this.isLoading || !this.avastar) {
 			return;
 		}
 
@@ -237,7 +259,7 @@ export default class MainScene extends Scene {
 			this.canvas.width / 2,
 			this.canvas.height / 2
 		);
-		for (const index in this.avastar.layers) {
+		for (let index = 0; index < this.avastar.layers.length; index++) {
 			const layer = this.avastar.layers[index];
 			const spring = this.layerSprings[index];
 
@@ -308,12 +330,20 @@ export default class MainScene extends Scene {
 		this.rootContainer.appendChild(this.preloader);
 	}
 
-	/// Convert an SVG string into an object URL usable as an img src
+	/// Create an img element for an SVG string. The backing blob
+	/// URL is revoked once the image has loaded, so thumbnails do
+	/// not leak object URLs across Avastar swaps.
 	///
 	/// - Parameter svgString: The SVG string to convert
-	svgToURL(svgString) {
+	svgToImage(svgString) {
 		const blob = new Blob([svgString], { type: "image/svg+xml" });
-		return URL.createObjectURL(blob);
+		const url = URL.createObjectURL(blob);
+		const image = document.createElement("img");
+		image.src = url;
+		image.addEventListener("load", () => URL.revokeObjectURL(url), {
+			once: true,
+		});
+		return image;
 	}
 
 	/// Build the upper left thumbnail that expands into a picker
@@ -389,13 +419,10 @@ export default class MainScene extends Scene {
 				const svgString = await this.avastarLoader.renderTokenSVG(
 					tokenId
 				);
-				const url = this.svgToURL(svgString);
-				this.thumbnailCache[tokenId] = url;
+				this.thumbnailCache[tokenId] = true;
 				const item = this.pickerItems[tokenId];
 				item.innerHTML = "";
-				const image = document.createElement("img");
-				image.src = url;
-				item.appendChild(image);
+				item.appendChild(this.svgToImage(svgString));
 			} catch (error) {
 				// Leave the token id label as the fallback thumbnail
 			}
@@ -418,13 +445,8 @@ export default class MainScene extends Scene {
 		if (!isSilent) {
 			this.preloader.style.opacity = 1;
 		}
-		this.avastarLoader.loadToken(
-			tokenId,
-			function () {
-				this.parseAvastarSVG();
-				this.preloader.style.opacity = 0;
-				this.updateSelectedThumbnail();
-			}.bind(this)
+		this.beginLoad((complete) =>
+			this.avastarLoader.loadToken(tokenId, complete)
 		);
 	}
 
@@ -434,9 +456,9 @@ export default class MainScene extends Scene {
 			return;
 		}
 		this.selectedThumbnail.innerHTML = "";
-		const image = document.createElement("img");
-		image.src = this.svgToURL(this.avastarLoader.currentAvastar);
-		this.selectedThumbnail.appendChild(image);
+		this.selectedThumbnail.appendChild(
+			this.svgToImage(this.avastarLoader.currentAvastar)
+		);
 	}
 
 	/// Method used to trigger the parse of the currently loaded avastar.

@@ -88,7 +88,21 @@ if [ -e .git ]; then
    echo "Expected to be in build/, but cwd is $PWD" >&2
    exit 1
 fi
+# Validate the destination too: WEB_PATH is env-overridable, and the wipe
+# below is recursive. Refuse catastrophic values and anything that doesn't
+# look like a web root we previously deployed (empty dir or has index.html —
+# ~/Sites is shared with the kwigbo site, so a repo-specific sentinel
+# wouldn't work here).
+if [ -z "$WEB_PATH" ] || [ "$WEB_PATH" = "/" ] || [ "$WEB_PATH" = "$HOME" ]; then
+   echo "Refusing to deploy: WEB_PATH ('$WEB_PATH') is not a safe web root" >&2
+   exit 1
+fi
 mkdir -p "$WEB_PATH"
+if [ -n "$(ls -A "$WEB_PATH")" ] && [ ! -f "$WEB_PATH/index.html" ]; then
+   echo "Refusing to wipe $WEB_PATH: non-empty and has no index.html," >&2
+   echo "so it doesn't look like a deployed web root." >&2
+   exit 1
+fi
 # -mindepth 1 clears dotfiles too; a bare glob would strand hidden leftovers
 # (.well-known, stale .DS_Store) that keep getting served after removal.
 find "$WEB_PATH" -mindepth 1 -delete
