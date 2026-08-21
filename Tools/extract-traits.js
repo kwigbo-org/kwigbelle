@@ -519,6 +519,11 @@ function extractFragments(renderOf, coverage) {
 					for (let k = 0; k <= piece.length && !applied; k++) {
 						const toLeft = piece.slice(0, k);
 						const toRight = piece.slice(k);
+						// Guards precede the spreads so a broken
+						// anchor invariant skips cleanly instead of
+						// spreading undefined
+						if (toLeft.length > 0 && (!leftKey || !known.has(leftKey))) continue;
+						if (toRight.length > 0 && (!rightKey || !known.has(rightKey))) continue;
 						const candL = leftKey && toLeft.length > 0
 							? [...known.get(leftKey), ...toLeft]
 							: null;
@@ -526,8 +531,6 @@ function extractFragments(renderOf, coverage) {
 							? [...toRight, ...known.get(rightKey)]
 							: null;
 						if (candL === null && candR === null) continue;
-						if (toLeft.length > 0 && (!leftKey || !known.has(leftKey))) continue;
-						if (toRight.length > 0 && (!rightKey || !known.has(rightKey))) continue;
 						if (candL && !appearsInAll(leftKey, candL)) continue;
 						if (candR && !appearsInAll(rightKey, candR)) continue;
 						if (candL) known.set(leftKey, candL);

@@ -41,10 +41,21 @@ export default class MainScene extends Scene {
 	async initialLoad(tokenParam) {
 		const hasWallet = await this.avastarLoader.hasWallet();
 		if (tokenParam && (hasWallet || this.isTraitComposeEnabled)) {
-			this.beginLoad(
-				(complete) => this.avastarLoader.loadToken(tokenParam, complete),
-				tokenParam
-			);
+			// Fallback must stay valid without a wallet: loadToken
+			// needs one, so walletless composition failures degrade
+			// to a bundled Avastar instead of a dead preloader
+			const fallback = hasWallet
+				? (complete) =>
+						this.avastarLoader.loadToken(tokenParam, complete)
+				: (complete) => {
+						const avastars = [8014, 25495, 25470, 25505, 21022];
+						this.avastarLoader.tokenId =
+							avastars[
+								Math.floor(Math.random() * avastars.length)
+							];
+						this.avastarLoader.loadLocalAvastarSVG(complete);
+					};
+			this.beginLoad(fallback, tokenParam);
 		} else {
 			// Instant display from the bundled SVGs
 			const avastars = [8014, 25495, 25470, 25505, 21022];
@@ -295,7 +306,10 @@ export default class MainScene extends Scene {
 		this.canvas.height = window.innerHeight;
 		if (this.isTraitComposeEnabled && this.avastar && this.avastar.layerInfo) {
 			// Composed path: rebuild layer images at the new size
-			// (fragments are cached in the composer, no refetch)
+			// (fragments are cached in the composer, no refetch).
+			// Bump the generation so any older in-flight compose -
+			// sized for the previous canvas - is discarded.
+			this.loadGeneration = (this.loadGeneration || 0) + 1;
 			const generation = this.loadGeneration;
 			this.traitComposer
 				.compose(

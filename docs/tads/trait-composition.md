@@ -93,17 +93,21 @@ Tools/validate-composition.js  node Tools/validate-composition.js --sample 100
                              normalize + diff; writes report.
 
 Lib/TraitComposer.js         class TraitComposer
-                               async compose(tokenId)
-                                 -> { layers: [{ svgString, traitId, name,
-                                      gene, rarity }], backgroundColor }
-                             Uses AvastarLoader's contract for
-                             getPrimeByTokenId/getReplicantByTokenId, decodes
-                             the hash, assembles per-trait layer SVGs from the
-                             committed library (fetched relative URLs).
-
-Lib/AvastarLoader.js         + getAvastarTraits(tokenId) -> { traits, generation,
-                               gender, ranking, series? }  (thin contract
-                               wrapper; series present for primes only)
+                               async compose(tokenId, displaySize)
+                                 -> { backgroundLayer (Image), layers
+                                      (Image[]), layerInfo ([{ traitId, name,
+                                      geneName, rarityName, ... }]), traits,
+                                      backgroundColor, fullSVG }
+                             (As shipped - supersedes the pre-implementation
+                             sketch.) Sources the trait hash from the
+                             deployed static hash corpus, NOT the contract,
+                             so composition needs no wallet at all; decodes
+                             the hash and assembles per-trait layer images
+                             from the committed library. fullSVG is the
+                             byte-exact renderAvastar reconstruction, used
+                             for thumbnails. The getAvastarTraits loader
+                             wrapper from the original sketch was never
+                             needed and is not implemented.
 
 Lib/MainScene.js             Layer pipeline consumes TraitComposer output when
                              available (per-trait layers, correct depth order),
