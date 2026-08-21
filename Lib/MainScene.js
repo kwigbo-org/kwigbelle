@@ -3,13 +3,14 @@ import Size from "./Size.js";
 import Point from "./Point.js";
 import AvastarParser from "./AvastarParser.js";
 import AvastarLoader from "./AvastarLoader.js";
+import TraitComposer from "./TraitComposer.js";
 
 /// Class used to represent the Avastars scene
 export default class MainScene extends Scene {
 	/// Overridden constructor
 	constructor(rootContainer) {
 		super(rootContainer);
-		console.log("kwigbelle build 2026-08-21.6 (review round 3 fixes)");
+		console.log("kwigbelle build 2026-08-21.7 (trait composition flag)");
 		// Build the UI
 		this.buildUI();
 		// Start loading
@@ -20,6 +21,11 @@ export default class MainScene extends Scene {
 		);
 		this.isParserDebugEnabled = urlParams.get("parserdebug");
 		this.isExplodeEnabled = urlParams.get("explode");
+		// TAD Step 4 rollout flag: ?traitcompose=1 composes layers
+		// from the committed trait library instead of slicing the
+		// on-chain render (docs/tads/trait-composition.md)
+		this.isTraitComposeEnabled = urlParams.get("traitcompose") === "1";
+		this.traitComposer = new TraitComposer();
 		// Object used to load the Avastar SVG from on chain
 		this.avastarLoader = new AvastarLoader(null);
 		this.initialLoad(urlParams.get("tokenid"));
@@ -34,17 +40,19 @@ export default class MainScene extends Scene {
 	/// - Parameter tokenParam: The tokenid url param, if any
 	async initialLoad(tokenParam) {
 		const hasWallet = await this.avastarLoader.hasWallet();
-		if (tokenParam && hasWallet) {
-			this.beginLoad((complete) =>
-				this.avastarLoader.loadToken(tokenParam, complete)
+		if (tokenParam && (hasWallet || this.isTraitComposeEnabled)) {
+			this.beginLoad(
+				(complete) => this.avastarLoader.loadToken(tokenParam, complete),
+				tokenParam
 			);
 		} else {
 			// Instant display from the bundled SVGs
 			const avastars = [8014, 25495, 25470, 25505, 21022];
 			this.avastarLoader.tokenId =
 				avastars[Math.floor(Math.random() * avastars.length)];
-			this.beginLoad((complete) =>
-				this.avastarLoader.loadLocalAvastarSVG(complete)
+			this.beginLoad(
+				(complete) => this.avastarLoader.loadLocalAvastarSVG(complete),
+				this.avastarLoader.tokenId
 			);
 		}
 		if (!hasWallet) {
@@ -218,23 +226,66 @@ export default class MainScene extends Scene {
 
 	/// Start a load through the given function, ignoring stale
 	/// completions: an older load finishing after a newer one
-	/// started must not overwrite the newer Avastar
+	/// started must not overwrite the newer Avastar. When trait
+	/// composition is enabled (and a tokenId is known) the library
+	/// path is tried first; the legacy loader+parser path is the
+	/// fallback on any composition failure.
 	///
-	/// - Parameter loadFunction: Called with the completion handler
-	beginLoad(loadFunction) {
+	/// - Parameters:
+	///		- loadFunction: Called with the completion handler
+	///		- tokenId: The token being loaded (enables composition)
+	beginLoad(loadFunction, tokenId) {
 		this.loadGeneration = (this.loadGeneration || 0) + 1;
 		const generation = this.loadGeneration;
-		loadFunction(
-			function () {
-				if (generation !== this.loadGeneration) {
-					return;
-				}
-				this.parseAvastarSVG();
-				this.isLoading = false;
-				this.preloader.style.opacity = 0;
-				this.updateSelectedThumbnail();
-			}.bind(this)
-		);
+		const complete = function () {
+			if (generation !== this.loadGeneration) {
+				return;
+			}
+			this.parseAvastarSVG();
+			this.finishLoad(generation);
+		}.bind(this);
+		if (this.isTraitComposeEnabled && tokenId != null) {
+			this.traitComposer
+				.compose(
+					tokenId,
+					new Size(this.canvas.width, this.canvas.height)
+				)
+				.then((composed) => {
+					if (generation !== this.loadGeneration) {
+						return;
+					}
+					// Keep the loader's state coherent: thumbnails
+					// and the same-token guard read from it
+					this.avastarLoader.tokenId = tokenId;
+					this.avastarLoader.currentAvastar = composed.fullSVG;
+					this.avastar = composed;
+					this.setupLayerSprings();
+					this.finishLoad(generation);
+				})
+				.catch((error) => {
+					console.warn(
+						`trait composition failed for ${tokenId}, using legacy path`,
+						error
+					);
+					loadFunction(complete);
+				});
+			return;
+		}
+		loadFunction(complete);
+	}
+
+	/// Shared tail of every successful (or recovered) load
+	finishLoad(generation) {
+		if (generation !== this.loadGeneration) {
+			return;
+		}
+		const contentView = document.getElementById("contentView");
+		if (this.avastar && this.avastar.backgroundColor) {
+			contentView.style.backgroundColor = this.avastar.backgroundColor;
+		}
+		this.isLoading = false;
+		this.preloader.style.opacity = 0;
+		this.updateSelectedThumbnail();
 	}
 
 	// MARK: Overridden Methods
@@ -242,6 +293,23 @@ export default class MainScene extends Scene {
 	resize() {
 		this.canvas.width = window.innerWidth;
 		this.canvas.height = window.innerHeight;
+		if (this.isTraitComposeEnabled && this.avastar && this.avastar.layerInfo) {
+			// Composed path: rebuild layer images at the new size
+			// (fragments are cached in the composer, no refetch)
+			const generation = this.loadGeneration;
+			this.traitComposer
+				.compose(
+					this.avastarLoader.tokenId,
+					new Size(this.canvas.width, this.canvas.height)
+				)
+				.then((composed) => {
+					if (generation !== this.loadGeneration) return;
+					this.avastar = composed;
+					this.setupLayerSprings();
+				})
+				.catch((error) => console.warn("recompose failed", error));
+			return;
+		}
 		/// Reparse
 		this.parseAvastarSVG();
 	}
@@ -462,8 +530,9 @@ export default class MainScene extends Scene {
 		if (!isSilent) {
 			this.preloader.style.opacity = 1;
 		}
-		this.beginLoad((complete) =>
-			this.avastarLoader.loadToken(tokenId, complete)
+		this.beginLoad(
+			(complete) => this.avastarLoader.loadToken(tokenId, complete),
+			tokenId
 		);
 	}
 
@@ -498,11 +567,15 @@ export default class MainScene extends Scene {
 		const contentView = document.getElementById("contentView");
 		// Get the background color from the Avastar Parser
 		contentView.style.backgroundColor = this.avastar.backgroundColor;
+		this.setupLayerSprings();
+	}
 
-		// Setup a spring for each layer so each moves independently.
-		// Layer 0 is the deepest (skin), the last layer (hair) is in
-		// front: front layers get looser springs, larger breathing
-		// motion, and more reach toward the pointer.
+	/// Setup a spring for each layer so each moves independently.
+	/// Layer 0 is the deepest, the last layer is in front: front
+	/// layers get looser springs, larger breathing motion, and more
+	/// reach toward the pointer. Shared by the parser and trait
+	/// composition paths.
+	setupLayerSprings() {
 		this.layerSprings = [];
 		const layerCount = this.avastar.layers.length;
 		for (let index = 0; index < layerCount; index++) {
