@@ -119,6 +119,12 @@ async function main() {
 	for (let i = OFFSET; i < candidates.length && sample.length < SAMPLE; i += step) {
 		sample.push(candidates[i]);
 	}
+	if (sample.length === 0) {
+		console.error(
+			`no held-out tokens sampled (offset ${OFFSET}, ${candidates.length} candidates) - refusing to report a pass on zero validations`
+		);
+		process.exit(1);
+	}
 	console.log(`validating ${sample.length} held-out tokens (of ${candidates.length} never seen by extraction)`);
 
 	let pass = 0, fail = 0, skip = 0;
@@ -145,6 +151,7 @@ async function main() {
 		} else {
 			fail++;
 			if (ABSORB) {
+				fs.mkdirSync(RENDERS_DIR, { recursive: true });
 				fs.writeFileSync(path.join(RENDERS_DIR, tokenId + ".svg"), onChain);
 			}
 			if (fail <= 5) {
