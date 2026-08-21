@@ -696,6 +696,13 @@ async function main() {
 			path.join(TRAITS_DIR, "compose.json"),
 			JSON.stringify({ header, footer }, null, 1)
 		);
+		// Committed manifest of every token used as extraction
+		// evidence: lets validate-composition.js derive a true
+		// held-out set on a fresh clone (renders/ is gitignored)
+		fs.writeFileSync(
+			path.join(TRAITS_DIR, "extraction-tokens.json"),
+			JSON.stringify(coverage.chosen.map(Number).sort((a, b) => a - b))
+		);
 	}
 	await writeLibrary(known, hashes);
 }

@@ -23,6 +23,14 @@ const sampleArg = process.argv.indexOf("--sample");
 const SAMPLE = sampleArg >= 0 ? Number(process.argv[sampleArg + 1]) : 100;
 const offsetArg = process.argv.indexOf("--offset");
 const OFFSET = offsetArg >= 0 ? Number(process.argv[offsetArg + 1]) : 0;
+if (!Number.isInteger(SAMPLE) || SAMPLE <= 0) {
+	console.error("--sample requires a positive integer");
+	process.exit(1);
+}
+if (!Number.isInteger(OFFSET) || OFFSET < 0) {
+	console.error("--offset requires a non-negative integer");
+	process.exit(1);
+}
 // --absorb: save mismatching on-chain renders into the extraction
 // corpus so the next extract-traits run learns from them
 const ABSORB = process.argv.includes("--absorb");
@@ -90,10 +98,20 @@ async function main() {
 			)
 		);
 	}
-	// Held-out = not among the cached extraction renders
+	// Held-out = not in the committed extraction manifest. The
+	// gitignored render cache is unioned in when present so tokens
+	// absorbed mid-iteration (before the manifest is regenerated)
+	// are never miscounted as held-out.
 	const usedInExtraction = new Set(
-		fs.readdirSync(RENDERS_DIR).map((f) => f.replace(".svg", ""))
+		JSON.parse(
+			fs.readFileSync(path.join(TRAITS_DIR, "extraction-tokens.json"), "utf8")
+		).map(String)
 	);
+	if (fs.existsSync(RENDERS_DIR)) {
+		for (const f of fs.readdirSync(RENDERS_DIR)) {
+			usedInExtraction.add(f.replace(".svg", ""));
+		}
+	}
 	const candidates = Object.keys(hashes).filter((t) => !usedInExtraction.has(t));
 	// Deterministic sample: evenly spaced across the id range
 	const step = Math.max(1, Math.floor(candidates.length / SAMPLE));

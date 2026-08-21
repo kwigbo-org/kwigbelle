@@ -56,22 +56,36 @@ Tools/fetch-hashes.js        node Tools/fetch-hashes.js
                              no series output). Resumable; throttle-aware
                              (provider capacity errors retried with backoff).
 
-Tools/extract-traits.js      node Tools/extract-traits.js
+Tools/extract-traits.js      node Tools/extract-traits.js [--verify]
                              Selects a coverage set (every (gene, variation)
-                             in >=2 tokens) from hashes.json, fetches those
-                             renders via renderAvastar, solves per-trait
-                             fragment lengths (linear system over render
-                             lengths), cuts fragments, cross-validates
-                             byte-identity across tokens sharing a trait,
-                             fetches getTraitInfoById per trait, writes
-                             Traits/<gen>/<traitId>.svg and Traits/index.json
-                             { traitId: { gene, geneName, variation, rarity,
-                               rarityName, name, series, gender, sha256 } }
-                             gene/rarity come from the contract as uint8 enums;
-                             geneName/rarityName are derived from a local
-                             enum-to-string table in the tool, NOT fetched.
-                             sha256 is the fragment checksum backing --verify
-                             (staleness detection per Decision 2).
+                             in >=2 tokens, plus Hamming-1 pairs) from
+                             hashes.json, fetches those renders, and extracts
+                             fragments ELEMENT-LEVEL (the length-system in
+                             the original Decision 7 sketch was superseded in
+                             implementation): unwrap the <svg> wrapper,
+                             tokenize into top-level elements, seed per-gene
+                             CORE fragments via id/url gene tagging, add
+                             Hamming-1 pair-diff evidence, then run an
+                             interleaved fixpoint of orphan split-repair,
+                             single-unknown propagation, and per-render
+                             reconciliation - every candidate validated by
+                             contiguous appearance in every carrier - until
+                             EVERY render partitions byte-exactly as
+                             header + 12 fragments (gene order) + footer.
+                             Writes Traits/<gen>/<traitId>.svg,
+                             Traits/compose.json (constant header/footer),
+                             Traits/extraction-tokens.json (evidence
+                             manifest for held-out determination), and
+                             Traits/index.json
+                             { traitId: { generation, gene, geneName,
+                               variation, rarity, rarityName, gender, name,
+                               sha256, bytes } }
+                             (series intentionally omitted - per-trait
+                             series arrays aren't needed by the composer).
+                             gene/rarity come from the contract as uint8
+                             enums; geneName/rarityName derive from a local
+                             enum-to-string table, NOT fetched. sha256 backs
+                             --verify (staleness detection per Decision 2).
 
 Tools/validate-composition.js  node Tools/validate-composition.js --sample 100
                              Held-out token sample (outside the coverage set):
@@ -106,7 +120,7 @@ Explicitly **out of scope** for this TAD: trait panel UI (names/rarity display i
    - *Result:* Metadata surface fully public; hash byte-packing confirmed (Q2 resolved); `getTraitArtById` role-gated (Q1 resolved) → Decision 7 contingency activated by amendment.
 2. **Hash corpus + trait library extraction.** — **DONE 2026-08-21** (see Progress log).
    - *Action:* Build `Tools/fetch-hashes.js` (all 26,617 hashes, batched) and `Tools/extract-traits.js` (coverage set → renders → length-system solve → fragment cut → cross-validation → `Traits/` + index). Commit tools, `Traits/`, and `Tools/data/hashes.json`.
-   - *Validate:* Linear system solves with zero residual (or deviations investigated — Q5); every fragment byte-identical across ≥2 source tokens; index covers every (gene, variation) present in the hash corpus; spot-open a dozen fragments in a browser; Q4 answered by inspection of extracted fragments.
+   - *Validate:* Every coverage render partitions byte-exactly into header + 12 fragments + footer (exact-partition gate); every fragment validated by contiguous appearance in every carrier; index covers every (gene, variation) present in the hash corpus; spot-open a dozen fragments in a browser; Q4 answered by inspection of extracted fragments.
    - *Rollback:* Delete `Traits/`, `Tools/` additions (single commit revert). If the renderer proves non-concatenative → deep fallback per Decision 7 (full-render scrape) via further amendment.
 3. **Offline composition validation.** — **DONE 2026-08-21** (see Progress log).
    - *Action:* Implement decode + assembly in `TraitComposer`; compose the 8 bundled tokens + a 100-token held-out RPC sample; diff against `renderAvastar` output (normalized).
