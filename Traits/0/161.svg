@@ -1,0 +1,1 @@
+<linearGradient id="backdrop_a" x1="500" x2="500" y1="1000" y2="0" gradientUnits="userSpaceOnUse"><stop offset="0" class="bg_stop_1"/><stop offset="1" class="bg_stop_2"/></linearGradient><path fill="url(#backdrop_a)" d="M0 0h1000v1000H0z"/>

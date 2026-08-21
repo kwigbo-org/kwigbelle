@@ -33,19 +33,28 @@ The Avastars contract removes the need for the heuristic entirely: `getPrimeByTo
 
 ## Open Questions
 
-- **Q3 — Replicants.** Confirm `getReplicantByTokenId` hash decodes identically (no `series` field).
-- **Q4 — Do trait fragments carry their own `<defs>`** (gradients/patterns/styles), or do shared defs live in a wrapper `renderAvastar` adds? Now resolved by fragment extraction in Step 2 (boundaries + content become explicit).
-- **Q5 — Concatenation order.** Extraction assumes each render is header + fragments in a fixed gene order + footer. Verify the order (expected: render order ≈ bg, backdrop, ears, face, nose, mouth, feature, eyes, hair with color genes expressed via CSS) during Step 2 alignment; the length-system residual will expose any deviation.
+All resolved during Step 2/3 implementation (2026-08-21):
+
+- **Q3 — RESOLVED: replicants decode identically.** All 1,417 replicants fetched with the same byte-packing (no `series` field, as expected); held-out validation samples span primes and replicants.
+- **Q4 — RESOLVED: defs live inside their gene's fragment.** Patterns, gradients, and `<defs>` are emitted within the owning gene's element run (e.g. `pattern id="nose_k"` inside the nose fragment). The composer needs no separate defs handling; the heuristic parser's cross-bucket defs risk (audit finding 3) is structurally absent in trait composition.
+- **Q5 — RESOLVED: strict gene-id emission order.** Renders are the `<svg>` wrapper + four color `<style>` blocks (genes 0–3, one element each) + art fragments for genes 4–11 in gene-id order + `</svg>`. Verified by the exact-partition gate over the whole extraction corpus. Notable: trait art freely reuses OTHER genes' CSS classes (feature art styled with `hair_*` — the exact class-reuse that broke the heuristic parser), so class names must never be used for attribution; element ids/refs and emission order are the ground truth.
 
 ## Proposed design surface
 
 ```
 Tools/fetch-hashes.js        node Tools/fetch-hashes.js
-                             Batched getPrimeByTokenId/getReplicantByTokenId
-                             over all 26,617 tokens (JSON-RPC batch, cheap
-                             calls); writes Tools/data/hashes.json
-                             { tokenId: { traits, generation, series, gender,
-                               ranking, kind } }. Resumable.
+                             Batched over all 26,617 tokens (JSON-RPC batch,
+                             cheap calls). Routing: getPrimeByTokenId reverts
+                             on replicants (and vice versa), so primes are
+                             tried first and revert-failures retried as
+                             replicants - cheaper than a per-token
+                             getAvastarWaveByTokenId pre-call. Writes
+                             Tools/data/hashes.json
+                             { tokenId: { traits, generation, gender,
+                               ranking, kind, series? } }
+                             series is PRIME-ONLY (getReplicantByTokenId has
+                             no series output). Resumable; throttle-aware
+                             (provider capacity errors retried with backoff).
 
 Tools/extract-traits.js      node Tools/extract-traits.js
                              Selects a coverage set (every (gene, variation)
@@ -79,7 +88,8 @@ Lib/TraitComposer.js         class TraitComposer
                              committed library (fetched relative URLs).
 
 Lib/AvastarLoader.js         + getAvastarTraits(tokenId) -> { traits, generation,
-                               series, gender, ranking }  (thin contract wrapper)
+                               gender, ranking, series? }  (thin contract
+                               wrapper; series present for primes only)
 
 Lib/MainScene.js             Layer pipeline consumes TraitComposer output when
                              available (per-trait layers, correct depth order),
@@ -94,11 +104,11 @@ Explicitly **out of scope** for this TAD: trait panel UI (names/rarity display i
 1. **Access probe.** — **DONE 2026-08-21.**
    - *Action:* Minimal Node script calling `getPrimeByTokenId(8014)`, `getTraitIdByGenerationGeneAndVariation`, `getTraitInfoById`, `getTraitNameById`, `getTraitArtById`, `renderAvastar` via `AVASTARS_RPC_URL`.
    - *Result:* Metadata surface fully public; hash byte-packing confirmed (Q2 resolved); `getTraitArtById` role-gated (Q1 resolved) → Decision 7 contingency activated by amendment.
-2. **Hash corpus + trait library extraction.**
+2. **Hash corpus + trait library extraction.** — **DONE 2026-08-21** (see Progress log).
    - *Action:* Build `Tools/fetch-hashes.js` (all 26,617 hashes, batched) and `Tools/extract-traits.js` (coverage set → renders → length-system solve → fragment cut → cross-validation → `Traits/` + index). Commit tools, `Traits/`, and `Tools/data/hashes.json`.
    - *Validate:* Linear system solves with zero residual (or deviations investigated — Q5); every fragment byte-identical across ≥2 source tokens; index covers every (gene, variation) present in the hash corpus; spot-open a dozen fragments in a browser; Q4 answered by inspection of extracted fragments.
    - *Rollback:* Delete `Traits/`, `Tools/` additions (single commit revert). If the renderer proves non-concatenative → deep fallback per Decision 7 (full-render scrape) via further amendment.
-3. **Offline composition validation.**
+3. **Offline composition validation.** — **DONE 2026-08-21** (see Progress log).
    - *Action:* Implement decode + assembly in `TraitComposer`; compose the 8 bundled tokens + a 100-token held-out RPC sample; diff against `renderAvastar` output (normalized).
    - *Validate:* Byte-parity on the full held-out sample; Q3 answered (replicant decode) and documented via amendment.
    - *Rollback:* Tool-side only; no runtime change yet.
@@ -127,4 +137,4 @@ None.
 - **2026-08-21** — Amended per panel review round 1 (PR #2): `geneName`/`rarityName` documented as locally derived, not contract outputs [sonnet]; Q1 reframed — `getTraitArtById` is `view`, `approveTraitAccess`/`useTraits` are the unrelated replicant-licensing writes [sonnet]; immutability claim qualified — `extendTraitArt` exists, so the committed library carries checksums + a `--verify` staleness check [codex]; Q2 strengthened with the `bool[12]` evidence [opus-4-7].
 - **2026-08-21** — Panel round 2: 3/3 CLEAN at `e70d2a1`. Operator scope sign-off ("go") received; implementation began.
 - **2026-08-21** — Amended per panel round 4: Decision 7's length system now includes the renderer's constant header+footer bytes `C` as a solved unknown, with the header length pinned structurally before offsets are cut [sonnet]; Decision 3 and Decision 2 cross-references updated to the post-amendment tool names and contingency [codex].
-- **2026-08-21** — **Step 1 executed.** `totalSupply` 26,617. Q1 resolved: `getTraitArtById` role-gated (reverts for zero AND non-zero callers); all other reads public. Q2 resolved: hash is byte-packed per gene (token 8014 → variations `[4,17,7,52,36,8,3,21,12,5,12,32]`, gene 0 var 4 → trait 3 "Mellow Apricot"); generation enum is 0-based. **Amendment: Decision 7** replaces the full-scrape contingency with coverage-set fragment extraction; Steps 2–3 redefined accordingly; Q5 added (concatenation order). Awaiting panel re-review + operator re-sign-off on the amended scope before Step 2.
+- **2026-08-21** — **Steps 2–3 executed.** Hash corpus: all 26,617 tokens (25,200 primes / 1,417 replicants, zero failures; `fetch-hashes.js` routes prime-first with revert-retry, throttle-aware batching under the Alchemy free-tier CU/s cap). Extraction (`extract-traits.js`) took 9 iterations to land — the working method is element-level (not the length-system Decision 7 sketched, which the element approach subsumes): tokenize each unwrapped render into top-level elements; seed per-gene CORE fragments via id/url gene tagging (574 seeds); Hamming-1 pair diffs add edge evidence; then an interleaved fixpoint of orphan split-repair, single-unknown propagation, and per-render reconciliation — with EVERY candidate validated by contiguous appearance in every carrier — until all renders partition exactly. Two boundary residuals (elements constant within the initial coverage set but not globally) were eliminated by absorbing failing validation renders as counterexamples; final corpus 209 renders, all partitioning byte-exactly. **Validation: five consecutive fresh held-out samples (~490 distinct tokens never used in extraction) reproduce on-chain `renderAvastar` output byte-for-byte with zero mismatches and zero missing traits.** Library committed: `Traits/0/<traitId>.svg` × 614 + `index.json` (name/gene/variation/rarity/gender/sha256) + `compose.json` (constant header/footer). Q3/Q4/Q5 resolved (see Resolved Questions). `totalSupply` 26,617. Q1 resolved: `getTraitArtById` role-gated (reverts for zero AND non-zero callers); all other reads public. Q2 resolved: hash is byte-packed per gene (token 8014 → variations `[4,17,7,52,36,8,3,21,12,5,12,32]`, gene 0 var 4 → trait 3 "Mellow Apricot"); generation enum is 0-based. **Amendment: Decision 7** replaces the full-scrape contingency with coverage-set fragment extraction; Steps 2–3 redefined accordingly; Q5 added (concatenation order). Awaiting panel re-review + operator re-sign-off on the amended scope before Step 2.
