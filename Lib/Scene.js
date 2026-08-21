@@ -1,6 +1,4 @@
-import Frame from "./Geometry/Frame.js";
-import Point from "./Geometry/Point.js";
-import Size from "./Geometry/Size.js";
+import Point from "./Point.js";
 import DisplayLoop from "./DisplayLoop.js";
 
 /// Class used to represent a game scene
@@ -9,7 +7,7 @@ export default class Scene {
 	///
 	/// - Parameter rootContainer: The DOM element the scene will use for display
 	constructor(rootContainer) {
-		this.touchFrame = new Frame(new Point(0, 0), new Size(64, 64));
+		this.touchPoint = new Point(0, 0);
 
 		this.boundRender = this.render.bind(this);
 		this.boundResize = this.resize.bind(this);
@@ -54,7 +52,7 @@ export default class Scene {
 	///
 	/// - Parameter event: The event that triggered the call
 	touchMove(event) {
-		this.touchFrame.origin = new Point(
+		this.touchPoint = new Point(
 			event.touches[0].clientX,
 			event.touches[0].clientY
 		);
@@ -65,7 +63,7 @@ export default class Scene {
 	/// - Parameter event: The event that triggered the call
 	touchStart(event) {
 		this.isTouchDown = true;
-		this.touchFrame.origin = new Point(
+		this.touchPoint = new Point(
 			event.touches[0].clientX,
 			event.touches[0].clientY
 		);
@@ -76,7 +74,7 @@ export default class Scene {
 	/// - Parameter event: The event that triggered the call
 	touchEnd() {
 		this.isTouchDown = false;
-		this.touchFrame.origin = new Point(0, 0);
+		this.touchPoint = new Point(0, 0);
 	}
 
 	/// Method called when a mouse is down in the scene
@@ -84,14 +82,14 @@ export default class Scene {
 	/// - Parameter event: The event that triggered the call
 	mouseDown(event) {
 		this.isTouchDown = true;
-		this.touchFrame.origin = new Point(event.pageX, event.pageY);
+		this.touchPoint = new Point(event.pageX, event.pageY);
 	}
 
 	/// Method called when a mouse is moved in the scene
 	///
 	/// - Parameter event: The event that triggered the call
 	mouseMove(event) {
-		this.touchFrame.origin = new Point(event.pageX, event.pageY);
+		this.touchPoint = new Point(event.pageX, event.pageY);
 	}
 
 	/// Method called when a mouse is lifted in the scene
@@ -99,6 +97,6 @@ export default class Scene {
 	/// - Parameter event: The event that triggered the call
 	mouseUp() {
 		this.isTouchDown = false;
-		this.touchFrame.origin = new Point(0, 0);
+		this.touchPoint = new Point(0, 0);
 	}
 }
