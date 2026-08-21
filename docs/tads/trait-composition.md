@@ -19,7 +19,7 @@ The Avastars contract removes the need for the heuristic entirely: `getPrimeByTo
 | # | Decision | Rationale |
 |---|---|---|
 | 1 | Derive layers from on-chain trait data (trait hash → per-trait art fragments) instead of heuristic slicing | Fixes audit findings 1–3 at the root; each layer becomes a named trait at its correct depth |
-| 2 | Fetch the full trait-art library **once** and commit it to the repo (`Traits/<generation>/<traitId>.svg` + `Traits/index.json`) | Trait art is immutable on-chain; a committed library makes runtime independent of the heavy `renderAvastar` call and of RPC rate limits. Library is a few hundred fragments, single-digit MB |
+| 2 | Fetch the full trait-art library **once** and commit it to the repo (`Traits/<generation>/<traitId>.svg` + `Traits/index.json`) | Trait art is effectively frozen (the mint completed years ago), though not strictly immutable — the ABI exposes `extendTraitArt` and a `TraitArtExtended` event. The committed library therefore records a per-fragment checksum, and `fetch-traits.js --verify` re-fetches and diffs against the snapshot so staleness is detectable on demand. A committed library makes runtime independent of the heavy `renderAvastar` call and of RPC rate limits; a few hundred fragments, single-digit MB |
 | 3 | The 25.5k-token full-render scraper is a **contingency only** (activated iff `getTraitArtById` reads are access-gated); a ~100-token render sample is kept for byte-level validation of local composition | Trait-art-first covers the whole corpus by construction at ~1/250th the fetch cost |
 | 4 | Trait names/rarity come from the committed `Traits/index.json` (built from `getTraitInfoById`); `getAvastarMetadata` used only as a cross-check during validation | No per-token metadata calls at runtime |
 | 5 | `AvastarParser` heuristic slicing is retained as a **runtime fallback** when trait composition fails (unknown generation, decode mismatch) | Graceful degradation; no regression for tokens the composer can't handle |
@@ -27,8 +27,8 @@ The Avastars contract removes the need for the heuristic entirely: `getPrimeByTo
 
 ## Open Questions
 
-- **Q1 — Is `getTraitArtById` publicly callable?** The ABI includes `approveTraitAccess`/`useTraits` (on-chain composition licensing); whether plain `eth_call` reads are gated is unverified (sandbox RPC probes were inconclusive). Resolved by Step 1. If gated → contingency in Decision 3.
-- **Q2 — Trait hash packing layout.** Gen 1 has 12 gene slots; the exact bit/byte packing of `traits` (uint256) per generation must be verified by decoding known tokens against their rendered SVGs and `getAvastarMetadata` output. Resolved by Step 3.
+- **Q1 — Is `getTraitArtById` publicly callable?** It is declared `view` in the ABI, which suggests plain `eth_call` reads work. (`approveTraitAccess`/`useTraits` are unrelated: they are nonpayable writes governing the prime→replicant trait-licensing flow, not read gating.) Access control could still live in the Solidity body, so the Step 1 probe stays; sandbox RPC probes were inconclusive. If gated → contingency in Decision 3.
+- **Q2 — Trait hash packing layout.** Gen 1 has 12 gene slots (supported by `useTraits`/`getPrimeReplicationByTokenId` taking `bool[12]`); the exact bit/byte packing of `traits` (uint256) per generation must be verified by decoding known tokens against their rendered SVGs and `getAvastarMetadata` output. Resolved by Step 3.
 - **Q3 — Replicants.** Confirm `getReplicantByTokenId` hash decodes identically (no `series` field).
 - **Q4 — Do trait fragments carry their own `<defs>`** (gradients/patterns/styles), or do shared defs live in a wrapper `renderAvastar` adds? Determines what the composer must inject per layer. Resolved by Step 2 inspection + Step 3 diffing.
 
@@ -41,7 +41,12 @@ Tools/fetch-traits.js        node Tools/fetch-traits.js [--generation 1]
                              getTraitInfoById + getTraitArtById, writes
                              Traits/<gen>/<traitId>.svg and Traits/index.json
                              { traitId: { gene, geneName, variation, rarity,
-                               rarityName, name, series, gender } }
+                               rarityName, name, series, gender, sha256 } }
+                             gene/rarity come from the contract as uint8 enums;
+                             geneName/rarityName are derived from a local
+                             enum-to-string table in the tool, NOT fetched.
+                             sha256 is the fragment checksum backing --verify
+                             (staleness detection per Decision 2).
 
 Tools/validate-composition.js  node Tools/validate-composition.js --sample 100
                              Random token sample: compose locally from Traits/,
@@ -103,3 +108,4 @@ None.
 ## Progress log
 
 - **2026-08-21** — TAD drafted from the AvastarParser audit + ABI analysis (this session). Sandbox RPC probes inconclusive on Q1; avastars.io confirmed alive (HTTP 200), `media.avastars.io` unresolvable from the audit environment.
+- **2026-08-21** — Amended per panel review round 1 (PR #2): `geneName`/`rarityName` documented as locally derived, not contract outputs [sonnet]; Q1 reframed — `getTraitArtById` is `view`, `approveTraitAccess`/`useTraits` are the unrelated replicant-licensing writes [sonnet]; immutability claim qualified — `extendTraitArt` exists, so the committed library carries checksums + a `--verify` staleness check [codex]; Q2 strengthened with the `bool[12]` evidence [opus-4-7].
