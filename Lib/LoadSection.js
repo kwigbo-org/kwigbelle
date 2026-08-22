@@ -51,16 +51,17 @@ export default class LoadSection {
 
 	/// Validate the input and hand a known token id to the scene
 	async submit() {
+		// EVERY submission supersedes any pending membership check -
+		// including invalid ones, which must cancel a slow in-flight
+		// check rather than let it load a token the user moved past
+		this.submitGeneration = (this.submitGeneration || 0) + 1;
+		const generation = this.submitGeneration;
 		const tokenId = this.input.value.trim();
 		this.error.innerText = "";
 		if (!/^\d+$/.test(tokenId)) {
 			this.error.innerText = "Enter a numeric token id";
 			return;
 		}
-		// A slow membership check (first call loads the library) must
-		// not act on behalf of a submission the user has superseded
-		this.submitGeneration = (this.submitGeneration || 0) + 1;
-		const generation = this.submitGeneration;
 		let isKnown = false;
 		try {
 			isKnown = await this.hasToken(tokenId);

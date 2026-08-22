@@ -89,15 +89,19 @@ const { check } = require("./check.js");
 	);
 	await page.fill("#loadTokenInput", "12345");
 	await page.press("#loadTokenInput", "Enter");
+	// Converge on the actual signal - the trait sheet rebuilding for
+	// the new token - not on preloader state, which is already "0"
+	// from the previous load before selectAvastar even fires
 	await page.waitForFunction(
-		() => {
-			const error = document.querySelector(".loadError").innerText;
+		(before) => {
+			const value = document.querySelector(".traitValue");
 			const preloader = document.getElementById("preloader").style.opacity;
-			return error === "" && preloader === "0";
+			return value && value.innerText !== before && preloader === "0";
 		},
+		nameBefore,
 		{ timeout: 15000 },
 	);
-	await page.waitForTimeout(800);
+	await page.waitForTimeout(300);
 	const after = await page.evaluate(() => ({
 		firstTrait: document.querySelector(".traitValue").innerText,
 		rowCount: document.querySelectorAll(".traitRow").length,
