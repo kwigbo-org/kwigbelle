@@ -61,9 +61,13 @@ bot that could have disambiguated NO LONGER FUNCTIONS (operator,
 2026-08-23), so the historical formula is unrecoverable — and with
 the bot gone, there is no live authority to stay consistent with.
 Resolution: kwigbelle defines its own transparent metric — all 12
-traits, uniqueness over the full frozen 26,617 population —
-labeled as such in the UI. The corpus is frozen, so the counts are
-computed ONCE and never change.
+traits, uniqueness over the PRIME population only (#0-25,199, the
+last prime minted; operator 2026-08-23) — labeled as such in the
+UI. Replicants are excluded from the comparison population AND
+from the metric itself: they are assembled from burned prime
+traits, so uniqueness-as-mint-lottery does not apply to them (a
+different mechanism by design). The corpus is frozen, so the
+counts are computed ONCE and never change.
 
 ## Decisions
 
@@ -112,18 +116,24 @@ computed ONCE and never change.
    but the distribution row reflects the DISPLAYED traits —
    consistent with cards showing overridden values, and the
    preview-only note already sits right there.
-6. **UB counts with kwigbelle's own transparent definition.** The
-   historical bot formula is unrecoverable (bot defunct), so the
-   metric is defined here: a UB-N combo is a set of N of the
-   token's 12 traits (gene:variation pairs) worn by NO other token
-   among all 26,617. `Tools/compute-ub.js` precomputes per-token
-   UB2/UB3 combo counts into `Tools/data/ub.json` (committed,
-   `-diff`, shipped by deploy.sh alongside hashes.json); the
-   identity card gains a "Unique-By" line with a muted "(all 12
-   traits)" qualifier so the numbers are never mistaken for the
-   old bot's. Known deltas from the dead bot's output are expected
-   (e.g. #8184: ours 6 UB3 combos, bot said 0) and documented
-   here, not hidden.
+6. **UB counts: a PRIME-ONLY metric with kwigbelle's own
+   transparent definition.** The historical bot formula is
+   unrecoverable (bot defunct), so the metric is defined here: a
+   UB-N combo is a set of N of a prime's 12 traits
+   (gene:variation pairs) worn by NO other prime among #0-25,199.
+   Replicants neither dilute the population nor receive the
+   metric (Context above; operator directive) — their identity
+   card shows kind/series-less chip, score+tier, and the
+   distribution row, with no Unique-By line. `Tools/compute-ub.js`
+   precomputes per-prime UB2/UB3 combo counts into
+   `Tools/data/ub.json` (committed, `-diff`, shipped by deploy.sh
+   alongside hashes.json); the identity card's line carries a
+   muted "(all 12 traits, among primes)" qualifier so the numbers
+   are never mistaken for the old bot's. Known deltas from the
+   dead bot's output are expected (e.g. #8184: ours 10 UB3 combos
+   prime-scoped, bot said 0) and documented here, not hidden.
+   Locally-computed anchors for validation: #8014 u2 0 / u3 40,
+   #8184 u2 0 / u3 10, #0 u2 0 / u3 195.
 7. **Out of scope:** layout redesign or avastars.io content/nav
    mimicry; the dotted starfield background (possible later
    accent); score-meter widget (their tool UI, not a site cue);
@@ -181,14 +191,16 @@ Tools/compute-ub.js            (gated Step 4)
    Rollback: style.css + index.html font link revert.
 4. **UB counts (kwigbelle definition per Decision 6; corpus
    frozen so this computes once).**
-   Action: Tools/compute-ub.js; ub.json committed + `-diff`;
-   deploy.sh ships it next to hashes.json; identity card gains
-   the Unique-By line with the "(all 12 traits)" qualifier.
+   Action: Tools/compute-ub.js (primes #0-25,199 only); ub.json
+   committed + `-diff`; deploy.sh ships it next to hashes.json;
+   identity card gains the Unique-By line with the "(all 12
+   traits, among primes)" qualifier; replicant cards omit it.
    Validate: script re-run is byte-identical (determinism);
    internal invariants (u2 <= C(12,2), u3 <= C(12,3), a token
-   with a u2 combo has >= 10 u3 combos containing it); harness
-   asserts the line for a token with locally-known counts (8014:
-   u2 0, u3 40); `./deploy.sh -w` serves ub.json.
+   with a u2 combo has >= 10 u3 combos containing it); ub.json
+   has exactly 25,200 entries; harness asserts the line for the
+   anchors (8014: u2 0 / u3 40) and its ABSENCE on a replicant;
+   `./deploy.sh -w` serves ub.json.
    Rollback: remove the line + file; deploy.sh line revert
    (risk-sensitive file - minimal one-line diff).
 
@@ -219,3 +231,12 @@ in Step 3 with no structural change (vrm-viewer TAD unaffected).
   full frozen population, labeled in the UI); Step 4 un-gated
   with determinism/invariant validation replacing the bot
   cross-check.
+- 2026-08-23 — Operator: "rarity needs to cut off at replicants
+  or replicants need to be a different rarity mechanism. The last
+  Avastar prime minted was 25199." Decision 6 re-scoped: UB is a
+  prime-only metric (population #0-25,199); replicants excluded
+  from the comparison AND from the display (they are assembled
+  from burned prime traits - the mint-lottery framing does not
+  apply). Anchors recomputed prime-scoped: 8014 u2 0/u3 40, 8184
+  u2 0/u3 10, founder #0 u2 0/u3 195. Score+tier display remains
+  for replicants (they carry their own ranking).
