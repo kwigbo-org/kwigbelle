@@ -11,6 +11,10 @@ import LoadSection from "./LoadSection.js";
 import EffectsSection from "./EffectsSection.js";
 import TraitsSection from "./TraitsSection.js";
 import TraitEditModal from "./TraitEditModal.js";
+import VRMSection, { progressText } from "./VRMSection.js";
+import VRMSource from "./VRMSource.js";
+import VRMViewer from "./VRMViewer.js";
+import ViewToggleUI from "./ViewToggleUI.js";
 import { svgToImage } from "./UIHelpers.js";
 
 /// The Avastars scene: load orchestration and rendering. The
@@ -21,7 +25,7 @@ export default class MainScene extends Scene {
 	/// Overridden constructor
 	constructor(rootContainer) {
 		super(rootContainer);
-		console.log("kwigbelle build 2026-08-22.7 (trait lab)");
+		console.log("kwigbelle build 2026-08-22.8 (vrm viewer)");
 		// Build the UI
 		this.buildUI();
 		// Start loading
@@ -51,7 +55,17 @@ export default class MainScene extends Scene {
 			this.layerSprings,
 			explodeParam !== null ? explodeParam !== "0" : null,
 		);
-		this.sidePanel.addSection("Effects", this.effectsSection.build());
+		// The Effects section element is kept so 3D mode can hide it
+		// wholesale: the spring rig has no meaning for the 3D model
+		this.effectsSectionElement = this.sidePanel.addSection(
+			"Effects",
+			this.effectsSection.build(),
+		);
+		this.vrmSection = new VRMSection(
+			() => this.toggle3D(),
+			() => this.downloadVRM(),
+		);
+		this.sidePanel.addSection("3D model", this.vrmSection.build());
 		this.traitsSection = new TraitsSection({
 			onEdit: (gene) => this.openTraitEditor(gene),
 			onUndo: (gene) => this.undoOverride(gene),
@@ -63,6 +77,19 @@ export default class MainScene extends Scene {
 		// loaded token's picks plus per-gene overrides
 		this.baselinePicks = null;
 		this.overrides = new Map();
+		// The 3D view (docs/tads/vrm-viewer.md): fetched on demand,
+		// shown on its own canvas; vrmGeneration is bumped by every
+		// mode transition AND by beginLoad, so a stale fetch or
+		// parse completion can never mount over a newer state
+		this.vrmSource = new VRMSource();
+		this.vrmViewer = new VRMViewer(rootContainer);
+		this.viewToggle = new ViewToggleUI(rootContainer, () => this.toggle3D());
+		this.is3D = false;
+		this.vrmGeneration = 0;
+		this.vrmAbort = null;
+		// Tokens the connected wallet owns (string ids): gates the
+		// Download VRM button in the 3D model section
+		this.ownedTokenIds = new Set();
 		// Object used to load the Avastar SVG from on chain
 		this.avastarLoader = new AvastarLoader(null);
 		// Overlay UI components: picks and connects come back into
@@ -74,6 +101,7 @@ export default class MainScene extends Scene {
 			rootContainer,
 			this.avastarLoader,
 			(ownedTokenIds) => {
+				this.recordOwnership(ownedTokenIds);
 				this.pickerUI.build(ownedTokenIds);
 				this.selectAvastar(ownedTokenIds[0], false);
 			},
@@ -110,6 +138,7 @@ export default class MainScene extends Scene {
 			console.error("Could not list the wallet's Avastars", error);
 		}
 		if (ownedTokenIds.length > 0) {
+			this.recordOwnership(ownedTokenIds);
 			this.pickerUI.build(ownedTokenIds);
 			if (!tokenParam) {
 				// Swap silently: keep the current Avastar animating
@@ -144,6 +173,10 @@ export default class MainScene extends Scene {
 	beginLoad(tokenId) {
 		this.loadGeneration = (this.loadGeneration || 0) + 1;
 		const generation = this.loadGeneration;
+		// Every load path funnels through here, so this is the single
+		// choke point that returns 3D mode to vector: the load flow is
+		// vector-native and the user opts into 3D per token
+		this.exit3D();
 		// Any in-flight preview recompose belongs to the previous
 		// display: invalidate it now, or an A->B->A reload could let
 		// a stale overridden render land on A's fresh baseline (its
@@ -309,6 +342,22 @@ export default class MainScene extends Scene {
 		this.preloader.style.opacity = 0;
 		this.pickerUI.updateSelectedThumbnail();
 		this.traitsSection.update(this.avastar);
+		this.vrmSection.setOwned(
+			this.ownedTokenIds.has(String(this.avastarLoader.tokenId)),
+		);
+	}
+
+	/// Remember which tokens the connected wallet owns and refresh
+	/// the download gate for whatever is currently displayed
+	///
+	/// - Parameter ownedTokenIds: The wallet's token ids
+	recordOwnership(ownedTokenIds) {
+		this.ownedTokenIds = new Set(ownedTokenIds.map(String));
+		if (this.avastar && this.avastar.tokenId != null) {
+			this.vrmSection.setOwned(
+				this.ownedTokenIds.has(String(this.avastar.tokenId)),
+			);
+		}
 	}
 
 	/// Load a picked Avastar and collapse the picker. The current
@@ -458,6 +507,140 @@ export default class MainScene extends Scene {
 		this.refreshPreview();
 	}
 
+	/// One tap on the 3D toggle: enter 3D from vector, cancel a
+	/// fetch in flight, or return to vector from 3D
+	toggle3D() {
+		if (this.is3D || this.vrmAbort) {
+			this.exit3D();
+			return;
+		}
+		this.enter3D();
+	}
+
+	/// Fetch and show the displayed token's model. Single-flight:
+	/// vrmAbort is set for the whole fetch+parse, and toggle3D turns
+	/// any tap during it into a cancel.
+	async enter3D() {
+		if (!this.avastar || this.avastar.tokenId == null) {
+			return;
+		}
+		const tokenId = this.avastar.tokenId;
+		this.vrmGeneration++;
+		const generation = this.vrmGeneration;
+		const controller = new AbortController();
+		this.vrmAbort = controller;
+		this.setVRMMode("loading");
+		try {
+			const bytes = await this.vrmSource.fetchVRM(
+				tokenId,
+				(loaded, total) => {
+					if (generation === this.vrmGeneration) {
+						this.viewToggle.setProgress(loaded, total);
+						this.vrmSection.setProgress(loaded, total);
+					}
+				},
+				controller.signal,
+			);
+			if (generation !== this.vrmGeneration) {
+				return;
+			}
+			// Bytes are down; parsing ~9MB takes a beat of its own -
+			// keep the overlay honest instead of freezing at 100%
+			this.viewToggle.setPhase("Preparing model…");
+			await this.vrmViewer.show(bytes);
+			if (generation !== this.vrmGeneration) {
+				// Superseded during the async parse (a token load or
+				// a cancel tap): unmount what just mounted
+				this.vrmViewer.hide();
+				return;
+			}
+			this.vrmAbort = null;
+			this.is3D = true;
+			this.setVRMMode("3d");
+			// Limited settings while 3D shows (operator directive):
+			// no spring controls, traits as read-only information
+			this.effectsSectionElement.style.display = "none";
+			this.traitsSection.setReadOnly(true);
+			// The 2D canvas would otherwise show its last frame
+			// through the 3D canvas's transparent background
+			const context = this.canvas.getContext("2d");
+			context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+		} catch (error) {
+			if (generation !== this.vrmGeneration) {
+				return;
+			}
+			this.vrmAbort = null;
+			this.setVRMMode("vector");
+			if (!error || error.name !== "AbortError") {
+				console.warn(`3D view failed for ${tokenId}`, error);
+				this.viewToggle.showError("3D model unavailable");
+			}
+		}
+	}
+
+	/// Return to the vector view. Safe to call in any state; bumps
+	/// vrmGeneration so anything 3D still in flight goes stale.
+	exit3D() {
+		this.vrmGeneration++;
+		if (this.vrmAbort) {
+			this.vrmAbort.abort();
+			this.vrmAbort = null;
+		}
+		this.vrmViewer.hide();
+		this.is3D = false;
+		this.setVRMMode("vector");
+		this.effectsSectionElement.style.display = "";
+		this.traitsSection.setReadOnly(false);
+	}
+
+	/// Keep the floating toggle and the panel section in step
+	setVRMMode(mode) {
+		this.viewToggle.setMode(mode);
+		this.vrmSection.setMode(mode);
+	}
+
+	/// Fetch the displayed token's model and hand it to the browser
+	/// as a file save under its original name. Owner-only by UI
+	/// gating; the token is captured up front, so a token load mid
+	/// download still saves the file that was asked for.
+	async downloadVRM() {
+		if (
+			!this.avastar ||
+			this.avastar.tokenId == null ||
+			this.isDownloadingVRM
+		) {
+			return;
+		}
+		const tokenId = this.avastar.tokenId;
+		this.isDownloadingVRM = true;
+		this.vrmSection.setDownloadState("Preparing…");
+		try {
+			const info = await this.vrmSource.vrmInfo(tokenId);
+			const bytes = await this.vrmSource.fetchVRM(tokenId, (loaded, total) => {
+				this.vrmSection.setDownloadState(
+					"Downloading… " + progressText(loaded, total),
+				);
+			});
+			const url = URL.createObjectURL(
+				new Blob([bytes], { type: "model/gltf-binary" }),
+			);
+			const anchor = document.createElement("a");
+			anchor.href = url;
+			anchor.download = info.filename;
+			document.body.appendChild(anchor);
+			anchor.click();
+			anchor.remove();
+			// Give the browser time to start the save before revoking
+			setTimeout(() => URL.revokeObjectURL(url), 10000);
+			this.vrmSection.setDownloadState(null);
+		} catch (error) {
+			console.warn(`VRM download failed for ${tokenId}`, error);
+			this.vrmSection.setDownloadState("Download failed");
+			setTimeout(() => this.vrmSection.setDownloadState(null), 4000);
+		}
+		this.isDownloadingVRM = false;
+	}
+
 	/// Re-render the display for the current picks. Preview-only
 	/// state change: guarded like resize (captured size + token
 	/// identity + its own generation for rapid apply/undo), never a
@@ -513,6 +696,13 @@ export default class MainScene extends Scene {
 	}
 
 	render() {
+		// 3D mode pauses the whole 2D pass - drawing AND the spring
+		// step below - deliberately: nothing 2D is visible, paused
+		// springs keep their state, and the dt clamp absorbs the gap
+		// on re-entry (docs/tads/vrm-viewer.md)
+		if (this.is3D) {
+			return;
+		}
 		const context = this.canvas.getContext("2d");
 		context.clearRect(0, 0, this.canvas.width, this.canvas.height);
 		// The avastar guard covers failed loads: isLoading clears on

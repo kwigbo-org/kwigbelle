@@ -35,6 +35,8 @@ export default class SidePanel {
 	/// - Parameters:
 	///		- title: The section header label
 	///		- contentElement: The section body
+	/// - Returns: The section element, so callers can show/hide
+	///		whole sections by mode (e.g. Effects in 3D)
 	addSection(title, contentElement) {
 		const section = document.createElement("div");
 		section.setAttribute("class", "panelSection");
@@ -59,5 +61,6 @@ export default class SidePanel {
 		section.appendChild(body);
 
 		this.sectionList.appendChild(section);
+		return section;
 	}
 }

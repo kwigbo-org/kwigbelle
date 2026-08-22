@@ -7,3 +7,6 @@
 /Tests/node_modules/
 /Tests/*.png
 /node_modules/
+
+# Test fixture cache (auto-downloaded VRM model, ~9.3MB)
+/Tests/fixtures/

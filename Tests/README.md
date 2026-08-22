@@ -34,6 +34,9 @@ node failure-test.js   # happy mainnet / wrong chain / failing RPC render
 node panel-test.js     # side panel: open, pause/resume, trait visibility, persistence
 node load-test.js      # Load Avastar section: walletless load, validation, composer split
 node lab-test.js       # trait swap preview: modal, override, undo, reset, swap-clears
+node vrm-source-test.js  # VRM fetch pipeline: gateways, progress, cache, abort (routed fixtures)
+node vrm-viewer-test.js  # 3D toggle: WebGL render, cache re-entry, cancel, load-supersedes
+node vrm-panel-test.js   # 3D-mode settings limits + owner-only Download VRM
 ```
 
 Every test prints its own pass evidence and exits nonzero on any
@@ -52,6 +55,12 @@ EIP-6963 wallets are announced with `eip6963:announceProvider` events.
 State that must survive a reload (network switches, authorization)
 lives in `sessionStorage` inside the mock.
 
-No test touches the real network; `AVASTARS_RPC_URL` is not needed.
+The VRM tests route `avastars.io/metadata/*` and every IPFS gateway
+to local fixtures. The model fixture itself (the real 8014 `.vrm`,
+~9.3MB) is auto-downloaded ONCE into `Tests/fixtures/` (gitignored)
+by `vrm-viewer-test.js` and reused after — that first run is the one
+place the harness needs network.
+
+No other test touches the real network; `AVASTARS_RPC_URL` is not needed.
 (The on-chain integration surface is covered separately by
 `Tools/validate-composition.js`, which does need the RPC env var.)

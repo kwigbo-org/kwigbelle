@@ -64,6 +64,15 @@
 		</style>
 		<link rel="stylesheet" href="./style.css" />
 		<script type="text/javascript" src="./Lib/vendor/web3.min.js"></script>
+		<!-- Import map for the vendored 3D stack (docs/tads/vrm-viewer.md).
+		     Must precede every module script, so it lives in head. -->
+		<script type="importmap">
+			{
+				"imports": {
+					"three": "./Lib/vendor/three/build/three.module.min.js"
+				}
+			}
+		</script>
 	</head>
 	<body class="noScroll">
 		<div id="contentView"></div>

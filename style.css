@@ -571,3 +571,138 @@
 		transform: rotateY(3600deg);
 	}
 }
+
+/* 3D view (docs/tads/vrm-viewer.md): the model canvas overlays the
+   vector canvas, under every UI overlay */
+#vrmCanvas {
+	position: absolute;
+	left: 0;
+	top: 0;
+	width: 100%;
+	height: 100%;
+	z-index: 5;
+	touch-action: none;
+}
+
+/* Floating vector <-> 3D toggle, mirroring the panel handle's look */
+#viewToggle {
+	position: absolute;
+	left: 16px;
+	bottom: 16px;
+	z-index: 10;
+	min-width: 44px;
+	padding: 12px 14px;
+	border-radius: 20px;
+	border: 2px solid #fff;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+	background: rgba(255, 255, 255, 0.6);
+	color: #333;
+	font-size: 26px;
+	font-weight: 700;
+	line-height: 1;
+	text-align: center;
+	cursor: pointer;
+	-webkit-tap-highlight-color: transparent;
+}
+
+#viewToggle.loading {
+	font-size: 17px;
+	padding: 16px 14px;
+}
+
+#viewToggleError {
+	position: absolute;
+	left: 16px;
+	bottom: 84px;
+	z-index: 10;
+	max-width: 240px;
+	padding: 8px 12px;
+	border-radius: 10px;
+	background: rgba(20, 20, 20, 0.85);
+	color: #fff;
+	font-family: sans-serif;
+	font-size: 14px;
+	opacity: 0;
+	transition: opacity 0.3s;
+	pointer-events: none;
+}
+
+#viewToggleError.visible {
+	opacity: 1;
+}
+
+/* 3D model section */
+.vrmProgress {
+	font-family: sans-serif;
+	font-size: 13px;
+	color: #444;
+	padding: 2px 0;
+}
+
+.vrmDownload:disabled {
+	opacity: 0.7;
+	cursor: default;
+}
+
+/* VRM loading overlay: unmistakable center-screen feedback for the
+   ~9MB fetch + parse (the button percent alone was too subtle) */
+#vrmLoading {
+	display: none;
+	z-index: 15;
+	text-align: center;
+	pointer-events: none;
+	background-color: rgba(40, 40, 40, 0.75);
+	color: #fff;
+}
+
+#vrmLoading.visible {
+	display: inline-block;
+}
+
+#vrmLoadingText {
+	font-family: sans-serif;
+	font-size: 16px;
+	padding-top: 10px;
+	white-space: nowrap;
+}
+
+#vrmLoadingBar {
+	position: relative;
+	width: 220px;
+	height: 8px;
+	margin: 12px auto 0;
+	border-radius: 4px;
+	background: rgba(255, 255, 255, 0.25);
+	overflow: hidden;
+}
+
+#vrmLoadingFill {
+	height: 100%;
+	width: 0%;
+	border-radius: 4px;
+	background: #fff;
+	transition: width 0.15s linear;
+}
+
+/* Before the first sized progress event: a sweeping stripe */
+#vrmLoadingBar.indeterminate #vrmLoadingFill {
+	width: 30%;
+	animation: vrm-sweep 1.2s ease-in-out infinite;
+}
+
+@keyframes vrm-sweep {
+	0% {
+		transform: translateX(-100%);
+	}
+	100% {
+		transform: translateX(330%);
+	}
+}
+
+#vrmLoadingHint {
+	font-family: sans-serif;
+	font-size: 12px;
+	opacity: 0.7;
+	padding-top: 8px;
+	white-space: nowrap;
+}
