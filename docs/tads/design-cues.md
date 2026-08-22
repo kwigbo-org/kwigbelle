@@ -11,7 +11,9 @@
 
 All facts below were verified against live sources on 2026-08-22/23;
 everything the display needs is already in local data — this feature
-adds ZERO runtime network calls.
+adds ZERO runtime data/API calls. (The one new network dependency is
+the Google Fonts stylesheet for Inconsolata, Decision 2, with a
+monospace fallback stack if it fails to load.)
 
 **avastars.io visual language** (probed live from the running site):
 
@@ -28,8 +30,10 @@ adds ZERO runtime network calls.
 - Every token has a 1-100 score — it IS the `ranking` field already
   in `Tools/data/hashes.json` (verified: metadata `ranking` equals
   ours for every spot check).
-- Tier bands, verified at ALL FOUR edges against the metadata
-  `level` attribute (tokens 205/225, 245/214, 223/244, 499/10):
+- Tier bands, verified at ALL FOUR edges against the `level`
+  attribute served by the on-chain tokenURI metadata endpoint
+  (https://avastars.io/metadata/{id} — NOT a local hashes.json
+  field; tokens 205/225, 245/214, 223/244, 499/10):
   Common < 33 ≤ Uncommon < 41 ≤ Rare < 50 ≤ Epic < 60 ≤ Legendary.
   Matches the operator's score-scale screenshot exactly.
 - Tier icons (Discord bot embed / avastars.io iconography):
@@ -168,7 +172,7 @@ TraitsSection (extended)
 TraitComposer.compose (extended)
   stamps series/kind/ranking from the hashes entry
 
-Tools/compute-ub.js            (gated Step 4)
+Tools/compute-ub.js            (Step 4; lottery primes #200-25,199)
   -> Tools/data/ub.json  { "<tokenId>": { "u2": n, "u3": n } }
 ```
 
@@ -260,3 +264,9 @@ in Step 3 with no structural change (vrm-viewer TAD unaffected).
   only once promos leave the pool — the exclusion measurably
   matters), 8184 0/10, #200 0/21, #25199 0/18; 3,034 of 25,000
   carry a UB2 combo.
+- 2026-08-23 — Panel round 1 (lite): 1/3 CLEAN. All prose fixes:
+  the zero-network claim narrowed to data/API calls (the
+  Inconsolata stylesheet IS a runtime fetch, with a fallback
+  stack); `level` clarified as the tokenURI metadata attribute,
+  not a hashes.json field; stale "(gated Step 4)" label in the
+  design surface updated to the lottery-prime definition.
