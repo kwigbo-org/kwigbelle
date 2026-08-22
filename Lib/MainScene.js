@@ -387,28 +387,15 @@ export default class MainScene extends Scene {
 			);
 			return;
 		}
-		// Composed path: rebuild layer images at the new size
-		// (fragments are cached in the composer, no refetch). Uses
-		// the current picks so trait overrides survive a resize.
-		const picks = this.currentPicks();
-		if (!picks) {
-			return;
-		}
-		this.traitComposer
-			.composePicks(picks, new Size(width, height))
-			.then((composed) => {
-				if (!this.avastar || this.avastar.tokenId !== resizeToken) {
-					return;
-				}
-				if (width !== this.canvas.width || height !== this.canvas.height) {
-					return;
-				}
-				composed.tokenId = resizeToken;
-				composed.gender = this.baseGender;
-				this.avastar = composed;
-				this.setupLayerSprings();
-			})
-			.catch((error) => console.warn("recompose failed", error));
+		// Composed path: a resize render IS a preview render (the
+		// current picks at the current size), so it goes through
+		// refreshPreview and inherits every staleness guard - preview
+		// generation, baseline identity, token identity, captured
+		// size. That closes the A->B->A hole a token-and-size-only
+		// guard leaves open, and a newer override render always
+		// supersedes an older resize render (fragments are cached in
+		// the composer, no refetch).
+		this.refreshPreview();
 	}
 
 	/// The trait picks currently on display: the loaded token's
