@@ -59,7 +59,11 @@ export default class TraitsSection {
 				const info = avastar.traits[gene];
 				if (info) {
 					this.content.appendChild(
-						this.infoRow(`${info.geneName}: ${info.name}`, info.rarityName),
+						this.infoRow(
+							`${info.geneName}: ${info.name}`,
+							info.rarityName,
+							avastar.geneColors ? avastar.geneColors[gene] : null,
+						),
 					);
 				}
 			}
@@ -93,10 +97,17 @@ export default class TraitsSection {
 		});
 	}
 
-	/// A display-only row: trait name + rarity tag, no checkbox
-	infoRow(label, rarity) {
+	/// A display-only row: color swatch + trait name + rarity tag,
+	/// no checkbox
+	infoRow(label, rarity, color) {
 		const row = document.createElement("div");
 		row.setAttribute("class", "traitRow info");
+		const swatch = document.createElement("span");
+		swatch.setAttribute("class", "traitSwatch");
+		if (color) {
+			swatch.style.backgroundColor = color;
+		}
+		row.appendChild(swatch);
 		const name = document.createElement("span");
 		name.setAttribute("class", "traitName");
 		name.innerText = label;

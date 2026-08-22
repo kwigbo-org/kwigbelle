@@ -215,8 +215,16 @@
 
 .traitRow.info {
 	cursor: default;
-	/* Align names with the checkbox rows below */
-	padding-left: 21px;
+}
+
+/* Sits in the checkbox's slot so names align across rows */
+.traitSwatch {
+	width: 13px;
+	height: 13px;
+	flex: 0 0 13px;
+	border-radius: 50%;
+	border: 1px solid rgba(0, 0, 0, 0.25);
+	background: transparent;
 }
 
 .traitName {

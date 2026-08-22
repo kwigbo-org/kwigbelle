@@ -96,6 +96,16 @@ window.ethereum = {
 	check(traitRows === 12, "expected 12 trait rows, got " + traitRows);
 	check(infoRows === 4, "expected 4 color info rows, got " + infoRows);
 	check(checkboxes === 8, "expected 8 toggleable rows, got " + checkboxes);
+	const swatchColors = await page.evaluate(() =>
+		[...document.querySelectorAll(".traitSwatch")].map(
+			(swatch) => swatch.style.backgroundColor,
+		),
+	);
+	console.log("swatches:", JSON.stringify(swatchColors));
+	check(
+		swatchColors.length === 4 && swatchColors.every((color) => color !== ""),
+		"expected 4 filled color swatches: " + JSON.stringify(swatchColors),
+	);
 
 	// Pause: two frames far apart must be identical, then differ
 	// again once unpaused (the breathing motion resumes)
