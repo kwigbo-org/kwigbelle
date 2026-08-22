@@ -208,6 +208,21 @@
 	cursor: pointer;
 }
 
+/* Wrapped names: pin the checkbox/swatch and rarity tag to the
+   first line instead of floating mid-row */
+.traitRow {
+	align-items: flex-start;
+}
+
+.traitRow input,
+.traitSwatch {
+	margin-top: 2px;
+}
+
+.traitRarity {
+	margin-top: 1px;
+}
+
 .effectRow input[type="range"] {
 	flex: 1;
 	min-width: 0;
@@ -229,9 +244,9 @@
 
 .traitName {
 	flex: 1;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
+	/* Full trait names always show - wrap instead of truncating */
+	overflow-wrap: anywhere;
+	line-height: 1.25;
 }
 
 .traitRarity {
