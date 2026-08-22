@@ -14,11 +14,14 @@ export default class EffectsSection {
 		if (stored) {
 			this.layerSprings.isExplodeEnabled = !!stored.explode;
 			this.layerSprings.isPaused = !!stored.paused;
+			// Clamp to the sliders' ranges so a stale or hand-edited
+			// stored value can't run the rig outside what the
+			// controls display
 			if (Number.isFinite(stored.motion)) {
-				this.layerSprings.motionScale = stored.motion;
+				this.layerSprings.motionScale = Math.max(0, Math.min(3, stored.motion));
 			}
 			if (Number.isFinite(stored.follow)) {
-				this.layerSprings.followScale = stored.follow;
+				this.layerSprings.followScale = Math.max(0, Math.min(2, stored.follow));
 			}
 		}
 		if (explodeOverride !== null) {
@@ -69,13 +72,11 @@ export default class EffectsSection {
 		content.appendChild(
 			this.sliderRow("Motion", 0, 3, this.layerSprings.motionScale, (value) => {
 				this.layerSprings.motionScale = value;
-				this.saveSettings();
 			}),
 		);
 		content.appendChild(
 			this.sliderRow("Follow", 0, 2, this.layerSprings.followScale, (value) => {
 				this.layerSprings.followScale = value;
-				this.saveSettings();
 			}),
 		);
 		return content;
@@ -109,7 +110,10 @@ export default class EffectsSection {
 		slider.max = String(max);
 		slider.step = "0.05";
 		slider.value = String(value);
+		// input drives the rig live while dragging; the localStorage
+		// write happens once on release (change), not per input event
 		slider.addEventListener("input", () => onChange(Number(slider.value)));
+		slider.addEventListener("change", () => this.saveSettings());
 		row.appendChild(slider);
 		return row;
 	}

@@ -15,12 +15,7 @@ export default class SidePanel {
 		this.handle = document.createElement("div");
 		this.handle.setAttribute("id", "panelHandle");
 		this.handle.innerText = "⚙";
-		this.handle.addEventListener(
-			"click",
-			function () {
-				this.toggle();
-			}.bind(this),
-		);
+		this.handle.addEventListener("click", () => this.toggle());
 		this.container.appendChild(this.handle);
 
 		this.sectionList = document.createElement("div");

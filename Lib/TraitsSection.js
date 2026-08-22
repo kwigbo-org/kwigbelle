@@ -7,7 +7,9 @@ export default class TraitsSection {
 	constructor() {
 		this.hiddenLayers = new Set();
 		this.isBackdropHidden = false;
-		this.currentTokenId = null;
+		// undefined (not null): a static-fallback avastar can carry a
+		// null tokenId, and the first update must still build rows
+		this.currentTokenId = undefined;
 		this.content = document.createElement("div");
 		this.content.setAttribute("class", "traitRows");
 	}

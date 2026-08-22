@@ -35,7 +35,10 @@ collaborators, talks to the scene through narrow callbacks,
    - Explode (toggle) — reach multiplier, computed live from depth
      so the toggle works without rebuilding springs. `?explode=1`
      stays as the explicit initializer and wins over the stored
-     setting on that load.
+     setting on that load. Deliberate semantics change from the
+     legacy flag: `?explode=0` now disables (previously any
+     non-empty value, including "0", enabled it) — the intuitive
+     mapping wins over bug-compatibility.
    - Motion (slider 0–3) — scales sway/breathe amplitudes.
    - Follow (slider 0–2) — scales pointer-follow offset.
    - Pause (toggle) — `step()` early-returns; the rig freezes.

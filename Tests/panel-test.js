@@ -90,7 +90,9 @@ const { check } = require("./check.js");
 	// Effects persist: set Motion to 0 and reload
 	await page.getByRole("slider", { name: "Motion" }).evaluate((slider) => {
 		slider.value = "0";
+		// input applies live; change (drag release) persists
 		slider.dispatchEvent(new Event("input", { bubbles: true }));
+		slider.dispatchEvent(new Event("change", { bubbles: true }));
 	});
 	const stored = await page.evaluate(() =>
 		JSON.parse(localStorage.getItem("kwigbelle.effects")),
