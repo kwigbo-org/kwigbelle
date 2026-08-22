@@ -57,11 +57,21 @@ export default class LoadSection {
 			this.error.innerText = "Enter a numeric token id";
 			return;
 		}
+		// A slow membership check (first call loads the library) must
+		// not act on behalf of a submission the user has superseded
+		this.submitGeneration = (this.submitGeneration || 0) + 1;
+		const generation = this.submitGeneration;
 		let isKnown = false;
 		try {
 			isKnown = await this.hasToken(tokenId);
 		} catch (error) {
+			if (generation !== this.submitGeneration) {
+				return;
+			}
 			this.error.innerText = "Could not check that token id — try again";
+			return;
+		}
+		if (generation !== this.submitGeneration) {
 			return;
 		}
 		if (!isKnown) {

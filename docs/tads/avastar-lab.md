@@ -81,7 +81,7 @@ TraitComposer
   async traitsForGene(gene) -> [trait records]      (modal option list)
 
 Lib/LoadSection.js
-  new LoadSection(onLoad(tokenId), hasToken)        section body via build()
+  new LoadSection(hasToken, onLoad(tokenId))        section body via build()
 
 Lib/TraitEditModal.js
   open(gene, currentPick, { gender, showAll, styles }) -> Promise<pick|null>
