@@ -73,6 +73,50 @@ const { check } = require("./check.js");
 	);
 	const currentHighlighted = await page.locator(".modalOption.current").count();
 	check(currentHighlighted === 1, "current trait not highlighted exactly once");
+	await page.waitForTimeout(1500);
+	await page.screenshot({ path: "lab-modal.png" });
+
+	// Text filter: type a visible option's name, expect only matches
+	const sampleName = await page.locator(".modalOptionName").first().innerText();
+	await page.fill(".modalFilterText", sampleName);
+	await page.waitForTimeout(400);
+	const textFiltered = await page.evaluate(
+		(name) =>
+			[...document.querySelectorAll(".modalOptionName")].map(
+				(n) => n.innerText,
+			),
+		sampleName,
+	);
+	check(
+		textFiltered.length > 0 &&
+			textFiltered.every((n) =>
+				n.toLowerCase().includes(sampleName.toLowerCase()),
+			),
+		"text filter returned non-matching options: " +
+			JSON.stringify(textFiltered),
+	);
+	await page.fill(".modalFilterText", "");
+
+	// Rarity filter: pick the first real rarity, expect only that tag
+	const rarityValue = await page.evaluate(() => {
+		const select = document.querySelector(".modalFilterRarity");
+		return select.options[1] ? select.options[1].value : "";
+	});
+	check(rarityValue !== "", "rarity dropdown has no options");
+	await page.selectOption(".modalFilterRarity", rarityValue);
+	await page.waitForTimeout(400);
+	const rarityTags = await page.evaluate(() =>
+		[...document.querySelectorAll(".modalOption .traitRarity")].map(
+			(t) => t.innerText,
+		),
+	);
+	check(
+		rarityTags.length > 0 && rarityTags.every((t) => t === rarityValue),
+		"rarity filter returned non-matching options: " +
+			JSON.stringify(rarityTags.slice(0, 5)),
+	);
+	await page.selectOption(".modalFilterRarity", "");
+	await page.waitForTimeout(400);
 
 	// Pick a different hair style (an option that isn't current)
 	const pickedName = await page

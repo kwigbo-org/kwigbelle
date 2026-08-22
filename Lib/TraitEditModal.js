@@ -81,6 +81,23 @@ export default class TraitEditModal {
 		header.appendChild(close);
 		sheet.appendChild(header);
 
+		// Filter bar: free-text name match + rarity dropdown
+		const filterBar = document.createElement("div");
+		filterBar.setAttribute("class", "modalFilterBar");
+		const textFilter = document.createElement("input");
+		textFilter.setAttribute("class", "modalFilterText");
+		textFilter.type = "text";
+		textFilter.placeholder = "Filter by name";
+		filterBar.appendChild(textFilter);
+		const raritySelect = document.createElement("select");
+		raritySelect.setAttribute("class", "modalFilterRarity");
+		const anyRarity = document.createElement("option");
+		anyRarity.value = "";
+		anyRarity.innerText = "Any rarity";
+		raritySelect.appendChild(anyRarity);
+		filterBar.appendChild(raritySelect);
+		sheet.appendChild(filterBar);
+
 		const grid = document.createElement("div");
 		grid.setAttribute("class", "modalGrid");
 		sheet.appendChild(grid);
@@ -97,20 +114,35 @@ export default class TraitEditModal {
 			done(null);
 			return;
 		}
-		const renderOptions = async (isShowAll) => {
-			// Rapid show-all toggles: only the latest render may keep
+		// Rarity options come from the slot's actual traits, in
+		// ascending rarity order
+		const rarities = [...new Map(all.map((r) => [r.rarity, r.rarityName]))]
+			.sort((a, b) => a[0] - b[0])
+			.map(([, name]) => name);
+		for (const rarityName of rarities) {
+			const option = document.createElement("option");
+			option.value = rarityName;
+			option.innerText = rarityName;
+			raritySelect.appendChild(option);
+		}
+		const renderOptions = async () => {
+			// Rapid filter changes: only the latest render may keep
 			// filling thumbnails; superseded runs stop at their next
 			// batch instead of decoding into detached nodes
 			this.renderGeneration = (this.renderGeneration || 0) + 1;
 			const generation = this.renderGeneration;
 			grid.innerHTML = "";
+			const text = textFilter.value.trim().toLowerCase();
+			const rarity = raritySelect.value;
 			// Gender 0 traits are unisex; a gender-0 base sees all
 			const options = all.filter(
 				(record) =>
-					isShowAll ||
-					record.gender === 0 ||
-					!context.gender ||
-					record.gender === context.gender,
+					(showAllBox.checked ||
+						record.gender === 0 ||
+						!context.gender ||
+						record.gender === context.gender) &&
+					(!rarity || record.rarityName === rarity) &&
+					(!text || record.name.toLowerCase().includes(text)),
 			);
 			const tiles = options.map((record) =>
 				this.optionTile(record, gene, currentPick, context, done),
@@ -131,10 +163,10 @@ export default class TraitEditModal {
 				);
 			}
 		};
-		showAllBox.addEventListener("change", () =>
-			renderOptions(showAllBox.checked),
-		);
-		renderOptions(false);
+		showAllBox.addEventListener("change", () => renderOptions());
+		textFilter.addEventListener("input", () => renderOptions());
+		raritySelect.addEventListener("change", () => renderOptions());
+		renderOptions();
 	}
 
 	/// One selectable option: preview area (thumbnail or swatch),
@@ -184,7 +216,7 @@ export default class TraitEditModal {
 					`<svg xmlns="http://www.w3.org/2000/svg" ` +
 					`xmlns:xlink="http://www.w3.org/1999/xlink" ` +
 					`preserveAspectRatio="xMidYMid meet" ` +
-					`width="88" height="88" viewBox="0 0 1000 1000">` +
+					`width="160" height="160" viewBox="0 0 1000 1000">` +
 					context.styles +
 					fragment +
 					"</svg>";
