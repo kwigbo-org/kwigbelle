@@ -63,11 +63,13 @@ const { check } = require("./check.js");
 	// errors2 instead of double-reporting into both arrays.
 	page.removeAllListeners("pageerror");
 	page.removeAllListeners("console");
+	page.removeAllListeners("dialog");
 	const errors2 = [];
 	page.on("pageerror", (e) => errors2.push(e.message));
 	page.on("console", (m) => {
 		if (m.type() === "error") errors2.push("console: " + m.text());
 	});
+	page.on("dialog", (d) => { errors2.push("dialog: " + d.message()); d.dismiss(); });
 	await page.goto("http://localhost:8741/index.html?tokenid=8014&traitcompose=0");
 	await page.waitForFunction(
 		() => document.getElementById("preloader")?.style.opacity === "0",
@@ -91,6 +93,7 @@ const { check } = require("./check.js");
 	page3.on("console", (m) => {
 		if (m.type() === "warning" && m.text().includes("legacy path")) warns.push(m.text());
 	});
+	page3.on("dialog", (d) => { errors3.push("dialog: " + d.message()); d.dismiss(); });
 	await page3.route("**/Traits/index.json", (route) => route.abort());
 	await page3.goto("http://localhost:8741/index.html?tokenid=8014");
 	await page3.waitForFunction(
