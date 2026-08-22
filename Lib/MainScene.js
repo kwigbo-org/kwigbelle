@@ -6,6 +6,9 @@ import TraitComposer from "./TraitComposer.js";
 import LayerSprings from "./LayerSprings.js";
 import PickerUI from "./PickerUI.js";
 import WalletConnectUI from "./WalletConnectUI.js";
+import SidePanel from "./SidePanel.js";
+import EffectsSection from "./EffectsSection.js";
+import TraitsSection from "./TraitsSection.js";
 import { svgToImage } from "./UIHelpers.js";
 
 /// The Avastars scene: load orchestration and rendering. The
@@ -16,20 +19,32 @@ export default class MainScene extends Scene {
 	/// Overridden constructor
 	constructor(rootContainer) {
 		super(rootContainer);
-		console.log("kwigbelle build 2026-08-22.3 (legacy retired)");
+		console.log("kwigbelle build 2026-08-22.4 (side panel)");
 		// Build the UI
 		this.buildUI();
 		// Start loading
 		this.isLoading = true;
 		// Check url params for a "tokenId"
 		const urlParams = new URLSearchParams(window.location.search.toLowerCase());
-		this.isExplodeEnabled = urlParams.get("explode");
 		// Trait composition is THE render path
 		// (docs/tads/trait-composition.md + retire-legacy.md): layers
 		// come from the committed trait library; on failure the token
 		// degrades to a single static full-render layer.
 		this.traitComposer = new TraitComposer();
-		this.layerSprings = new LayerSprings(this.isExplodeEnabled);
+		this.layerSprings = new LayerSprings(false);
+		// The right-side panel: effects controls drive the spring rig
+		// (?explode=1, when explicitly present, wins over the stored
+		// setting); trait rows drive per-layer visibility that the
+		// render loop consults each frame
+		const explodeParam = urlParams.get("explode");
+		this.sidePanel = new SidePanel(rootContainer);
+		this.effectsSection = new EffectsSection(
+			this.layerSprings,
+			explodeParam !== null ? explodeParam !== "0" : null,
+		);
+		this.sidePanel.addSection("Effects", this.effectsSection.build());
+		this.traitsSection = new TraitsSection();
+		this.sidePanel.addSection("Traits", this.traitsSection.build());
 		// Object used to load the Avastar SVG from on chain
 		this.avastarLoader = new AvastarLoader(null);
 		// Overlay UI components: picks and connects come back into
@@ -262,6 +277,7 @@ export default class MainScene extends Scene {
 		this.isLoading = false;
 		this.preloader.style.opacity = 0;
 		this.pickerUI.updateSelectedThumbnail();
+		this.traitsSection.update(this.avastar);
 	}
 
 	/// Load a picked Avastar and collapse the picker. The current
@@ -373,8 +389,12 @@ export default class MainScene extends Scene {
 		this.lastFrameTime = now;
 		dt = Math.min(dt, 1 / 30);
 
-		// The static fallback has no separate background layer
-		if (this.avastar.backgroundLayer) {
+		// The static fallback has no separate background layer, and
+		// the traits panel can hide the backdrop
+		if (
+			this.avastar.backgroundLayer &&
+			this.traitsSection.isBackdropVisible()
+		) {
 			context.drawImage(
 				this.avastar.backgroundLayer,
 				0,
@@ -395,6 +415,11 @@ export default class MainScene extends Scene {
 			this.isTouchDown ? this.touchPoint : null,
 		);
 		for (let index = 0; index < this.avastar.layers.length; index++) {
+			// Hidden layers keep their springs (indices stay stable);
+			// they just aren't drawn
+			if (!this.traitsSection.isLayerVisible(index)) {
+				continue;
+			}
 			const spring = this.layerSprings.at(index);
 			context.drawImage(
 				this.avastar.layers[index],
