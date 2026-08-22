@@ -544,6 +544,9 @@ export default class MainScene extends Scene {
 			if (generation !== this.vrmGeneration) {
 				return;
 			}
+			// Bytes are down; parsing ~9MB takes a beat of its own -
+			// keep the overlay honest instead of freezing at 100%
+			this.viewToggle.setPhase("Preparing model…");
 			await this.vrmViewer.show(bytes);
 			if (generation !== this.vrmGeneration) {
 				// Superseded during the async parse (a token load or

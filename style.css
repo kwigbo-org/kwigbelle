@@ -643,3 +643,66 @@
 	opacity: 0.7;
 	cursor: default;
 }
+
+/* VRM loading overlay: unmistakable center-screen feedback for the
+   ~9MB fetch + parse (the button percent alone was too subtle) */
+#vrmLoading {
+	display: none;
+	z-index: 15;
+	text-align: center;
+	pointer-events: none;
+	background-color: rgba(40, 40, 40, 0.75);
+	color: #fff;
+}
+
+#vrmLoading.visible {
+	display: inline-block;
+}
+
+#vrmLoadingText {
+	font-family: sans-serif;
+	font-size: 16px;
+	padding-top: 10px;
+	white-space: nowrap;
+}
+
+#vrmLoadingBar {
+	position: relative;
+	width: 220px;
+	height: 8px;
+	margin: 12px auto 0;
+	border-radius: 4px;
+	background: rgba(255, 255, 255, 0.25);
+	overflow: hidden;
+}
+
+#vrmLoadingFill {
+	height: 100%;
+	width: 0%;
+	border-radius: 4px;
+	background: #fff;
+	transition: width 0.15s linear;
+}
+
+/* Before the first sized progress event: a sweeping stripe */
+#vrmLoadingBar.indeterminate #vrmLoadingFill {
+	width: 30%;
+	animation: vrm-sweep 1.2s ease-in-out infinite;
+}
+
+@keyframes vrm-sweep {
+	0% {
+		transform: translateX(-100%);
+	}
+	100% {
+		transform: translateX(330%);
+	}
+}
+
+#vrmLoadingHint {
+	font-family: sans-serif;
+	font-size: 12px;
+	opacity: 0.7;
+	padding-top: 8px;
+	white-space: nowrap;
+}

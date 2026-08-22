@@ -132,6 +132,12 @@ async function ensureFixture() {
 	check(gatewayHits === 1, "expected exactly one model fetch");
 	const toggleIn3D = await page.locator("#viewToggle").innerText();
 	check(toggleIn3D === "2D", "toggle should read 2D in 3D mode");
+	check(
+		!(await page.evaluate(() =>
+			document.getElementById("vrmLoading").classList.contains("visible"),
+		)),
+		"loading overlay still visible after 3D mounted",
+	);
 	await page.screenshot({ path: "vrm-3d.png" });
 
 	// Back to vector: 3D canvas unmounts, vector canvas draws again
@@ -182,6 +188,21 @@ async function ensureFixture() {
 		/%|MB|…/.test(loadingText),
 		"no progress indication while loading: " + loadingText,
 	);
+	// The center-screen overlay is the load's primary feedback
+	const overlay = await page.evaluate(() => ({
+		visible: document
+			.getElementById("vrmLoading")
+			.classList.contains("visible"),
+		text: document.getElementById("vrmLoadingText").innerText,
+		hasBar: !!document.getElementById("vrmLoadingBar"),
+	}));
+	console.log("loading overlay:", JSON.stringify(overlay));
+	check(overlay.visible, "loading overlay not shown during fetch");
+	check(
+		overlay.text.includes("Loading 3D model"),
+		"overlay text wrong: " + overlay.text,
+	);
+	check(overlay.hasBar, "loading overlay has no progress bar");
 	await page.click("#viewToggle");
 	await page.waitForTimeout(1500);
 	check(
@@ -191,6 +212,12 @@ async function ensureFixture() {
 	check(
 		(await page.locator("#viewToggle").innerText()) === "3D",
 		"toggle not back to 3D after cancel",
+	);
+	check(
+		!(await page.evaluate(() =>
+			document.getElementById("vrmLoading").classList.contains("visible"),
+		)),
+		"loading overlay stuck after cancel",
 	);
 
 	// A token load mid-fetch supersedes the 3D entry: the stale
