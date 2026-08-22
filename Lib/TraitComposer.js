@@ -102,6 +102,9 @@ export default class TraitComposer {
 			layerInfo.push(picks[gene]);
 		}
 		return {
+			// The token this composition belongs to: consumers guard
+			// stale async results against it
+			tokenId: String(tokenId),
 			// Backdrop (gene 4) stretches to fill like the parser's
 			// background bucket did
 			backgroundLayer: this.toImage(styles + fragments[4], true, displaySize),

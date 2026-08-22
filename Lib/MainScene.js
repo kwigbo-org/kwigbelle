@@ -325,16 +325,19 @@ export default class MainScene extends Scene {
 			// Composed path: rebuild layer images at the new size
 			// (fragments are cached in the composer, no refetch).
 			// The load generation is NOT bumped - a resize must not
-			// invalidate a pending token load. Staleness is guarded
-			// by captured size (a newer resize wins) and generation
-			// (a newer token load wins).
-			const generation = this.loadGeneration;
+			// invalidate a pending token load. Staleness guards:
+			// captured size (a newer resize wins), and TOKEN identity
+			// (recomposing the currently displayed token must never
+			// overwrite a token load that completed in the interim).
+			const recomposeToken = this.avastar.tokenId;
 			const width = this.canvas.width;
 			const height = this.canvas.height;
 			this.traitComposer
-				.compose(this.avastarLoader.tokenId, new Size(width, height))
+				.compose(recomposeToken, new Size(width, height))
 				.then((composed) => {
-					if (generation !== this.loadGeneration) return;
+					if (!this.avastar || this.avastar.tokenId !== recomposeToken) {
+						return;
+					}
 					if (
 						width !== this.canvas.width ||
 						height !== this.canvas.height
