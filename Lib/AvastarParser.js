@@ -42,11 +42,7 @@ export default class AvastarParser {
 			const searchKeys = searchLayers[searchKeysIndex];
 			const reference = referenceNodes[index];
 			if (!this.objectIsOfType(reference, searchKeys)) {
-				const sliced = this.slice(
-					svgChildren,
-					lastStartIndex,
-					reference.index
-				);
+				const sliced = this.slice(svgChildren, lastStartIndex, reference.index);
 				if (this.debug) {
 					console.log(`=============`);
 					console.log("++ Slicing Layer ++");
@@ -62,11 +58,7 @@ export default class AvastarParser {
 		}
 
 		// Final slice
-		const sliced = this.slice(
-			svgChildren,
-			lastStartIndex,
-			svgChildren.length
-		);
+		const sliced = this.slice(svgChildren, lastStartIndex, svgChildren.length);
 		this.renderPaths.push(sliced);
 
 		if (this.debug) {
@@ -82,10 +74,7 @@ export default class AvastarParser {
 		if (this.debug) {
 			let nodeCount = 0;
 			for (const index in this.renderPaths) {
-				const renderPath = this.renderPaths[index];
-				for (const pathIndex in renderPath) {
-					nodeCount++;
-				}
+				nodeCount += this.renderPaths[index].length;
 			}
 			console.log(`=============`);
 			console.log("++ Validating Node Count ++");
@@ -164,7 +153,7 @@ export default class AvastarParser {
 				}
 				if (node.children && node.children.length > 0) {
 					returnNodes = returnNodes.concat(
-						this.nodeWithReference(node.children, currentIndex)
+						this.nodeWithReference(node.children, currentIndex),
 					);
 				}
 			}

@@ -57,7 +57,7 @@ window.ethereum = {
 	await page.goto("http://localhost:8741/index.html");
 	await page.waitForFunction(
 		() => document.getElementById("preloader")?.style.opacity === "0",
-		{ timeout: 15000 }
+		{ timeout: 15000 },
 	);
 	// Wait for the background wallet flow: picker built, auto-swap
 	// to the first owned Avastar done (thumbnail image present)
@@ -76,14 +76,17 @@ window.ethereum = {
 	check(collapsed.hasPicker, "picker not built");
 	check(collapsed.thumbHasImg, "current thumbnail has no image");
 	check(!collapsed.listVisible, "picker list expanded before any tap");
-	check(collapsed.itemCount === 3, "expected 3 owned items, got " + collapsed.itemCount);
+	check(
+		collapsed.itemCount === 3,
+		"expected 3 owned items, got " + collapsed.itemCount,
+	);
 	await page.screenshot({ path: "picker-collapsed.png" });
 
 	// Expand: all three owned Avastars listed, thumbnails render in
 	await page.click(".pickerThumb.current");
 	await page.waitForFunction(
 		() => document.querySelectorAll("#pickerList img").length === 3,
-		{ timeout: 15000 }
+		{ timeout: 15000 },
 	);
 	await page.screenshot({ path: "picker-expanded.png" });
 
@@ -92,28 +95,23 @@ window.ethereum = {
 	// load actually completes (the same-token guard skips the rebuild),
 	// so a changed img src is the evidence the pick took effect.
 	const thumbSrcBefore = await page.evaluate(
-		() => document.querySelector(".pickerThumb.current img").src
+		() => document.querySelector(".pickerThumb.current img").src,
 	);
-	await page
-		.locator("#pickerList .pickerThumb")
-		.nth(1)
-		.click();
+	await page.locator("#pickerList .pickerThumb").nth(1).click();
 	await page.waitForFunction(
 		() =>
-			!document
-				.getElementById("pickerList")
-				.classList.contains("expanded") &&
+			!document.getElementById("pickerList").classList.contains("expanded") &&
 			document.getElementById("preloader")?.style.opacity === "0",
-		{ timeout: 15000 }
+		{ timeout: 15000 },
 	);
 	await page.waitForTimeout(800);
 	const thumbSrcAfter = await page.evaluate(
-		() => document.querySelector(".pickerThumb.current img").src
+		() => document.querySelector(".pickerThumb.current img").src,
 	);
 	console.log("pick reloaded thumbnail:", thumbSrcAfter !== thumbSrcBefore);
 	check(
 		thumbSrcAfter !== thumbSrcBefore,
-		"picking the second Avastar did not reload the current thumbnail"
+		"picking the second Avastar did not reload the current thumbnail",
 	);
 	await page.screenshot({ path: "picker-picked.png" });
 

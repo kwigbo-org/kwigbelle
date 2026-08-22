@@ -58,7 +58,9 @@ announce();
 
 (async () => {
 	const browser = await chromium.launch({ channel: "chrome", headless: true });
-	const context = await browser.newContext({ viewport: { width: 800, height: 600 } });
+	const context = await browser.newContext({
+		viewport: { width: 800, height: 600 },
+	});
 	const page = await context.newPage();
 	const alerts = [];
 	const pageErrors = [];
@@ -72,7 +74,7 @@ announce();
 	await page.goto("http://localhost:8741/index.html");
 	await page.waitForFunction(
 		() => document.getElementById("preloader")?.style.opacity === "0",
-		{ timeout: 15000 }
+		{ timeout: 15000 },
 	);
 	await page.waitForSelector(".connectButton", { timeout: 10000 });
 
@@ -80,12 +82,12 @@ announce();
 	await page.click(".connectButton");
 	await page.waitForSelector("#walletList", { timeout: 5000 });
 	const names = await page.evaluate(() =>
-		[...document.querySelectorAll(".walletRow span")].map((s) => s.innerText)
+		[...document.querySelectorAll(".walletRow span")].map((s) => s.innerText),
 	);
 	console.log("chooser lists:", JSON.stringify(names));
 	check(
 		JSON.stringify(names) === JSON.stringify(["RabbyMock", "HotMock"]),
-		"chooser did not list both wallets: " + JSON.stringify(names)
+		"chooser did not list both wallets: " + JSON.stringify(names),
 	);
 	await page.screenshot({ path: "wallet-chooser.png" });
 
@@ -94,12 +96,15 @@ announce();
 	await page.waitForSelector(".pickerThumb.current img", { timeout: 20000 });
 	const rabbyPrompts = await page.evaluate(() => window.__rabbyPrompts);
 	const stored = await page.evaluate(() =>
-		localStorage.getItem("kwigbelle.wallet")
+		localStorage.getItem("kwigbelle.wallet"),
 	);
 	console.log(
-		`picked HotMock: picker up, rabbyPrompts=${rabbyPrompts}, stored=${JSON.stringify(stored)}`
+		`picked HotMock: picker up, rabbyPrompts=${rabbyPrompts}, stored=${JSON.stringify(stored)}`,
 	);
-	check(rabbyPrompts === 0, "unchosen wallet was prompted " + rabbyPrompts + "x");
+	check(
+		rabbyPrompts === 0,
+		"unchosen wallet was prompted " + rabbyPrompts + "x",
+	);
 	check(stored === "io.mock.hotmock", "choice not persisted: " + stored);
 
 	// Reload: the stored choice + authorized account should go
@@ -107,10 +112,10 @@ announce();
 	await page.reload();
 	await page.waitForSelector(".pickerThumb.current img", { timeout: 20000 });
 	const buttonAfter = await page.evaluate(
-		() => !!document.querySelector(".connectButton")
+		() => !!document.querySelector(".connectButton"),
 	);
 	console.log(
-		`after reload: picker restored, connectButton=${buttonAfter}, alerts=${JSON.stringify(alerts)} pageErrors=${JSON.stringify(pageErrors)}`
+		`after reload: picker restored, connectButton=${buttonAfter}, alerts=${JSON.stringify(alerts)} pageErrors=${JSON.stringify(pageErrors)}`,
 	);
 	check(!buttonAfter, "connect button reappeared after reload");
 	check(alerts.length === 0, "alerts: " + JSON.stringify(alerts));

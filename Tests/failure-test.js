@@ -63,7 +63,7 @@ async function run(name, opts) {
 	try {
 		await page.waitForFunction(
 			() => document.getElementById("preloader")?.style.opacity === "0",
-			{ timeout: 15000 }
+			{ timeout: 15000 },
 		);
 	} catch {
 		loaded = false;
@@ -81,7 +81,7 @@ async function run(name, opts) {
 		})(),
 	}));
 	console.log(
-		`${name}: loaded=${loaded} avatarDrawn=${state.canvasDrawn} picker=${state.picker} alerts=${JSON.stringify(alerts)} pageErrors=${JSON.stringify(pageErrors)}`
+		`${name}: loaded=${loaded} avatarDrawn=${state.canvasDrawn} picker=${state.picker} alerts=${JSON.stringify(alerts)} pageErrors=${JSON.stringify(pageErrors)}`,
 	);
 	// Trait composition renders without the chain, so every scenario —
 	// including wrong chain and failing render RPC — must still load
@@ -89,7 +89,10 @@ async function run(name, opts) {
 	check(loaded, `${name}: preloader never cleared`);
 	check(state.canvasDrawn, `${name}: avatar not drawn`);
 	check(alerts.length === 0, `${name}: alerts: ` + JSON.stringify(alerts));
-	check(pageErrors.length === 0, `${name}: page errors: ` + JSON.stringify(pageErrors));
+	check(
+		pageErrors.length === 0,
+		`${name}: page errors: ` + JSON.stringify(pageErrors),
+	);
 	await browser.close();
 }
 

@@ -14,7 +14,7 @@ const { check } = require("./check.js");
 	// Wait for the preloader to fade (load + parse complete)
 	await page.waitForFunction(
 		() => document.getElementById("preloader")?.style.opacity === "0",
-		{ timeout: 15000 }
+		{ timeout: 15000 },
 	);
 	// Let the springs settle into the idle breathing loop
 	await page.waitForTimeout(1500);
