@@ -17,8 +17,7 @@ on-chain renderer and validated byte-for-byte against it (see
 ./deploy.sh -w        # build to ~/Sites and serve at 127.0.0.1:8000
 ```
 
-URL flags: `?tokenid=N` · `?traitcompose=0` (legacy render path) ·
-`?explode=1` · `?parserdebug=1`
+URL flags: `?tokenid=N` · `?explode=1`
 
 Tests: see [Tests/README.md](Tests/README.md).
 Lint/format: `npm install` once, then `npm run check` (local only).

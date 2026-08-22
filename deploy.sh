@@ -60,6 +60,16 @@ do
     esac
 done
 
+# Corpus freshness: warn-only, deploys must keep working offline.
+# The site composes from Tools/data/hashes.json; tokens minted after
+# that snapshot cannot render until it is refreshed (see
+# Tools/check-corpus.js). AVASTARS_RPC_URL is tooling-only and never
+# ships with the site.
+if [ -n "$AVASTARS_RPC_URL" ] && command -v node >/dev/null 2>&1; then
+   node Tools/check-corpus.js || \
+      echo "WARNING: continuing deploy despite the corpus warning above" >&2
+fi
+
 # Clean Phase
 rm -rf build
 mkdir build

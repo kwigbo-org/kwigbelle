@@ -18,17 +18,17 @@ Lib/PickerUI.js            owned-Avastars picker overlay
 Lib/WalletConnectUI.js     wallet button, multi-wallet chooser,
                            connect/switch flow
 Lib/UIHelpers.js           stopSceneEvents, svgToImage
-Lib/vendor/                vendored minified libs (web3, css.js) -
-                           never lint/format/edit
-Lib/TraitComposer.js       DEFAULT render path: composes any of the
+Lib/vendor/                vendored minified libs (web3) - never
+                           lint/format/edit
+Lib/TraitComposer.js       THE render path: composes any of the
                            26,617 Avastars from Traits/ + the static
-                           hash corpus - no wallet, no chain calls
+                           hash corpus - no wallet, no chain calls.
+                           On failure MainScene degrades to a single
+                           static full-render layer (retire-legacy
+                           TAD); the old heuristic parser is GONE
 Lib/AvastarLoader.js       wallet integration: EIP-6963 discovery,
                            chain guard, owned-token enumeration,
-                           legacy on-chain renderAvastar loading
-Lib/AvastarParser.js       LEGACY layer slicer (heuristic, known
-                           unsound - see the TAD); kept only as the
-                           automatic fallback + ?traitcompose=0 path
+                           renderAvastar for thumbnails + fallback
 Lib/Scene.js, DisplayLoop.js, Point.js, Size.js   small scene plumbing
 Traits/                    committed trait library: 614 SVG fragments
                            (Traits/0/<traitId>.svg), index.json
@@ -40,6 +40,9 @@ Tools/extract-traits.js    rebuilds Traits/ from a coverage corpus;
                            --verify checks staleness against the chain
 Tools/validate-composition.js  held-out byte-parity vs renderAvastar;
                            --absorb feeds failures back as evidence
+Tools/check-corpus.js      totalSupply vs hashes.json staleness;
+                           --update refreshes; deploy.sh runs it
+                           warn-only when AVASTARS_RPC_URL is set
 Tests/                     headless-Chrome harness (see Tests/README.md)
 SVG/                       8 bundled fallback Avastars (pretty-printed
                            saves; chain output is minified - compare
@@ -48,8 +51,7 @@ docs/tads/                 frozen TADs (design history)
 feedback/                  gitignored operator progress log
 ```
 
-URL flags: `?tokenid=N` (any token), `?traitcompose=0` (legacy path),
-`?explode=1`, `?parserdebug=1`.
+URL flags: `?tokenid=N` (any token), `?explode=1`.
 
 ## Ground rules learned the hard way
 

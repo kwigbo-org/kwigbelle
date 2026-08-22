@@ -1,5 +1,9 @@
 /// Class used to load an Avastar SVG from the blockchain
 export default class AvastarLoader {
+	/// Token ids with SVGs bundled in SVG/ — the offline fallback
+	/// data (deploy.sh ships the SVG/ directory)
+	static BUNDLED_TOKEN_IDS = [8014, 25495, 25470, 25505, 21022];
+
 	/// Create a new loader and pass a token id
 	constructor(tokenId) {
 		this.tokenId = tokenId;
@@ -226,86 +230,36 @@ export default class AvastarLoader {
 		return true;
 	}
 
-	/// Method used to initialize the load of the Avastar tokenId
+	/// Fetch the best available full-render SVG for a token, used
+	/// when trait composition fails: the on-chain render when a
+	/// mainnet wallet is connected, else a bundled SVG (substituting
+	/// a random bundled Avastar when the exact token has none).
+	/// Callers display the result as a single static layer — nothing
+	/// slices it.
 	///
-	/// - Parameter complete: The method called when load is complete
-	async load(complete) {
-		let onChain = false;
+	/// - Parameter tokenId: The token id to fetch
+	/// - Returns: The SVG string
+	async fallbackSVG(tokenId) {
 		try {
-			onChain = await this.connect();
-		} catch (error) {
-			console.error("Wallet connect failed", error);
-		}
-		try {
-			if (onChain) {
-				await this.loadOnChainAvastarSVG(complete);
-			} else {
-				await this.loadLocalAvastarSVG(complete);
+			if (await this.connect()) {
+				return await this.renderTokenSVG(tokenId);
 			}
 		} catch (error) {
-			// A rejected fetch (offline, server down) must not
-			// strand the preloader: recover the UI
-			console.error(`Avastar load failed for ${this.tokenId}`, error);
-			complete();
+			console.error(`On chain render failed for Avastar ${tokenId}`, error);
 		}
-	}
-
-	/// Switch to another token and load it
-	///
-	/// - Parameters:
-	///		- tokenId: The token id to switch to
-	///		- complete: The method called when load is complete
-	loadToken(tokenId, complete) {
-		this.tokenId = tokenId;
-		this.load(complete);
-	}
-
-	/// Method used to load an Avastar from a local SVG
-	///
-	/// - Parameter complete: The Method called when the Avastar is loaded
-	async loadLocalAvastarSVG(complete) {
-		const requestedToken = this.tokenId;
-		let myAvastar = await fetch(`./SVG/Avastar-${requestedToken}.svg`);
-		if (!myAvastar.ok) {
-			alert(`Avastar not found ${requestedToken}`);
-			// Recover the UI (hide the preloader, keep the
-			// previously loaded Avastar on screen)
-			complete();
-			return;
-		}
-		let svgString = await myAvastar.text();
-		// A newer loadToken may have started while this fetch was in
-		// flight: never let a stale load overwrite the current Avastar
-		if (String(this.tokenId) === String(requestedToken)) {
-			this.currentAvastar = svgString;
-		}
-		complete();
-	}
-
-	/// Method used to load an Avastar from the blockchain.
-	/// Falls back to a bundled local SVG when the on chain
-	/// render fails (RPC limits, rate limiting).
-	///
-	/// - Parameter complete: The Method called when the Avastar is loaded
-	async loadOnChainAvastarSVG(complete) {
-		const requestedToken = this.tokenId;
-		let svgString = null;
-		try {
-			svgString = await this.renderTokenSVG(requestedToken);
-		} catch (error) {
-			console.error(
-				`On chain render failed for Avastar ${requestedToken}`,
-				error,
+		let response = await fetch(`./SVG/Avastar-${tokenId}.svg`);
+		if (!response.ok) {
+			const bundled = AvastarLoader.BUNDLED_TOKEN_IDS;
+			const randomId = bundled[Math.floor(Math.random() * bundled.length)];
+			console.warn(
+				`No SVG available for ${tokenId}, showing bundled Avastar ${randomId}`,
 			);
-			await this.loadLocalAvastarSVG(complete);
-			return;
+			response = await fetch(`./SVG/Avastar-${randomId}.svg`);
 		}
-		// A newer loadToken may have started while the render was in
-		// flight: never let a stale load overwrite the current Avastar
-		if (String(this.tokenId) === String(requestedToken)) {
-			this.currentAvastar = svgString;
+		if (!response.ok) {
+			throw new Error(`no fallback SVG for ${tokenId}`);
 		}
-		complete(svgString);
+		return response.text();
 	}
 
 	/// Render a token's SVG from the contract without changing
