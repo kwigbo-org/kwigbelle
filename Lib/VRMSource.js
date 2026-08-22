@@ -25,13 +25,16 @@ export default class VRMSource {
 	/// metadata endpoint (cached per token; the endpoint echoes the
 	/// requesting origin, so the browser can call it directly)
 	///
-	/// - Parameter tokenId: The token to look up
-	async vrmInfo(tokenId) {
+	/// - Parameters:
+	///		- tokenId: The token to look up
+	///		- signal: Optional AbortSignal - a cancel must cover the
+	///			metadata phase too, not just the byte download
+	async vrmInfo(tokenId, signal) {
 		const key = String(tokenId);
 		if (this.infoCache.has(key)) {
 			return this.infoCache.get(key);
 		}
-		const response = await fetch(this.metadataURL + key);
+		const response = await fetch(this.metadataURL + key, { signal });
 		if (!response.ok) {
 			throw new Error(`metadata request failed (HTTP ${response.status})`);
 		}
@@ -79,7 +82,7 @@ export default class VRMSource {
 			this.bytesCache.set(key, bytes);
 			return bytes;
 		}
-		const info = await this.vrmInfo(tokenId);
+		const info = await this.vrmInfo(tokenId, signal);
 		let lastError = null;
 		for (const url of this.candidateURLs(info.url)) {
 			try {

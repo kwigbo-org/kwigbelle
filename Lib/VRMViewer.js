@@ -139,6 +139,11 @@ export default class VRMViewer {
 			this.vrm = null;
 		}
 		if (this.renderer) {
+			// Release the GL context eagerly: dispose alone leaves it
+			// alive until the detached canvas is collected, and rapid
+			// vector<->3D toggling would accumulate live contexts
+			// until the browser starts evicting with warnings
+			this.renderer.forceContextLoss();
 			this.renderer.dispose();
 			this.renderer = null;
 		}

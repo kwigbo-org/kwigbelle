@@ -327,3 +327,15 @@ may restyle the toggle/section it introduces.
   toggle callback pair collapsed into MainScene.setVRMMode keeping
   button and section in step (no separate setProgress plumbing on
   ViewToggleUI beyond the shared progressText helper).
+- 2026-08-22 — Operator QA: the button-only loading indicator was
+  too subtle. Added a center-screen overlay (site spinner + phase
+  line + progress bar + cancel hint): indeterminate sweep until the
+  first sized progress event, live percent after, distinct
+  "Preparing model…" parse phase. Operator QA +1.
+- 2026-08-22 — Panel round 3 on the implementation: 2/4 (opus-4-7
+  and Codex CLEAN). Both LOWs fixed as fix-pushes: (a) the abort
+  signal now covers the metadata fetch too, not just the byte
+  download (vrm-source-test asserts no endpoint sees a request from
+  a pre-aborted call); (b) hide() calls forceContextLoss() before
+  renderer.dispose() so rapid toggling can't accumulate live GL
+  contexts.

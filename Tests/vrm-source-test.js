@@ -164,11 +164,15 @@ const { check } = require("./check.js");
 		}
 	});
 	check(abort === "AbortError", "abort did not rethrow: " + abort);
-	// An aborted signal rejects before any request is issued, and
-	// must not advance to another gateway either
+	// An aborted signal rejects before any request is issued - the
+	// signal covers the metadata phase too, so NO endpoint (metadata
+	// or gateway) may see a request
 	check(
-		hits.pinata === 3 && hits.ipfsio === 2 && hits.dweb === 1,
-		"abort advanced gateways anyway: " + JSON.stringify(hits),
+		hits.metadata === 3 &&
+			hits.pinata === 3 &&
+			hits.ipfsio === 2 &&
+			hits.dweb === 1,
+		"abort still issued a request: " + JSON.stringify(hits),
 	);
 
 	console.log("errors:", errors.length ? errors : "none");
