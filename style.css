@@ -134,14 +134,16 @@
 	/* Sits just left of the sliding column */
 	transform: translateX(-100%);
 	position: absolute;
-	padding: 10px 12px;
-	border-radius: 16px 0 0 16px;
+	/* Sized to read as a peer of the 64px picker thumbnail */
+	padding: 14px 16px;
+	border-radius: 20px 0 0 20px;
 	border: 2px solid #fff;
 	border-right: none;
 	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
 	background: rgba(255, 255, 255, 0.6);
 	color: #333;
-	font-size: 18px;
+	font-size: 30px;
+	line-height: 1;
 	cursor: pointer;
 	-webkit-tap-highlight-color: transparent;
 }
