@@ -17,6 +17,12 @@ Lib/LayerSprings.js        spring physics: per-depth params +
 Lib/PickerUI.js            owned-Avastars picker overlay
 Lib/WalletConnectUI.js     wallet button, multi-wallet chooser,
                            connect/switch flow
+Lib/SidePanel.js           right-side collapsible panel; sections
+                           register via addSection(title, element)
+Lib/EffectsSection.js      spring-rig controls (explode, motion,
+                           follow, pause); localStorage persisted
+Lib/TraitsSection.js       per-layer trait rows + visibility the
+                           render loop consults each frame
 Lib/UIHelpers.js           stopSceneEvents, svgToImage
 Lib/vendor/                vendored minified libs (web3) - never
                            lint/format/edit

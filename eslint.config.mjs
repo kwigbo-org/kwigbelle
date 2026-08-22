@@ -66,6 +66,7 @@ export default [
 				sessionStorage: "readonly",
 				localStorage: "readonly",
 				CustomEvent: "readonly",
+				Event: "readonly",
 				Web3: "readonly",
 			},
 		},
