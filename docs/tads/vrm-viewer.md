@@ -52,9 +52,15 @@ loaded token, entered and left via a toggle.
      bare `three`)
    - `Lib/vendor/three-vrm/LICENSE` (MIT)
 
-   `index.html` gains `<script type="importmap">` mapping bare
-   `"three"` to the vendored build (import maps are supported by
-   every browser that already runs this site's ES modules).
+   `index.html` gains `<script type="importmap">` in `<head>`,
+   mapping bare `"three"` to the vendored build. Placement is
+   load-bearing: the HTML spec requires an import map to appear
+   before ANY `<script type="module">` in document order (the
+   site's module script is in `<body>`, so `<head>` satisfies
+   this). Import maps are supported by every currently-supported
+   evergreen browser (Safari 16.4+ is the baseline — later than
+   ES-module support itself, but years shipped by now; no
+   fallback is provided for older browsers).
    First-party code imports GLTFLoader/OrbitControls by relative
    path, so no `three/addons/` mapping is needed. ~1.1MB added;
    vendored files are never edited (existing rule), excluded from
@@ -94,9 +100,14 @@ loaded token, entered and left via a toggle.
    facing, camera auto-framed from the model's bounding box,
    `vrm.update(dt)` each frame (drives spring-bone hair/cloth
    where models have them). The viewer runs its own rAF loop while
-   mounted; the 2D `render()` early-returns while 3D is active
-   (DisplayLoop keeps ticking — drawing is the only thing paused,
-   so leaving 3D resumes the springs where they were). `hide()`
+   mounted; the 2D `render()` early-returns while 3D is active.
+   Because `layerSprings.step()` runs inside `render()`, that
+   early return pauses BOTH the spring physics and the drawing —
+   deliberate: nothing 2D is visible in 3D mode, and paused
+   springs keep their state, so leaving 3D resumes them exactly
+   where they were (same behavior as the existing "Pause motion"
+   effect). The frame-time clamp already prevents a re-entry
+   lurch, exactly as it does for a background tab. `hide()`
    stops the loop, unmounts the canvas, and disposes the model +
    renderer. A glTF that parses but carries no VRM extension is
    treated as a load failure, not silently shown.
@@ -124,6 +135,9 @@ loaded token, entered and left via a toggle.
    - Load section: stays available. Loading any token EXITS 3D
      mode back to vector (the load flow is vector-native; the
      user opts into 3D per token — no surprise 9MB downloads).
+     `beginLoad` is the single choke point, so this covers every
+     load path — the Load section, a picker pick, and the silent
+     wallet auto-swap alike.
    - `SidePanel.addSection` returns the section element so the
      scene can show/hide sections by mode.
 7. **"3D model" panel section content:** a short note (what the
@@ -157,9 +171,12 @@ loaded token, entered and left via a toggle.
     local JSON fixture and the gateway URLs from a local `.vrm`
     file; one scenario 504s the first gateway to prove fallback.
     The real 8014 VRM (~9.3MB) is downloaded once into
-    `Tests/fixtures/` (gitignored — same precedent as the
-    `Tools/data/renders/` corpus cache) on first run and reused
-    after; if that first-run download fails the test FAILS with a
+    `Tests/fixtures/` on first run and reused after.
+    `/Tests/fixtures/` is NOT in `.gitignore` today — adding it
+    is an explicit Step 2 action (same precedent as the already-
+    ignored `Tools/data/renders/` corpus cache), or the first
+    test run would stage a 9MB binary. If that first-run
+    download fails the test FAILS with a
     message naming the network cause — no silent skip. Headless
     Chrome renders WebGL via SwiftShader; the harness asserts a
     non-blank 3D canvas.
@@ -219,7 +236,9 @@ MainScene (extended)
    Rollback: delete the vendor dirs + the importmap block; no
    first-party code references them yet.
 2. **VRMSource (metadata → gateways → cache → progress).**
-   Action: new module per the design surface.
+   Action: new module per the design surface; add
+   `/Tests/fixtures/` to `.gitignore` before the first harness
+   run (Decision 10).
    Validate: new harness test with routed fixtures — happy path
    returns bytes with progress callbacks; first-gateway 504 falls
    through to the second; all-fail rejects; metadata + bytes are
@@ -267,3 +286,14 @@ may restyle the toggle/section it introduces.
   limited 3D settings + owner download) and the live-verified
   discovery notes; opened for panel review before implementation
   (pattern (a)).
+- 2026-08-22 — Panel round 1 (lite, docs-only scope):
+  STATUS:FINDINGS (0/3). All prose-accuracy, all fixed: (a) the
+  render() early-return pauses spring physics along with drawing
+  (step runs inside render()) — Decision 4 now says so and calls
+  the freeze deliberate; (b) `Tests/fixtures/` claimed gitignored
+  but isn't — now an explicit Step 2 action; (c) import-map
+  placement constraint (must precede any module script → head)
+  made explicit; (d) import-map browser-support claim softened to
+  the real baseline (Safari 16.4+); (e) noted beginLoad is the
+  single choke point, so picker picks and the silent wallet swap
+  exit 3D too, not just the Load section.
