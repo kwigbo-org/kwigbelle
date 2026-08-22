@@ -3,7 +3,18 @@
 Interactive Avastars display site (kwigbelle.com). Static — no build
 step, no framework: ES modules served as-is. An Avastar renders on a
 canvas as independently-moving layers (spring physics, idle
-breathing, pointer follow), with a wallet picker for owned tokens.
+breathing, pointer follow), with a wallet picker for owned tokens
+and a side panel: load-any-token, effects controls, trait sheet
+with visibility toggles, and a trait swap preview.
+
+Project purpose (operator, 2026-08-22): jump-start interest in
+Avastars. The replicant factory is CLOSED and the contract is
+LOCKED — no new mints are possible, so the hash corpus (26,617) is
+effectively frozen (check-corpus should always report fresh) and
+everything trait-swap related is preview-only by nature, not just
+by policy. Declared next directions: match avastars.io design cues
+(dark theme, their rarity iconography) and explore a VRM 3D viewer
+(each Avastar has an assigned VRM model; toggle vector <-> 3D).
 
 ## Architecture
 

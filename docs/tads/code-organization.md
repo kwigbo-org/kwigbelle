@@ -1,6 +1,7 @@
 # TAD: Code organization & style tooling
 
-- **Status:** PROPOSED (2026-08-22)
+- **Status:** IMPLEMENTED (2026-08-22, PR #4) — frozen as
+  historical record
 - **Driver:** Operator wants to move to new features on organized
   ground: "I want styles and code organized." Constraint: **no
   GitHub Actions / paid CI** — everything runs locally.
