@@ -9,6 +9,51 @@ export default class TraitEditModal {
 	/// - Parameter traitComposer: Source of trait records + fragments
 	constructor(traitComposer) {
 		this.traitComposer = traitComposer;
+		// traitId -> viewBox crop, so bboxes measure once
+		this.cropCache = new Map();
+	}
+
+	/// The viewBox that frames a trait's actual artwork. Fragments
+	/// draw at their natural position on the 1000x1000 face canvas,
+	/// so a nose rendered full-frame is a speck - the thumbnail must
+	/// zoom to the art's bounding box.
+	///
+	/// - Parameters:
+	///		- record: The trait record (cache key)
+	///		- fragment: Its SVG fragment
+	/// - Returns: A "x y w h" viewBox string
+	cropFor(record, fragment) {
+		if (this.cropCache.has(record.traitId)) {
+			return this.cropCache.get(record.traitId);
+		}
+		const FULL = "0 0 1000 1000";
+		let crop = FULL;
+		const svgNS = "http://www.w3.org/2000/svg";
+		const host = document.createElementNS(svgNS, "svg");
+		host.setAttribute("viewBox", FULL);
+		host.style.position = "absolute";
+		host.style.left = "-99999px";
+		host.style.width = "1000px";
+		host.style.height = "1000px";
+		try {
+			host.innerHTML = fragment;
+			document.body.appendChild(host);
+			const box = host.getBBox();
+			if (box && box.width > 0 && box.height > 0) {
+				// Square crop centered on the art, 30% breathing room,
+				// floored so tiny marks keep a little face context
+				const size = Math.max(Math.max(box.width, box.height) * 1.3, 140);
+				const x = box.x + box.width / 2 - size / 2;
+				const y = box.y + box.height / 2 - size / 2;
+				crop = `${x} ${y} ${size} ${size}`;
+			}
+		} catch (error) {
+			// getBBox unavailable: fall back to the full canvas
+		} finally {
+			host.remove();
+		}
+		this.cropCache.set(record.traitId, crop);
+		return crop;
 	}
 
 	/// Show the chooser for one gene slot.
@@ -71,7 +116,7 @@ export default class TraitEditModal {
 		showAllBox.type = "checkbox";
 		showAll.appendChild(showAllBox);
 		const showAllText = document.createElement("span");
-		showAllText.innerText = "show all";
+		showAllText.innerText = "all genders";
 		showAll.appendChild(showAllText);
 		header.appendChild(showAll);
 		const close = document.createElement("span");
@@ -96,6 +141,13 @@ export default class TraitEditModal {
 		anyRarity.innerText = "Any rarity";
 		raritySelect.appendChild(anyRarity);
 		filterBar.appendChild(raritySelect);
+		const seriesSelect = document.createElement("select");
+		seriesSelect.setAttribute("class", "modalFilterSeries");
+		const anySeries = document.createElement("option");
+		anySeries.value = "";
+		anySeries.innerText = "Any series";
+		seriesSelect.appendChild(anySeries);
+		filterBar.appendChild(seriesSelect);
 		sheet.appendChild(filterBar);
 
 		const grid = document.createElement("div");
@@ -125,6 +177,17 @@ export default class TraitEditModal {
 			option.innerText = rarityName;
 			raritySelect.appendChild(option);
 		}
+		// Series values are 0-based on chain (0-4), shown as 1-5;
+		// options come from the series this slot's traits appear in
+		const seriesValues = [
+			...new Set(all.flatMap((record) => record.series || [])),
+		].sort((a, b) => a - b);
+		for (const value of seriesValues) {
+			const option = document.createElement("option");
+			option.value = String(value);
+			option.innerText = `Series ${value + 1}`;
+			seriesSelect.appendChild(option);
+		}
 		const renderOptions = async () => {
 			// Rapid filter changes: only the latest render may keep
 			// filling thumbnails; superseded runs stop at their next
@@ -134,6 +197,7 @@ export default class TraitEditModal {
 			grid.innerHTML = "";
 			const text = textFilter.value.trim().toLowerCase();
 			const rarity = raritySelect.value;
+			const series = seriesSelect.value;
 			// Gender 0 traits are unisex; a gender-0 base sees all
 			const options = all.filter(
 				(record) =>
@@ -142,6 +206,7 @@ export default class TraitEditModal {
 						!context.gender ||
 						record.gender === context.gender) &&
 					(!rarity || record.rarityName === rarity) &&
+					(series === "" || (record.series || []).includes(Number(series))) &&
 					(!text || record.name.toLowerCase().includes(text)),
 			);
 			const tiles = options.map((record) =>
@@ -166,6 +231,7 @@ export default class TraitEditModal {
 		showAllBox.addEventListener("change", () => renderOptions());
 		textFilter.addEventListener("input", () => renderOptions());
 		raritySelect.addEventListener("change", () => renderOptions());
+		seriesSelect.addEventListener("change", () => renderOptions());
 		renderOptions();
 	}
 
@@ -211,12 +277,14 @@ export default class TraitEditModal {
 					return;
 				}
 				// Art slots: the real fragment styled with the CURRENT
-				// Avastar's colors, so the preview is true to this face
+				// Avastar's colors, zoomed to the art's bounding box so
+				// small features (noses, studs) fill the tile
+				const crop = this.cropFor(record, fragment);
 				const svg =
 					`<svg xmlns="http://www.w3.org/2000/svg" ` +
 					`xmlns:xlink="http://www.w3.org/1999/xlink" ` +
 					`preserveAspectRatio="xMidYMid meet" ` +
-					`width="160" height="160" viewBox="0 0 1000 1000">` +
+					`width="160" height="160" viewBox="${crop}">` +
 					context.styles +
 					fragment +
 					"</svg>";

@@ -166,3 +166,13 @@ Single-lane feature; no cross-lane consumers.
   Reset-all restore the exact baseline frame; visibility toggles
   work on overridden layers; a token load clears overrides. Suite
   10/10.
+- 2026-08-22 — Operator QA on the modal: (a) filter bar added (free
+  text + rarity + series); (b) thumbnails were structurally tiny -
+  fragments draw at their natural position on the 1000x1000 face
+  canvas, so tile size alone couldn't help; thumbnails now zoom to
+  the art's measured bounding box (getBBox, cached per traitId,
+  square crop with 30% pad, 140-unit floor); (c) "show all" renamed
+  "all genders". Series was not in Traits/index.json - it IS in the
+  on-chain TraitInfo (word 2, uint8[] 0-based); extract-traits.js
+  now decodes it and the library index was regenerated (fragments
+  byte-identical, index gains the series field).

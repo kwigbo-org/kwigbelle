@@ -118,6 +118,40 @@ const { check } = require("./check.js");
 	await page.selectOption(".modalFilterRarity", "");
 	await page.waitForTimeout(400);
 
+	// Series filter: pick the first real series, expect every shown
+	// option to carry it (verified against the library index)
+	const seriesValue = await page.evaluate(() => {
+		const select = document.querySelector(".modalFilterSeries");
+		return select.options[1] ? select.options[1].value : "";
+	});
+	check(seriesValue !== "", "series dropdown has no options");
+	await page.selectOption(".modalFilterSeries", seriesValue);
+	await page.waitForTimeout(400);
+	const seriesCheck = await page.evaluate(async (value) => {
+		const shown = [...document.querySelectorAll(".modalOptionName")].map(
+			(n) => n.innerText,
+		);
+		const index = await (await fetch("./Traits/index.json")).json();
+		const inSeries = new Set(
+			Object.values(index)
+				.filter(
+					(t) => t.gene === 11 && (t.series || []).includes(Number(value)),
+				)
+				.map((t) => t.name),
+		);
+		return {
+			count: shown.length,
+			allMatch: shown.every((name) => inSeries.has(name)),
+		};
+	}, seriesValue);
+	console.log("series filter:", JSON.stringify(seriesCheck));
+	check(
+		seriesCheck.count > 0 && seriesCheck.allMatch,
+		"series filter returned non-matching options",
+	);
+	await page.selectOption(".modalFilterSeries", "");
+	await page.waitForTimeout(400);
+
 	// Pick a different hair style (an option that isn't current)
 	const pickedName = await page
 		.locator(".modalOption:not(.current) .modalOptionName")

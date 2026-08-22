@@ -452,7 +452,8 @@
 	font-family: inherit;
 }
 
-.modalFilterRarity {
+.modalFilterRarity,
+.modalFilterSeries {
 	padding: 8px 10px;
 	border-radius: 10px;
 	border: 1px solid rgba(0, 0, 0, 0.2);
