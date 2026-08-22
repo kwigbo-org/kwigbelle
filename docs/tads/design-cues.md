@@ -61,13 +61,15 @@ bot that could have disambiguated NO LONGER FUNCTIONS (operator,
 2026-08-23), so the historical formula is unrecoverable — and with
 the bot gone, there is no live authority to stay consistent with.
 Resolution: kwigbelle defines its own transparent metric — all 12
-traits, uniqueness over the PRIME population only (#0-25,199, the
-last prime minted; operator 2026-08-23) — labeled as such in the
-UI. Replicants are excluded from the comparison population AND
-from the metric itself: they are assembled from burned prime
-traits, so uniqueness-as-mint-lottery does not apply to them (a
-different mechanism by design). The corpus is frozen, so the
-counts are computed ONCE and never change.
+traits, uniqueness over the LOTTERY-PRIME population only
+(#200-25,199; operator 2026-08-23). Excluded from both the
+comparison population and the metric itself, because none of them
+played the same mint lottery:
+- Founders #0-99 and Exclusives #100-199: hand-picked traits.
+- Replicants #25,200+: assembled from burned prime traits.
+All three still show score/tier/distribution — only the
+Unique-By line is lottery-prime-only. The corpus is frozen, so
+the counts are computed ONCE and never change.
 
 ## Decisions
 
@@ -96,9 +98,13 @@ counts are computed ONCE and never change.
    SVG in options) but its labels keep the tier names.
 4. **Identity card at the top of the Traits section**, shown in
    both vector and 3D (read-only) modes — it is informational:
-   - "Avastar #N" title + kind chip ("Prime" / "Replicant")
+   - "Avastar #N" title + kind chip: "Prime" / "Replicant" /
+     "Founder" (#0-99) / "Exclusive" (#100-199) — the promo
+     sub-kinds are pure token-id ranges from the Gen-1 series
+     sheet
    - "Gen 1 · Series N" chip tinted with that series' color
-     (replicants: neutral "Replicant" chip only)
+     (replicants: neutral "Replicant" chip only; Founder/
+     Exclusive chips take the Series-0 teal)
    - "Score N" + tier icon + tier name, tinted by band (the
      verified band edges above)
    - Trait distribution row: the five tier icons each with the
@@ -116,24 +122,28 @@ counts are computed ONCE and never change.
    but the distribution row reflects the DISPLAYED traits —
    consistent with cards showing overridden values, and the
    preview-only note already sits right there.
-6. **UB counts: a PRIME-ONLY metric with kwigbelle's own
+6. **UB counts: a LOTTERY-PRIME metric with kwigbelle's own
    transparent definition.** The historical bot formula is
    unrecoverable (bot defunct), so the metric is defined here: a
-   UB-N combo is a set of N of a prime's 12 traits
-   (gene:variation pairs) worn by NO other prime among #0-25,199.
+   UB-N combo is a set of N of a token's 12 traits
+   (gene:variation pairs) worn by NO other token among the
+   lottery primes #200-25,199. Founders, Exclusives, and
    Replicants neither dilute the population nor receive the
-   metric (Context above; operator directive) — their identity
-   card shows kind/series-less chip, score+tier, and the
-   distribution row, with no Unique-By line. `Tools/compute-ub.js`
-   precomputes per-prime UB2/UB3 combo counts into
-   `Tools/data/ub.json` (committed, `-diff`, shipped by deploy.sh
-   alongside hashes.json); the identity card's line carries a
-   muted "(all 12 traits, among primes)" qualifier so the numbers
-   are never mistaken for the old bot's. Known deltas from the
-   dead bot's output are expected (e.g. #8184: ours 10 UB3 combos
-   prime-scoped, bot said 0) and documented here, not hidden.
-   Locally-computed anchors for validation: #8014 u2 0 / u3 40,
-   #8184 u2 0 / u3 10, #0 u2 0 / u3 195.
+   metric (Context above; operator directives) — their identity
+   cards show their kind chip, score+tier, and the distribution
+   row, with no Unique-By line. `Tools/compute-ub.js` precomputes
+   per-token UB2/UB3 combo counts into `Tools/data/ub.json`
+   (committed, `-diff`, shipped by deploy.sh alongside
+   hashes.json); the identity card's line carries a muted
+   "(all 12 traits, among Series 1-5 primes)" qualifier so the
+   numbers are never mistaken for the old bot's. Known deltas
+   from the dead bot's output are expected (e.g. #8184: ours 10
+   UB3 combos, bot said 0) and documented here, not hidden.
+   Locally-computed anchors for validation: #8014 u2 1 / u3 41,
+   #8184 u2 0 / u3 10, #200 u2 0 / u3 21, #25199 u2 0 / u3 18;
+   3,034 of the 25,000 lottery primes carry at least one UB2
+   combo. (Excluding the hand-picked promos measurably matters:
+   #8014's unique pair only exists once they're out of the pool.)
 7. **Out of scope:** layout redesign or avastars.io content/nav
    mimicry; the dotted starfield background (possible later
    accent); score-meter widget (their tool UI, not a site cue);
@@ -191,16 +201,17 @@ Tools/compute-ub.js            (gated Step 4)
    Rollback: style.css + index.html font link revert.
 4. **UB counts (kwigbelle definition per Decision 6; corpus
    frozen so this computes once).**
-   Action: Tools/compute-ub.js (primes #0-25,199 only); ub.json
-   committed + `-diff`; deploy.sh ships it next to hashes.json;
-   identity card gains the Unique-By line with the "(all 12
-   traits, among primes)" qualifier; replicant cards omit it.
+   Action: Tools/compute-ub.js (lottery primes #200-25,199
+   only); ub.json committed + `-diff`; deploy.sh ships it next
+   to hashes.json; identity card gains the Unique-By line with
+   the "(all 12 traits, among Series 1-5 primes)" qualifier;
+   Founder/Exclusive/Replicant cards omit it.
    Validate: script re-run is byte-identical (determinism);
    internal invariants (u2 <= C(12,2), u3 <= C(12,3), a token
    with a u2 combo has >= 10 u3 combos containing it); ub.json
-   has exactly 25,200 entries; harness asserts the line for the
-   anchors (8014: u2 0 / u3 40) and its ABSENCE on a replicant;
-   `./deploy.sh -w` serves ub.json.
+   has exactly 25,000 entries; harness asserts the line for the
+   anchors (8014: u2 1 / u3 41) and its ABSENCE on a founder
+   (#50) and a replicant; `./deploy.sh -w` serves ub.json.
    Rollback: remove the line + file; deploy.sh line revert
    (risk-sensitive file - minimal one-line diff).
 
@@ -240,3 +251,12 @@ in Step 3 with no structural change (vrm-viewer TAD unaffected).
   apply). Anchors recomputed prime-scoped: 8014 u2 0/u3 40, 8184
   u2 0/u3 10, founder #0 u2 0/u3 195. Score+tier display remains
   for replicants (they carry their own ranking).
+- 2026-08-23 — Operator: Founders #0-99 and Exclusives #100-199
+  have HAND-PICKED traits — not the same lottery — and are also
+  excluded from rarity. UB population re-scoped to the lottery
+  primes #200-25,199 (25,000 tokens); promo cards (new Founder/
+  Exclusive kind chips) omit the Unique-By line like replicants.
+  Anchors recomputed: 8014 u2 1/u3 41 (the unique pair appears
+  only once promos leave the pool — the exclusion measurably
+  matters), 8184 0/10, #200 0/21, #25199 0/18; 3,034 of 25,000
+  carry a UB2 combo.
