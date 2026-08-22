@@ -248,6 +248,11 @@ export default class MainScene extends Scene {
 	beginLoad(loadFunction, tokenId) {
 		this.loadGeneration = (this.loadGeneration || 0) + 1;
 		const generation = this.loadGeneration;
+		// Synchronous record of the latest REQUEST: async paths only
+		// update loader state on success, and the same-token guard
+		// must reflect what the user last asked for, not what last
+		// finished loading
+		this.requestedTokenId = tokenId != null ? String(tokenId) : null;
 		const complete = function () {
 			if (generation !== this.loadGeneration) {
 				return;
@@ -564,7 +569,16 @@ export default class MainScene extends Scene {
 	///			the automatic swap to the wallet's first Avastar)
 	selectAvastar(tokenId, isSilent) {
 		this.pickerList.classList.remove("expanded");
-		if (String(tokenId) === String(this.avastarLoader.tokenId)) {
+		// Guard against the latest REQUESTED token (recorded
+		// synchronously in beginLoad), not the loader's last
+		// completed one - re-picking the displayed token while a
+		// different load is in flight must start a fresh load that
+		// supersedes it
+		const current =
+			this.requestedTokenId != null
+				? this.requestedTokenId
+				: String(this.avastarLoader.tokenId);
+		if (String(tokenId) === current) {
 			return;
 		}
 		if (!isSilent) {
