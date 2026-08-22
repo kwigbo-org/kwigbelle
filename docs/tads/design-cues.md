@@ -56,11 +56,14 @@ continue, so all-12 is definitively NOT the bot's definition);
 restricting to the 7 art genes (5-11) or art+backdrop (4-11) both
 give 0 for #8184 but disagree on other tokens (8014: 0 vs 3). The
 written guides say colors CAN participate ("unique by Eye Color
-and Skin Tone"), contradicting the art-only subsets. Resolution
-path: the operator runs the Discord bot (`!rarity 8014`, and
-ideally `!rarity 21022`) and the reported UB3 counts disambiguate
-the gene subset. The corpus is frozen, so once pinned, UB counts
-are computed ONCE and never change.
+and Skin Tone"), contradicting the art-only subsets. The Discord
+bot that could have disambiguated NO LONGER FUNCTIONS (operator,
+2026-08-23), so the historical formula is unrecoverable — and with
+the bot gone, there is no live authority to stay consistent with.
+Resolution: kwigbelle defines its own transparent metric — all 12
+traits, uniqueness over the full frozen 26,617 population —
+labeled as such in the UI. The corpus is frozen, so the counts are
+computed ONCE and never change.
 
 ## Decisions
 
@@ -109,15 +112,18 @@ are computed ONCE and never change.
    but the distribution row reflects the DISPLAYED traits —
    consistent with cards showing overridden values, and the
    preview-only note already sits right there.
-6. **UB counts (gated step).** `Tools/compute-ub.js` precomputes
-   per-token UB2/UB3 combo counts into `Tools/data/ub.json`
-   (committed, `-diff`, shipped by deploy.sh alongside
-   hashes.json) and the identity card gains a "Unique-By" line —
-   ONLY once the operator's bot samples pin the gene subset. If
-   the samples stay unavailable, fallback decision: ship with the
-   transparent definition "all 12 traits, all 26,617 tokens" and
-   label it as such in the card. Until then this step does not
-   start.
+6. **UB counts with kwigbelle's own transparent definition.** The
+   historical bot formula is unrecoverable (bot defunct), so the
+   metric is defined here: a UB-N combo is a set of N of the
+   token's 12 traits (gene:variation pairs) worn by NO other token
+   among all 26,617. `Tools/compute-ub.js` precomputes per-token
+   UB2/UB3 combo counts into `Tools/data/ub.json` (committed,
+   `-diff`, shipped by deploy.sh alongside hashes.json); the
+   identity card gains a "Unique-By" line with a muted "(all 12
+   traits)" qualifier so the numbers are never mistaken for the
+   old bot's. Known deltas from the dead bot's output are expected
+   (e.g. #8184: ours 6 UB3 combos, bot said 0) and documented
+   here, not hidden.
 7. **Out of scope:** layout redesign or avastars.io content/nav
    mimicry; the dotted starfield background (possible later
    accent); score-meter widget (their tool UI, not a site cue);
@@ -173,14 +179,16 @@ Tools/compute-ub.js            (gated Step 4)
    pass on 127.0.0.1:8000 across panel/modal/picker/3D flows;
    screenshots archived in the PR for operator QA.
    Rollback: style.css + index.html font link revert.
-4. **UB counts (GATED on the operator's bot samples pinning the
-   definition; corpus frozen so this computes once).**
+4. **UB counts (kwigbelle definition per Decision 6; corpus
+   frozen so this computes once).**
    Action: Tools/compute-ub.js; ub.json committed + `-diff`;
    deploy.sh ships it next to hashes.json; identity card gains
-   the Unique-By line.
-   Validate: recompute matches the operator-provided bot samples
-   exactly; harness asserts the line for a token with known
-   counts; `./deploy.sh -w` serves ub.json.
+   the Unique-By line with the "(all 12 traits)" qualifier.
+   Validate: script re-run is byte-identical (determinism);
+   internal invariants (u2 <= C(12,2), u3 <= C(12,3), a token
+   with a u2 combo has >= 10 u3 combos containing it); harness
+   asserts the line for a token with locally-known counts (8014:
+   u2 0, u3 40); `./deploy.sh -w` serves ub.json.
    Rollback: remove the line + file; deploy.sh line revert
    (risk-sensitive file - minimal one-line diff).
 
@@ -205,3 +213,9 @@ in Step 3 with no structural change (vrm-viewer TAD unaffected).
   variants fit #8184 but need a second sample) — Step 4 gated on
   operator bot samples. Opened for panel review before
   implementation (pattern (a)).
+- 2026-08-23 — Operator: the Discord bot no longer functions, so
+  the historical UB formula is unrecoverable. Decision 6 updated:
+  kwigbelle defines its own transparent metric (all 12 traits,
+  full frozen population, labeled in the UI); Step 4 un-gated
+  with determinism/invariant validation replacing the bot
+  cross-check.
