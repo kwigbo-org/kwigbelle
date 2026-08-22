@@ -1,0 +1,14 @@
+{
+	"name": "kwigbelle",
+	"private": true,
+	"description": "Dev tooling only - the site itself has no build step and no runtime dependencies",
+	"scripts": {
+		"lint": "eslint .",
+		"format": "prettier --write .",
+		"check": "eslint . && prettier --check ."
+	},
+	"devDependencies": {
+		"eslint": "^9.0.0",
+		"prettier": "^3.0.0"
+	}
+}

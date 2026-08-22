@@ -1,0 +1,14 @@
+Lib/vendor/
+Traits/
+SVG/
+Tools/data/
+build/
+Tests/node_modules/
+node_modules/
+package-lock.json
+Tests/package-lock.json
+favicon/
+manifest.json
+Lib/Avastars-ABI.json
+docs/tads/
+Lib/AvastarsMetaData-ABI.json

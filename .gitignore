@@ -6,3 +6,4 @@
 /Tools/data/known-debug.json
 /Tests/node_modules/
 /Tests/*.png
+/node_modules/
