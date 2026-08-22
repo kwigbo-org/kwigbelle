@@ -18,6 +18,11 @@ export default class PickerUI {
 	///
 	/// - Parameter tokenIds: The owned token ids to list
 	build(tokenIds) {
+		// Rebuilding must not orphan a previous picker element and
+		// its live listeners in the DOM
+		if (this.picker) {
+			this.picker.remove();
+		}
 		this.ownedTokenIds = tokenIds;
 		this.thumbnailCache = {};
 		this.pickerItems = {};

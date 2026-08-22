@@ -24,7 +24,7 @@ export default class WalletConnectUI {
 			return;
 		}
 		this.connectContainer = document.createElement("div");
-		this.connectContainer.setAttribute("id", "avastarPicker");
+		this.connectContainer.setAttribute("id", "walletConnect");
 		stopSceneEvents(this.connectContainer);
 		const button = document.createElement("div");
 		button.setAttribute("class", "connectButton");
