@@ -1,6 +1,8 @@
-// TAD Step 4 harness: ?traitcompose=1 renders from the committed
-// library with no wallet, layers carry trait metadata, and the
-// composed full SVG byte-matches the bundled on-chain render.
+// Trait composition harness: the site renders from the committed
+// library with no wallet, layers carry trait metadata, the composed
+// full SVG content-matches the bundled on-chain render, and a
+// library failure degrades to the single-static-layer fallback
+// (docs/tads/retire-legacy.md) instead of a dead preloader.
 const { chromium } = require("playwright-core");
 const { check } = require("./check.js");
 
@@ -11,7 +13,7 @@ const { check } = require("./check.js");
 	page.on("pageerror", (e) => errors.push("pageerror: " + e.message));
 	page.on("console", (m) => {
 		if (m.type() === "error") errors.push("console: " + m.text());
-		if (m.type() === "warning" && m.text().includes("legacy path"))
+		if (m.type() === "warning" && m.text().includes("static fallback"))
 			errors.push("FELL BACK: " + m.text());
 	});
 	page.on("dialog", (d) => {
@@ -19,10 +21,8 @@ const { check } = require("./check.js");
 		d.dismiss();
 	});
 
-	// No wallet, explicit token, composition on
-	await page.goto(
-		"http://localhost:8741/index.html?tokenid=8014&traitcompose=1",
-	);
+	// No wallet, explicit token
+	await page.goto("http://localhost:8741/index.html?tokenid=8014");
 	await page.waitForFunction(
 		() => document.getElementById("preloader")?.style.opacity === "0",
 		{ timeout: 15000 },
@@ -70,50 +70,8 @@ const { check } = require("./check.js");
 	check(!!state.backgroundColor, "no background color extracted");
 	check(errors.length === 0, "page errors: " + JSON.stringify(errors));
 
-	// Regression: explicit opt-out must keep the legacy path working.
-	// Detach the nav-1 listeners first so nav-2 events land only in
-	// errors2 instead of double-reporting into both arrays.
-	page.removeAllListeners("pageerror");
-	page.removeAllListeners("console");
-	page.removeAllListeners("dialog");
-	const errors2 = [];
-	page.on("pageerror", (e) => errors2.push(e.message));
-	page.on("console", (m) => {
-		if (m.type() === "error") errors2.push("console: " + m.text());
-	});
-	page.on("dialog", (d) => {
-		errors2.push("dialog: " + d.message());
-		d.dismiss();
-	});
-	await page.goto(
-		"http://localhost:8741/index.html?tokenid=8014&traitcompose=0",
-	);
-	await page.waitForFunction(
-		() => document.getElementById("preloader")?.style.opacity === "0",
-		{ timeout: 15000 },
-	);
-	await page.waitForTimeout(800);
-	const legacyDrawn = await page.evaluate(() => {
-		const c = document.getElementById("mainCanvas");
-		return (
-			c.getContext("2d").getImageData(c.width / 2, c.height / 2, 1, 1)
-				.data[3] !== 0
-		);
-	});
-	console.log(
-		"legacy opt-out drawn:",
-		legacyDrawn,
-		"errors:",
-		errors2.length ? errors2 : "none",
-	);
-	check(legacyDrawn, "legacy opt-out did not draw");
-	check(
-		errors2.length === 0,
-		"opt-out page errors: " + JSON.stringify(errors2),
-	);
-
-	// Forced failure: library unreachable -> automatic fallback to
-	// the legacy path, with the console warn as evidence
+	// Forced failure: library unreachable -> single static layer
+	// fallback, with the console warn as evidence
 	const page3 = await browser.newPage({
 		viewport: { width: 800, height: 600 },
 	});
@@ -121,7 +79,7 @@ const { check } = require("./check.js");
 	const errors3 = [];
 	page3.on("pageerror", (e) => errors3.push(e.message));
 	page3.on("console", (m) => {
-		if (m.type() === "warning" && m.text().includes("legacy path"))
+		if (m.type() === "warning" && m.text().includes("static fallback"))
 			warns.push(m.text());
 	});
 	page3.on("dialog", (d) => {
@@ -135,23 +93,24 @@ const { check } = require("./check.js");
 		{ timeout: 15000 },
 	);
 	await page3.waitForTimeout(800);
-	const fallbackDrawn = await page3.evaluate(() => {
+	const fallback = await page3.evaluate(() => {
 		const c = document.getElementById("mainCanvas");
-		return (
-			c.getContext("2d").getImageData(c.width / 2, c.height / 2, 1, 1)
-				.data[3] !== 0
-		);
+		return {
+			drawn:
+				c.getContext("2d").getImageData(c.width / 2, c.height / 2, 1, 1)
+					.data[3] !== 0,
+		};
 	});
 	console.log(
-		"forced-failure fallback drawn:",
-		fallbackDrawn,
+		"forced-failure static fallback drawn:",
+		fallback.drawn,
 		"warned:",
 		warns.length > 0,
 		"errors:",
 		errors3.length ? errors3 : "none",
 	);
-	check(fallbackDrawn, "forced-failure fallback did not draw");
-	check(warns.length > 0, "fallback happened without the legacy-path warn");
+	check(fallback.drawn, "static fallback did not draw");
+	check(warns.length > 0, "fallback happened without the static-fallback warn");
 	check(
 		errors3.length === 0,
 		"fallback page errors: " + JSON.stringify(errors3),

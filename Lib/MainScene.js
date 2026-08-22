@@ -1,12 +1,12 @@
 import Scene from "./Scene.js";
 import Size from "./Size.js";
 import Point from "./Point.js";
-import AvastarParser from "./AvastarParser.js";
 import AvastarLoader from "./AvastarLoader.js";
 import TraitComposer from "./TraitComposer.js";
 import LayerSprings from "./LayerSprings.js";
 import PickerUI from "./PickerUI.js";
 import WalletConnectUI from "./WalletConnectUI.js";
+import { svgToImage } from "./UIHelpers.js";
 
 /// The Avastars scene: load orchestration and rendering. The
 /// overlay UI lives in PickerUI/WalletConnectUI and the physics in
@@ -16,20 +16,18 @@ export default class MainScene extends Scene {
 	/// Overridden constructor
 	constructor(rootContainer) {
 		super(rootContainer);
-		console.log("kwigbelle build 2026-08-22.2 (code organization)");
+		console.log("kwigbelle build 2026-08-22.3 (legacy retired)");
 		// Build the UI
 		this.buildUI();
 		// Start loading
 		this.isLoading = true;
 		// Check url params for a "tokenId"
 		const urlParams = new URLSearchParams(window.location.search.toLowerCase());
-		this.isParserDebugEnabled = urlParams.get("parserdebug");
 		this.isExplodeEnabled = urlParams.get("explode");
-		// Trait composition is the default (TAD Step 5): layers come
-		// from the committed trait library, with the legacy on-chain
-		// render + parser slicing as automatic fallback. Opt out via
-		// ?traitcompose=0 (docs/tads/trait-composition.md).
-		this.isTraitComposeEnabled = urlParams.get("traitcompose") !== "0";
+		// Trait composition is THE render path
+		// (docs/tads/trait-composition.md + retire-legacy.md): layers
+		// come from the committed trait library; on failure the token
+		// degrades to a single static full-render layer.
 		this.traitComposer = new TraitComposer();
 		this.layerSprings = new LayerSprings(this.isExplodeEnabled);
 		// Object used to load the Avastar SVG from on chain
@@ -58,30 +56,15 @@ export default class MainScene extends Scene {
 	///
 	/// - Parameter tokenParam: The tokenid url param, if any
 	async initialLoad(tokenParam) {
-		const hasWallet = await this.avastarLoader.hasWallet();
-		if (tokenParam && (hasWallet || this.isTraitComposeEnabled)) {
-			// Fallback must stay valid without a wallet: loadToken
-			// needs one, so walletless composition failures degrade
-			// to a bundled Avastar instead of a dead preloader
-			const fallback = hasWallet
-				? (complete) => this.avastarLoader.loadToken(tokenParam, complete)
-				: (complete) => {
-						const avastars = [8014, 25495, 25470, 25505, 21022];
-						this.avastarLoader.tokenId =
-							avastars[Math.floor(Math.random() * avastars.length)];
-						this.avastarLoader.loadLocalAvastarSVG(complete);
-					};
-			this.beginLoad(fallback, tokenParam);
+		if (tokenParam) {
+			this.beginLoad(tokenParam);
 		} else {
-			// Instant display from the bundled SVGs
-			const avastars = [8014, 25495, 25470, 25505, 21022];
-			this.avastarLoader.tokenId =
-				avastars[Math.floor(Math.random() * avastars.length)];
-			this.beginLoad(
-				(complete) => this.avastarLoader.loadLocalAvastarSVG(complete),
-				this.avastarLoader.tokenId,
-			);
+			// A random bundled kwigbelle Avastar (composition needs
+			// no wallet, so the display starts immediately)
+			const bundled = AvastarLoader.BUNDLED_TOKEN_IDS;
+			this.beginLoad(bundled[Math.floor(Math.random() * bundled.length)]);
 		}
+		const hasWallet = await this.avastarLoader.hasWallet();
 		if (!hasWallet) {
 			return;
 		}
@@ -120,15 +103,12 @@ export default class MainScene extends Scene {
 
 	/// Start a load through the given function, ignoring stale
 	/// completions: an older load finishing after a newer one
-	/// started must not overwrite the newer Avastar. When trait
-	/// composition is enabled (and a tokenId is known) the library
-	/// path is tried first; the legacy loader+parser path is the
-	/// fallback on any composition failure.
+	/// started must not overwrite the newer Avastar. Composition is
+	/// the only layered path; on failure the token degrades to a
+	/// single static full-render layer (staticFallback).
 	///
-	/// - Parameters:
-	///		- loadFunction: Called with the completion handler
-	///		- tokenId: The token being loaded (enables composition)
-	beginLoad(loadFunction, tokenId) {
+	/// - Parameter tokenId: The token to load
+	beginLoad(tokenId) {
 		this.loadGeneration = (this.loadGeneration || 0) + 1;
 		const generation = this.loadGeneration;
 		// Synchronous record of the latest REQUEST: async paths only
@@ -136,55 +116,110 @@ export default class MainScene extends Scene {
 		// must reflect what the user last asked for, not what last
 		// finished loading
 		this.requestedTokenId = tokenId != null ? String(tokenId) : null;
-		const complete = function () {
+		const composeAttempt = () => {
+			const width = this.canvas.width;
+			const height = this.canvas.height;
+			this.traitComposer
+				.compose(tokenId, new Size(width, height))
+				.then((composed) => {
+					if (generation !== this.loadGeneration) {
+						return;
+					}
+					if (width !== this.canvas.width || height !== this.canvas.height) {
+						// Canvas resized mid flight: recompose at
+						// the current size (fragments are cached)
+						composeAttempt();
+						return;
+					}
+					// Keep the loader's state coherent: thumbnails
+					// and the same-token guard read from it
+					this.avastarLoader.tokenId = tokenId;
+					this.avastarLoader.currentAvastar = composed.fullSVG;
+					this.avastar = composed;
+					this.setupLayerSprings();
+					this.finishLoad(generation);
+				})
+				.catch((error) => {
+					// A stale failure must not fire the fallback: it
+					// would fetch and display a superseded token
+					if (generation !== this.loadGeneration) {
+						return;
+					}
+					console.warn(
+						`trait composition failed for ${tokenId}, using static fallback`,
+						error,
+					);
+					this.staticFallback(generation, tokenId);
+				});
+		};
+		composeAttempt();
+	}
+
+	/// Recover a failed composition with the token's full-render SVG
+	/// shown as one static layer riding a single spring, so the site
+	/// stays alive instead of stranding the preloader
+	async staticFallback(generation, tokenId) {
+		let svgString = null;
+		try {
+			svgString = await this.avastarLoader.fallbackSVG(tokenId);
+		} catch (error) {
 			if (generation !== this.loadGeneration) {
 				return;
 			}
-			this.parseAvastarSVG();
+			// Nothing to show: recover the UI and keep whatever
+			// Avastar is already on screen
+			console.error(`fallback load failed for ${tokenId}`, error);
 			this.finishLoad(generation);
-		}.bind(this);
-		if (this.isTraitComposeEnabled && tokenId != null) {
-			const composeAttempt = () => {
-				const width = this.canvas.width;
-				const height = this.canvas.height;
-				this.traitComposer
-					.compose(tokenId, new Size(width, height))
-					.then((composed) => {
-						if (generation !== this.loadGeneration) {
-							return;
-						}
-						if (width !== this.canvas.width || height !== this.canvas.height) {
-							// Canvas resized mid flight: recompose at
-							// the current size (fragments are cached)
-							composeAttempt();
-							return;
-						}
-						// Keep the loader's state coherent: thumbnails
-						// and the same-token guard read from it
-						this.avastarLoader.tokenId = tokenId;
-						this.avastarLoader.currentAvastar = composed.fullSVG;
-						this.avastar = composed;
-						this.setupLayerSprings();
-						this.finishLoad(generation);
-					})
-					.catch((error) => {
-						// A stale failure must not fire the fallback:
-						// loadToken mutates loader state even though
-						// its completion would be discarded
-						if (generation !== this.loadGeneration) {
-							return;
-						}
-						console.warn(
-							`trait composition failed for ${tokenId}, using legacy path`,
-							error,
-						);
-						loadFunction(complete);
-					});
-			};
-			composeAttempt();
 			return;
 		}
-		loadFunction(complete);
+		if (generation !== this.loadGeneration) {
+			return;
+		}
+		const image = this.staticImage(svgString);
+		image.addEventListener(
+			"load",
+			() => {
+				if (generation !== this.loadGeneration) {
+					return;
+				}
+				this.avastarLoader.tokenId = tokenId;
+				this.avastarLoader.currentAvastar = svgString;
+				this.avastar = {
+					tokenId: tokenId != null ? String(tokenId) : null,
+					isStatic: true,
+					sourceSVG: svgString,
+					backgroundLayer: null,
+					layers: [image],
+					backgroundColor: this.staticBackgroundColor(svgString),
+				};
+				this.setupLayerSprings();
+				this.finishLoad(generation);
+			},
+			{ once: true },
+		);
+	}
+
+	/// An img for a full-render SVG sized to the current canvas.
+	/// Chain and bundled renders size themselves (1000px or viewBox
+	/// only), so the root tag's size is replaced for drawImage.
+	staticImage(svgString) {
+		const width = this.canvas.width;
+		const height = this.canvas.height;
+		const sized = svgString.replace(/<svg\b[^>]*>/, (tag) =>
+			tag
+				.replace(/\s(?:width|height)="[^"]*"/g, "")
+				.replace(/<svg/, `<svg width="${width}" height="${height}"`),
+		);
+		return svgToImage(sized);
+	}
+
+	/// The page background color from a full render's style block
+	/// (same class the composer reads it from)
+	staticBackgroundColor(svgString) {
+		const match = svgString.match(
+			/\.bg_color\s*\{\s*fill:\s*(#[0-9A-Fa-f]{3,8})/,
+		);
+		return match ? match[1] : null;
 	}
 
 	/// Shared tail of every successful (or recovered) load
@@ -225,10 +260,7 @@ export default class MainScene extends Scene {
 		if (!isSilent) {
 			this.preloader.style.opacity = 1;
 		}
-		this.beginLoad(
-			(complete) => this.avastarLoader.loadToken(tokenId, complete),
-			tokenId,
-		);
+		this.beginLoad(tokenId);
 	}
 
 	// MARK: Overridden Methods
@@ -236,34 +268,56 @@ export default class MainScene extends Scene {
 	resize() {
 		this.canvas.width = window.innerWidth;
 		this.canvas.height = window.innerHeight;
-		if (this.isTraitComposeEnabled && this.avastar && this.avastar.layerInfo) {
-			// Composed path: rebuild layer images at the new size
-			// (fragments are cached in the composer, no refetch).
-			// The load generation is NOT bumped - a resize must not
-			// invalidate a pending token load. Staleness guards:
-			// captured size (a newer resize wins), and TOKEN identity
-			// (recomposing the currently displayed token must never
-			// overwrite a token load that completed in the interim).
-			const recomposeToken = this.avastar.tokenId;
-			const width = this.canvas.width;
-			const height = this.canvas.height;
-			this.traitComposer
-				.compose(recomposeToken, new Size(width, height))
-				.then((composed) => {
-					if (!this.avastar || this.avastar.tokenId !== recomposeToken) {
+		if (!this.avastar) {
+			return;
+		}
+		// Rebuild the display at the new size. The load generation is
+		// NOT bumped - a resize must not invalidate a pending token
+		// load. Staleness guards: captured size (a newer resize wins),
+		// and TOKEN identity (rebuilding the currently displayed token
+		// must never overwrite a token load that completed in the
+		// interim).
+		const resizeToken = this.avastar.tokenId;
+		const width = this.canvas.width;
+		const height = this.canvas.height;
+		if (this.avastar.isStatic) {
+			const sourceSVG = this.avastar.sourceSVG;
+			const image = this.staticImage(sourceSVG);
+			image.addEventListener(
+				"load",
+				() => {
+					if (
+						!this.avastar ||
+						!this.avastar.isStatic ||
+						this.avastar.tokenId !== resizeToken
+					) {
 						return;
 					}
 					if (width !== this.canvas.width || height !== this.canvas.height) {
 						return;
 					}
-					this.avastar = composed;
+					this.avastar = { ...this.avastar, layers: [image] };
 					this.setupLayerSprings();
-				})
-				.catch((error) => console.warn("recompose failed", error));
+				},
+				{ once: true },
+			);
 			return;
 		}
-		/// Reparse
-		this.parseAvastarSVG();
+		// Composed path: rebuild layer images at the new size
+		// (fragments are cached in the composer, no refetch)
+		this.traitComposer
+			.compose(resizeToken, new Size(width, height))
+			.then((composed) => {
+				if (!this.avastar || this.avastar.tokenId !== resizeToken) {
+					return;
+				}
+				if (width !== this.canvas.width || height !== this.canvas.height) {
+					return;
+				}
+				this.avastar = composed;
+				this.setupLayerSprings();
+			})
+			.catch((error) => console.warn("recompose failed", error));
 	}
 
 	render() {
@@ -282,13 +336,16 @@ export default class MainScene extends Scene {
 		this.lastFrameTime = now;
 		dt = Math.min(dt, 1 / 30);
 
-		context.drawImage(
-			this.avastar.backgroundLayer,
-			0,
-			0,
-			this.canvas.width,
-			this.canvas.height,
-		);
+		// The static fallback has no separate background layer
+		if (this.avastar.backgroundLayer) {
+			context.drawImage(
+				this.avastar.backgroundLayer,
+				0,
+				0,
+				this.canvas.width,
+				this.canvas.height,
+			);
+		}
 
 		const centerPoint = new Point(
 			this.canvas.width / 2,
@@ -337,31 +394,8 @@ export default class MainScene extends Scene {
 		this.rootContainer.appendChild(this.preloader);
 	}
 
-	/// Method used to trigger the parse of the currently loaded avastar.
-	parseAvastarSVG() {
-		// Check the avastar loader for an Avastar
-		const svgString = this.avastarLoader.currentAvastar;
-		if (!svgString) {
-			// TODO: Handle this failure
-			return;
-		}
-		// Create a new AvastarParser and pass in the currently loaded Avastar
-		this.avastar = new AvastarParser(
-			svgString,
-			new Size(this.canvas.width, this.canvas.height),
-		);
-		this.avastar.debug = this.isParserDebugEnabled;
-		// Parse the Avastar SVG
-		this.avastar.parse();
-
-		const contentView = document.getElementById("contentView");
-		// Get the background color from the Avastar Parser
-		contentView.style.backgroundColor = this.avastar.backgroundColor;
-		this.setupLayerSprings();
-	}
-
 	/// Rebuild the spring rig for the current Avastar's layers.
-	/// Shared by the parser and trait composition paths.
+	/// Shared by the composed and static-fallback paths.
 	setupLayerSprings() {
 		this.layerSprings.setup(
 			this.avastar.layers.length,

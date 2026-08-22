@@ -16,8 +16,8 @@ export default [
 	},
 	js.configs.recommended,
 	{
-		// Runtime site code: browser ES modules. Web3 and cssjs are
-		// page globals loaded from Lib/vendor/ via script tags.
+		// Runtime site code: browser ES modules. Web3 is a page
+		// global loaded from Lib/vendor/ via a script tag.
 		files: ["Lib/**/*.js"],
 		languageOptions: {
 			ecmaVersion: 2022,
@@ -40,7 +40,6 @@ export default [
 				alert: "readonly",
 				DOMParser: "readonly",
 				Web3: "readonly",
-				cssjs: "readonly",
 			},
 		},
 	},
