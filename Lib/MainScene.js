@@ -144,6 +144,11 @@ export default class MainScene extends Scene {
 	beginLoad(tokenId) {
 		this.loadGeneration = (this.loadGeneration || 0) + 1;
 		const generation = this.loadGeneration;
+		// Any in-flight preview recompose belongs to the previous
+		// display: invalidate it now, or an A->B->A reload could let
+		// a stale overridden render land on A's fresh baseline (its
+		// token id matches again, but overrides were reset)
+		this.previewGeneration = (this.previewGeneration || 0) + 1;
 		// Synchronous record of the latest REQUEST: async paths only
 		// update loader state on success, and the same-token guard
 		// must reflect what the user last asked for, not what last
@@ -478,6 +483,10 @@ export default class MainScene extends Scene {
 			return;
 		}
 		const previewToken = this.avastar.tokenId;
+		// Baseline identity is the belt to the generation's braces:
+		// beginLoad allocates a fresh picks array even for the same
+		// token id, so a stale preview can never pass both checks
+		const baselineAtStart = this.baselinePicks;
 		const width = this.canvas.width;
 		const height = this.canvas.height;
 		this.previewGeneration = (this.previewGeneration || 0) + 1;
@@ -486,6 +495,9 @@ export default class MainScene extends Scene {
 			.composePicks(picks, new Size(width, height))
 			.then((composed) => {
 				if (generation !== this.previewGeneration) {
+					return;
+				}
+				if (this.baselinePicks !== baselineAtStart) {
 					return;
 				}
 				if (!this.avastar || this.avastar.tokenId !== previewToken) {
