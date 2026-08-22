@@ -1,0 +1,8 @@
+{
+	"name": "kwigbelle-tests",
+	"private": true,
+	"description": "Headless-Chrome harness tests. See README.md.",
+	"dependencies": {
+		"playwright-core": "^1.40.0"
+	}
+}

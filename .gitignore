@@ -4,3 +4,5 @@
 /feedback/
 /Tools/data/renders/
 /Tools/data/known-debug.json
+/Tests/node_modules/
+/Tests/*.png
