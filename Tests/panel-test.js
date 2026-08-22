@@ -80,13 +80,22 @@ window.ethereum = {
 	check(isOpen, "panel did not open");
 	await page.screenshot({ path: "panel-open.png" });
 
-	// Traits: backdrop row + one row per composed layer (8014 has 7)
+	// Traits: 4 info rows (color genes) + backdrop + one row per
+	// composed layer (8014 has 7); only the last 8 have checkboxes
 	const traitRows = await page.locator(".traitRow").count();
-	console.log("trait rows:", traitRows);
-	check(
-		traitRows === 8,
-		"expected 8 trait rows (backdrop + 7), got " + traitRows,
+	const infoRows = await page.locator(".traitRow.info").count();
+	const checkboxes = await page.locator(".traitRow input").count();
+	console.log(
+		"trait rows:",
+		traitRows,
+		"info:",
+		infoRows,
+		"toggles:",
+		checkboxes,
 	);
+	check(traitRows === 12, "expected 12 trait rows, got " + traitRows);
+	check(infoRows === 4, "expected 4 color info rows, got " + infoRows);
+	check(checkboxes === 8, "expected 8 toggleable rows, got " + checkboxes);
 
 	// Pause: two frames far apart must be identical, then differ
 	// again once unpaused (the breathing motion resumes)

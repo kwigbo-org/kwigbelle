@@ -213,6 +213,12 @@
 	min-width: 0;
 }
 
+.traitRow.info {
+	cursor: default;
+	/* Align names with the checkbox rows below */
+	padding-left: 21px;
+}
+
 .traitName {
 	flex: 1;
 	overflow: hidden;

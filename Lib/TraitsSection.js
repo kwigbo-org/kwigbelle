@@ -50,6 +50,20 @@ export default class TraitsSection {
 			this.content.appendChild(note);
 			return;
 		}
+		// Genes 0-3 (skin tone, hair color, eye color, bg color) are
+		// color styles applied across the art layers, not layers of
+		// their own - shown for completeness, with no visibility
+		// checkbox because there is nothing to hide
+		if (avastar.traits) {
+			for (let gene = 0; gene < 4; gene++) {
+				const info = avastar.traits[gene];
+				if (info) {
+					this.content.appendChild(
+						this.infoRow(`${info.geneName}: ${info.name}`, info.rarityName),
+					);
+				}
+			}
+		}
 		if (avastar.backgroundLayer && avastar.traits && avastar.traits[4]) {
 			const backdrop = avastar.traits[4];
 			this.content.appendChild(
@@ -77,6 +91,21 @@ export default class TraitsSection {
 				),
 			);
 		});
+	}
+
+	/// A display-only row: trait name + rarity tag, no checkbox
+	infoRow(label, rarity) {
+		const row = document.createElement("div");
+		row.setAttribute("class", "traitRow info");
+		const name = document.createElement("span");
+		name.setAttribute("class", "traitName");
+		name.innerText = label;
+		row.appendChild(name);
+		const tag = document.createElement("span");
+		tag.setAttribute("class", "traitRarity");
+		tag.innerText = rarity || "";
+		row.appendChild(tag);
+		return row;
 	}
 
 	/// A row: checkbox + trait name + rarity tag
