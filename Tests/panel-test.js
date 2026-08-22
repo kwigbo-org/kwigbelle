@@ -93,9 +93,14 @@ window.ethereum = {
 		"toggles:",
 		checkboxes,
 	);
-	check(traitRows === 12, "expected 12 trait rows, got " + traitRows);
 	check(infoRows === 4, "expected 4 color info rows, got " + infoRows);
 	check(checkboxes === 8, "expected 8 toggleable rows, got " + checkboxes);
+	// Derived rather than a second constant: every row is either
+	// info or toggleable
+	check(
+		traitRows === infoRows + checkboxes,
+		`row total ${traitRows} != info ${infoRows} + toggles ${checkboxes}`,
+	);
 	const swatchColors = await page.evaluate(() =>
 		[...document.querySelectorAll(".traitSwatch")].map(
 			(swatch) => swatch.style.backgroundColor,

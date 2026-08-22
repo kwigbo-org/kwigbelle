@@ -111,6 +111,9 @@ export default class TraitComposer {
 			backgroundLayer: this.toImage(styles + fragments[4], true, displaySize),
 			layers,
 			layerInfo,
+			// Gene-ordered by construction (index = gene id, 0-11);
+			// TraitsSection relies on 0-3 being the color genes and
+			// 4 the backdrop
 			traits: picks,
 			geneColors,
 			backgroundColor: bgMatch ? bgMatch[1] : "#FFFFFF",
