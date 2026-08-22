@@ -14,9 +14,15 @@
 			content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0"
 		/>
 
-		<!-- Google Fonts -->
+		<!-- Google Fonts: Inconsolata is the avastars.io typeface
+		     (docs/tads/design-cues.md); every use falls back to the
+		     generic monospace stack if this fails to load -->
 		<link rel="preconnect" href="https://fonts.googleapis.com" />
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link
+			rel="stylesheet"
+			href="https://fonts.googleapis.com/css2?family=Inconsolata:wght@400;600;700&display=swap"
+		/>
 
 		<!-- Global Styles -->
 
@@ -27,7 +33,10 @@
 				margin: 0;
 				display: block;
 				color: #fff;
-				background-color: #fff;
+				/* avastars.io deep navy while nothing is loaded; the
+				   loaded token's own background color replaces it on
+				   #contentView at runtime (art area stays art-driven) */
+				background-color: #150437;
 				user-select: none;
 				-webkit-user-select: none;
 				-moz-user-select: none;
@@ -43,7 +52,7 @@
 			html {
 				height: 100%;
 				width: 100%;
-				background: #fff;
+				background: #150437;
 				overflow: hidden;
 				position: fixed;
 			}
@@ -59,7 +68,7 @@
 				top: 0px;
 				width: 100%;
 				height: 100%;
-				background-color: #fff;
+				background-color: #150437;
 			}
 		</style>
 		<link rel="stylesheet" href="./style.css" />

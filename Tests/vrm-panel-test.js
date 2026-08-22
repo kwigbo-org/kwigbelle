@@ -141,7 +141,7 @@ async function launch(withWallet) {
 			const sections = [...document.querySelectorAll(".panelSection")];
 			const effects = sections.find(
 				(s) =>
-					s.querySelector(".panelSectionHeader span").innerText === "Effects",
+					s.querySelector(".panelSectionHeader span").textContent === "Effects",
 			);
 			return {
 				effectsHidden: effects.style.display === "none",
@@ -178,7 +178,7 @@ async function launch(withWallet) {
 			const sections = [...document.querySelectorAll(".panelSection")];
 			const effects = sections.find(
 				(s) =>
-					s.querySelector(".panelSectionHeader span").innerText === "Effects",
+					s.querySelector(".panelSectionHeader span").textContent === "Effects",
 			);
 			return {
 				effectsVisible: effects.style.display !== "none",

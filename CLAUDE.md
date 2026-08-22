@@ -50,6 +50,8 @@ Lib/VRMSection.js          "3D model" panel section: view toggle +
                            owner-only Download VRM
 Lib/ViewToggleUI.js        floating 3D/2D button with fetch
                            progress and tap-to-cancel
+Lib/RarityIcons.js         tier icons/colors, score->tier bands,
+                           kind labels (single design-token source)
 Lib/UIHelpers.js           stopSceneEvents, svgToImage
 Lib/vendor/                vendored libs (web3; three + three-vrm
                            ES modules wired by index.html's import
@@ -74,6 +76,8 @@ Tools/extract-traits.js    rebuilds Traits/ from a coverage corpus;
                            --verify checks staleness against the chain
 Tools/validate-composition.js  held-out byte-parity vs renderAvastar;
                            --absorb feeds failures back as evidence
+Tools/compute-ub.js        frozen Unique-By combo counts for the
+                           lottery primes -> Tools/data/ub.json
 Tools/check-corpus.js      totalSupply vs hashes.json staleness;
                            --update refreshes; deploy.sh runs it
                            warn-only when AVASTARS_RPC_URL is set
@@ -114,7 +118,7 @@ URL flags: `?tokenid=N` (any token), `?explode=1`.
   site by design.
 - `Lib/AvastarLoader.js` / wallet flows — multi-wallet discovery,
   chain switching, connect prompts.
-- `Traits/**` + `Tools/data/hashes.json` — generated integrity-
+- `Traits/**` + `Tools/data/hashes.json` + `ub.json` — generated integrity-
   checked data.
 
 ## Testing
@@ -133,7 +137,7 @@ Frozen TADs and generated/vendored trees are excluded on purpose.
 `./deploy.sh` local-only → `~/Sites`; `-w` also serves at
 127.0.0.1:8000; `-s` stage; `-p` promote stage→prod + CloudFront
 invalidation. deploy.sh must copy any new runtime asset (it ships
-`Lib SVG favicon Traits Tools/data/hashes.json`).
+`Lib SVG favicon Traits Tools/data/hashes.json` and `ub.json`).
 
 ## Shared rules across all project agents
 

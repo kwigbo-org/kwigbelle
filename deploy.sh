@@ -83,9 +83,12 @@ cp -r SVG build
 cp -r favicon build
 cp -r Traits build
 # Trait composition needs the hash corpus at the same path it has in
-# the repo (Lib/TraitComposer.js fetches ./Tools/data/hashes.json)
+# the repo (Lib/TraitComposer.js fetches ./Tools/data/hashes.json);
+# the identity card lazy-loads the precomputed Unique-By counts from
+# the same directory (ub.json, docs/tads/design-cues.md)
 mkdir -p build/Tools/data
 cp Tools/data/hashes.json build/Tools/data/hashes.json
+cp Tools/data/ub.json build/Tools/data/ub.json
 
 # Keep macOS metadata out of every deploy target
 find build -name '.DS_Store' -delete
