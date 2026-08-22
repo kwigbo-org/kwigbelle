@@ -1,0 +1,37 @@
+const { chromium } = require("playwright-core");
+
+(async () => {
+	const browser = await chromium.launch({ channel: "chrome", headless: true });
+	const page = await browser.newPage({ viewport: { width: 800, height: 600 } });
+	const errors = [];
+	page.on("pageerror", (e) => errors.push("pageerror: " + e.message));
+	page.on("console", (m) => {
+		if (m.type() === "error") errors.push("console: " + m.text());
+	});
+
+	await page.goto("http://localhost:8741/index.html?tokenid=8014");
+	// Wait for the preloader to fade (load + parse complete)
+	await page.waitForFunction(
+		() => document.getElementById("preloader")?.style.opacity === "0",
+		{ timeout: 15000 }
+	);
+	// Let the springs settle into the idle breathing loop
+	await page.waitForTimeout(1500);
+	await page.screenshot({ path: "idle-1.png" });
+	// Capture again mid-breath to prove the idle animation moves
+	await page.waitForTimeout(1200);
+	await page.screenshot({ path: "idle-2.png" });
+
+	// Press the mouse near a corner and drag — layers should spring toward it
+	await page.mouse.move(650, 150);
+	await page.mouse.down();
+	await page.waitForTimeout(700);
+	await page.screenshot({ path: "follow.png" });
+	await page.mouse.up();
+	// Release — layers should spring back toward center with overshoot
+	await page.waitForTimeout(400);
+	await page.screenshot({ path: "release.png" });
+
+	console.log("errors:", errors.length ? errors : "none");
+	await browser.close();
+})();
