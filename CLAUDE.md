@@ -19,6 +19,8 @@ Lib/WalletConnectUI.js     wallet button, multi-wallet chooser,
                            connect/switch flow
 Lib/SidePanel.js           right-side collapsible panel; sections
                            register via addSection(title, element)
+Lib/LoadSection.js         load any Avastar by token id (walletless,
+                           corpus-validated before loading)
 Lib/EffectsSection.js      spring-rig controls (explode, motion,
                            follow, pause); localStorage persisted
 Lib/TraitsSection.js       per-layer trait rows + visibility the
