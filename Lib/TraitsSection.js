@@ -59,82 +59,79 @@ export default class TraitsSection {
 				const info = avastar.traits[gene];
 				if (info) {
 					this.content.appendChild(
-						this.infoRow(
-							`${info.geneName}: ${info.name}`,
-							info.rarityName,
-							avastar.geneColors ? avastar.geneColors[gene] : null,
-						),
+						this.card(info, {
+							color: avastar.geneColors ? avastar.geneColors[gene] : null,
+						}),
 					);
 				}
 			}
 		}
 		if (avastar.backgroundLayer && avastar.traits && avastar.traits[4]) {
-			const backdrop = avastar.traits[4];
 			this.content.appendChild(
-				this.traitRow(
-					`${backdrop.geneName}: ${backdrop.name}`,
-					backdrop.rarityName,
-					(visible) => {
+				this.card(avastar.traits[4], {
+					onToggle: (visible) => {
 						this.isBackdropHidden = !visible;
 					},
-				),
+				}),
 			);
 		}
 		avastar.layerInfo.forEach((info, index) => {
 			this.content.appendChild(
-				this.traitRow(
-					`${info.geneName}: ${info.name}`,
-					info.rarityName,
-					(visible) => {
+				this.card(info, {
+					onToggle: (visible) => {
 						if (visible) {
 							this.hiddenLayers.delete(index);
 						} else {
 							this.hiddenLayers.add(index);
 						}
 					},
-				),
+				}),
 			);
 		});
 	}
 
-	/// A display-only row: color swatch + trait name + rarity tag,
-	/// no checkbox
-	infoRow(label, rarity, color) {
-		const row = document.createElement("div");
-		row.setAttribute("class", "traitRow info");
-		const swatch = document.createElement("span");
-		swatch.setAttribute("class", "traitSwatch");
-		if (color) {
-			swatch.style.backgroundColor = color;
+	/// A trait card: the gene as a bold title with the trait value
+	/// below it and the rarity tag on the right. Layer traits get a
+	/// visibility checkbox (options.onToggle); the color genes get a
+	/// swatch of their primary tone (options.color) instead.
+	///
+	/// - Parameters:
+	///		- info: A trait record ({ geneName, name, rarityName })
+	///		- options: { onToggle } or { color }
+	card(info, options) {
+		const isToggle = typeof options.onToggle === "function";
+		const row = document.createElement(isToggle ? "label" : "div");
+		row.setAttribute("class", isToggle ? "traitRow" : "traitRow info");
+		if (isToggle) {
+			const checkbox = document.createElement("input");
+			checkbox.type = "checkbox";
+			checkbox.checked = true;
+			checkbox.addEventListener("change", () =>
+				options.onToggle(checkbox.checked),
+			);
+			row.appendChild(checkbox);
+		} else {
+			const swatch = document.createElement("span");
+			swatch.setAttribute("class", "traitSwatch");
+			if (options.color) {
+				swatch.style.backgroundColor = options.color;
+			}
+			row.appendChild(swatch);
 		}
-		row.appendChild(swatch);
-		const name = document.createElement("span");
-		name.setAttribute("class", "traitName");
-		name.innerText = label;
-		row.appendChild(name);
+		const text = document.createElement("span");
+		text.setAttribute("class", "traitText");
+		const gene = document.createElement("span");
+		gene.setAttribute("class", "traitGene");
+		gene.innerText = info.geneName;
+		text.appendChild(gene);
+		const value = document.createElement("span");
+		value.setAttribute("class", "traitValue");
+		value.innerText = info.name;
+		text.appendChild(value);
+		row.appendChild(text);
 		const tag = document.createElement("span");
 		tag.setAttribute("class", "traitRarity");
-		tag.innerText = rarity || "";
-		row.appendChild(tag);
-		return row;
-	}
-
-	/// A row: checkbox + trait name + rarity tag
-	traitRow(label, rarity, onChange) {
-		const row = document.createElement("label");
-		row.setAttribute("class", "traitRow");
-		const checkbox = document.createElement("input");
-		checkbox.type = "checkbox";
-		checkbox.checked = true;
-		checkbox.addEventListener("change", () => onChange(checkbox.checked));
-		row.appendChild(checkbox);
-		const name = document.createElement("span");
-		name.setAttribute("class", "traitName");
-		name.innerText = label;
-		row.appendChild(name);
-		const tag = document.createElement("span");
-		tag.setAttribute("class", "traitRarity");
-		tag.innerText = rarity || "";
+		tag.innerText = info.rarityName || "";
 		row.appendChild(tag);
 		return row;
 	}
