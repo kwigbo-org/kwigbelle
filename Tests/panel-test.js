@@ -5,6 +5,48 @@
 const { chromium } = require("playwright-core");
 const { check } = require("./check.js");
 
+// A mock wallet so the picker exists: the in-page token-swap reset
+// (finishLoad -> traitsSection.update) can only be exercised by an
+// actual pick, not by a navigation that rebuilds all JS state.
+const MOCK_PROVIDER = `
+window.__ownedIds = [8014, 25495, 25470];
+window.ethereum = {
+	isMetaMask: true,
+	on: () => {},
+	removeListener: () => {},
+	request: async ({ method, params }) => {
+		if (method === "eth_accounts" || method === "eth_requestAccounts") {
+			return ["0x1111111111111111111111111111111111111111"];
+		}
+		if (method === "eth_chainId") return "0x1";
+		if (method === "net_version") return "1";
+		if (method === "eth_blockNumber") return "0x1";
+		if (method === "eth_call") {
+			const w3 = new Web3();
+			const abi = w3.eth.abi;
+			const data = params[0].data;
+			const sel = data.slice(0, 10);
+			const sig = (s) => abi.encodeFunctionSignature(s);
+			if (sel === sig("balanceOf(address)")) {
+				return abi.encodeParameter("uint256", window.__ownedIds.length);
+			}
+			if (sel === sig("tokenOfOwnerByIndex(address,uint256)")) {
+				const index = parseInt(data.slice(-64), 16);
+				return abi.encodeParameter("uint256", window.__ownedIds[index]);
+			}
+			if (sel === sig("renderAvastar(uint256)")) {
+				const id = parseInt(data.slice(-64), 16);
+				const res = await fetch("/SVG/Avastar-" + id + ".svg");
+				if (!res.ok) throw new Error("no svg for " + id);
+				return abi.encodeParameter("string", await res.text());
+			}
+			throw new Error("unmocked eth_call selector " + sel);
+		}
+		throw new Error("unmocked method " + method);
+	},
+};
+`;
+
 (async () => {
 	const browser = await chromium.launch({ channel: "chrome", headless: true });
 	const page = await browser.newPage({ viewport: { width: 800, height: 600 } });
@@ -18,6 +60,7 @@ const { check } = require("./check.js");
 		d.dismiss();
 	});
 
+	await page.addInitScript(MOCK_PROVIDER);
 	await page.goto("http://localhost:8741/index.html?tokenid=8014");
 	await page.waitForFunction(
 		() => document.getElementById("preloader")?.style.opacity === "0",
@@ -110,22 +153,47 @@ const { check } = require("./check.js");
 	console.log("motion after reload:", motionAfter);
 	check(motionAfter === "0", "motion setting did not survive reload");
 
-	// Token swap resets visibility: rows all checked for a new token
-	await page.goto("http://localhost:8741/index.html?tokenid=25495");
-	await page.waitForFunction(
-		() => document.getElementById("preloader")?.style.opacity === "0",
-		{ timeout: 15000 },
-	);
-	await page.click("#panelHandle");
-	const uncheckedCount = await page.evaluate(
+	// In-page token swap resets visibility: hide a trait on the
+	// current token, pick a different one through the picker (real
+	// finishLoad -> update path, no navigation), and the rebuilt
+	// rows must all be checked again
+	await page.waitForSelector(".pickerThumb.current img", { timeout: 15000 });
+	await page.locator(".traitRow input").nth(2).uncheck();
+	const hiddenBefore = await page.evaluate(
 		() =>
 			[...document.querySelectorAll(".traitRow input")].filter(
 				(box) => !box.checked,
 			).length,
 	);
+	check(hiddenBefore === 1, "precondition: expected 1 hidden row");
+	await page.click(".pickerThumb.current");
+	await page.waitForFunction(
+		() => document.querySelectorAll("#pickerList img").length === 3,
+		{ timeout: 20000 },
+	);
+	await page.locator("#pickerList .pickerThumb").nth(1).click();
+	await page.waitForFunction(
+		() =>
+			!document.getElementById("pickerList").classList.contains("expanded") &&
+			document.getElementById("preloader")?.style.opacity === "0",
+		{ timeout: 15000 },
+	);
+	await page.waitForTimeout(500);
+	const swapState = await page.evaluate(() => {
+		const boxes = [...document.querySelectorAll(".traitRow input")];
+		return {
+			count: boxes.length,
+			unchecked: boxes.filter((box) => !box.checked).length,
+		};
+	});
+	console.log("after in-page swap:", JSON.stringify(swapState));
 	check(
-		uncheckedCount === 0,
-		uncheckedCount + " rows unchecked after token swap",
+		swapState.count === 8,
+		"expected 8 rows after swap, got " + swapState.count,
+	);
+	check(
+		swapState.unchecked === 0,
+		swapState.unchecked + " rows unchecked after in-page token swap",
 	);
 
 	console.log("errors:", errors.length ? errors : "none");
