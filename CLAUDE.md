@@ -9,8 +9,17 @@ breathing, pointer follow), with a wallet picker for owned tokens.
 
 ```
 index.html                 boots Lib/MainScene.js (module)
-Lib/MainScene.js           scene: load orchestration, spring physics,
-                           picker/chooser UI, ?param flags
+Lib/MainScene.js           scene: load orchestration + async-race
+                           guards (the most delicate code in the
+                           repo), render loop, ?param flags
+Lib/LayerSprings.js        spring physics: per-depth params +
+                           integration (idle breathing, follow)
+Lib/PickerUI.js            owned-Avastars picker overlay
+Lib/WalletConnectUI.js     wallet button, multi-wallet chooser,
+                           connect/switch flow
+Lib/UIHelpers.js           stopSceneEvents, svgToImage
+Lib/vendor/                vendored minified libs (web3, css.js) -
+                           never lint/format/edit
 Lib/TraitComposer.js       DEFAULT render path: composes any of the
                            26,617 Avastars from Traits/ + the static
                            hash corpus - no wallet, no chain calls
@@ -78,6 +87,11 @@ URL flags: `?tokenid=N` (any token), `?traitcompose=0` (legacy path),
 providers; every PR is verified against it. On-chain parity lives in
 `Tools/validate-composition.js`.
 
+Style: `npm install` once at the repo root, then `npm run check`
+(ESLint + Prettier). Local only — NO GitHub Actions/CI, operator
+decision (cost). Run it before every PR alongside the Tests/ suite.
+Frozen TADs and generated/vendored trees are excluded on purpose.
+
 ## Deploy
 
 `./deploy.sh` local-only → `~/Sites`; `-w` also serves at
@@ -97,6 +111,7 @@ every agent in the kwigbo lane model, see the canonical doc:
 Script invocations use `~/<script>.sh` (host-anchored via `$HOME`).
 
 Quick reference (full nuance in the doc):
+
 - PR creation IS the user approval — no separate "APPROVED" click required
 - Project work starts with a TAD (operator policy 2026-08-21 for this
   repo) — see the TAD phase section in the canonical doc; merged TADs

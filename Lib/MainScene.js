@@ -4,21 +4,25 @@ import Point from "./Point.js";
 import AvastarParser from "./AvastarParser.js";
 import AvastarLoader from "./AvastarLoader.js";
 import TraitComposer from "./TraitComposer.js";
+import LayerSprings from "./LayerSprings.js";
+import PickerUI from "./PickerUI.js";
+import WalletConnectUI from "./WalletConnectUI.js";
 
-/// Class used to represent the Avastars scene
+/// The Avastars scene: load orchestration and rendering. The
+/// overlay UI lives in PickerUI/WalletConnectUI and the physics in
+/// LayerSprings; this class owns the async-race machinery that
+/// keeps loads, resizes, and picks from overwriting each other.
 export default class MainScene extends Scene {
 	/// Overridden constructor
 	constructor(rootContainer) {
 		super(rootContainer);
-		console.log("kwigbelle build 2026-08-22.1 (trait composition default)");
+		console.log("kwigbelle build 2026-08-22.2 (code organization)");
 		// Build the UI
 		this.buildUI();
 		// Start loading
 		this.isLoading = true;
 		// Check url params for a "tokenId"
-		const urlParams = new URLSearchParams(
-			window.location.search.toLowerCase()
-		);
+		const urlParams = new URLSearchParams(window.location.search.toLowerCase());
 		this.isParserDebugEnabled = urlParams.get("parserdebug");
 		this.isExplodeEnabled = urlParams.get("explode");
 		// Trait composition is the default (TAD Step 5): layers come
@@ -27,8 +31,22 @@ export default class MainScene extends Scene {
 		// ?traitcompose=0 (docs/tads/trait-composition.md).
 		this.isTraitComposeEnabled = urlParams.get("traitcompose") !== "0";
 		this.traitComposer = new TraitComposer();
+		this.layerSprings = new LayerSprings(this.isExplodeEnabled);
 		// Object used to load the Avastar SVG from on chain
 		this.avastarLoader = new AvastarLoader(null);
+		// Overlay UI components: picks and connects come back into
+		// the scene through these callbacks
+		this.pickerUI = new PickerUI(rootContainer, this.avastarLoader, (tokenId) =>
+			this.selectAvastar(tokenId),
+		);
+		this.walletUI = new WalletConnectUI(
+			rootContainer,
+			this.avastarLoader,
+			(ownedTokenIds) => {
+				this.pickerUI.build(ownedTokenIds);
+				this.selectAvastar(ownedTokenIds[0], false);
+			},
+		);
 		this.initialLoad(urlParams.get("tokenid"));
 	}
 
@@ -46,14 +64,11 @@ export default class MainScene extends Scene {
 			// needs one, so walletless composition failures degrade
 			// to a bundled Avastar instead of a dead preloader
 			const fallback = hasWallet
-				? (complete) =>
-						this.avastarLoader.loadToken(tokenParam, complete)
+				? (complete) => this.avastarLoader.loadToken(tokenParam, complete)
 				: (complete) => {
 						const avastars = [8014, 25495, 25470, 25505, 21022];
 						this.avastarLoader.tokenId =
-							avastars[
-								Math.floor(Math.random() * avastars.length)
-							];
+							avastars[Math.floor(Math.random() * avastars.length)];
 						this.avastarLoader.loadLocalAvastarSVG(complete);
 					};
 			this.beginLoad(fallback, tokenParam);
@@ -64,7 +79,7 @@ export default class MainScene extends Scene {
 				avastars[Math.floor(Math.random() * avastars.length)];
 			this.beginLoad(
 				(complete) => this.avastarLoader.loadLocalAvastarSVG(complete),
-				this.avastarLoader.tokenId
+				this.avastarLoader.tokenId,
 			);
 		}
 		if (!hasWallet) {
@@ -79,7 +94,7 @@ export default class MainScene extends Scene {
 			console.error("Could not list the wallet's Avastars", error);
 		}
 		if (ownedTokenIds.length > 0) {
-			this.buildAvastarPicker(ownedTokenIds);
+			this.pickerUI.build(ownedTokenIds);
 			if (!tokenParam) {
 				// Swap silently: keep the current Avastar animating
 				// until the wallet's first one has rendered
@@ -92,147 +107,14 @@ export default class MainScene extends Scene {
 		// site yet. Offer a button for whichever fix applies.
 		const onMainnet = await this.avastarLoader.isMainnet();
 		if (!onMainnet) {
-			this.buildConnectButton("🔗 Switch to Mainnet");
+			this.walletUI.show("🔗 Switch to Mainnet");
 			return;
 		}
 		const accounts = await this.avastarLoader.provider
 			.request({ method: "eth_accounts" })
 			.catch(() => []);
 		if (!accounts || accounts.length === 0) {
-			this.buildConnectButton("🔗 Link Wallet");
-		}
-	}
-
-	/// Build the upper left wallet button shown when the wallet
-	/// needs a user tap: to authorize the site or fix the network
-	///
-	/// - Parameter title: The label to show on the button
-	buildConnectButton(title) {
-		if (this.connectContainer) {
-			return;
-		}
-		this.connectContainer = document.createElement("div");
-		this.connectContainer.setAttribute("id", "avastarPicker");
-		this.stopSceneEvents(this.connectContainer);
-		const button = document.createElement("div");
-		button.setAttribute("class", "connectButton");
-		button.innerText = title;
-		button.addEventListener("click", this.connectWallet.bind(this));
-		this.connectContainer.appendChild(button);
-		this.rootContainer.appendChild(this.connectContainer);
-	}
-
-	/// Entry point for the wallet button: with several wallets
-	/// installed show a chooser first, otherwise connect directly
-	async connectWallet() {
-		const wallets = await this.avastarLoader.getWallets();
-		if (wallets.length > 1) {
-			this.toggleWalletChooser(wallets);
-			return;
-		}
-		this.continueConnect();
-	}
-
-	/// Expand or collapse the list of installed wallets under the
-	/// wallet button. Picking one remembers it for future visits.
-	///
-	/// - Parameter wallets: The { info, provider } entries to list
-	toggleWalletChooser(wallets) {
-		if (this.walletList) {
-			this.walletList.remove();
-			this.walletList = null;
-			return;
-		}
-		this.walletList = document.createElement("div");
-		this.walletList.setAttribute("id", "walletList");
-		for (const wallet of wallets) {
-			const row = document.createElement("div");
-			row.setAttribute("class", "walletRow");
-			if (wallet.info && wallet.info.icon) {
-				const icon = document.createElement("img");
-				icon.src = wallet.info.icon;
-				row.appendChild(icon);
-			}
-			const name = document.createElement("span");
-			name.innerText = (wallet.info && wallet.info.name) || "Wallet";
-			row.appendChild(name);
-			row.addEventListener(
-				"click",
-				function () {
-					this.avastarLoader.selectWallet(wallet);
-					this.walletList.remove();
-					this.walletList = null;
-					this.continueConnect();
-				}.bind(this)
-			);
-			this.walletList.appendChild(row);
-		}
-		this.connectContainer.appendChild(this.walletList);
-	}
-
-	/// Fix whatever the chosen wallet needs (from a user tap, which
-	/// every wallet allows): switch to mainnet and/or connect, then
-	/// swap in the picker
-	async continueConnect() {
-		// Reentrancy guard: a second tap while the flow is mid
-		// flight would run two connects and build two pickers
-		if (this.isConnecting) {
-			return;
-		}
-		this.isConnecting = true;
-		try {
-			// Wrong network: ask the wallet to switch. The page
-			// reloads into the working state via the chainChanged
-			// listener.
-			const onMainnet = await this.avastarLoader.isMainnet();
-			if (!onMainnet) {
-				const switched = await this.avastarLoader.switchToMainnet();
-				if (switched) {
-					// Fallback for wallets that do not emit chainChanged
-					window.location.reload();
-				}
-				return;
-			}
-			let ownedTokenIds = [];
-			try {
-				ownedTokenIds = await this.avastarLoader.getOwnedTokenIds(
-					true
-				);
-			} catch (error) {
-				console.error("Wallet connect failed", error);
-				return;
-			}
-			if (ownedTokenIds.length === 0) {
-				return;
-			}
-			this.connectContainer.remove();
-			this.connectContainer = null;
-			this.buildAvastarPicker(ownedTokenIds);
-			this.selectAvastar(ownedTokenIds[0], false);
-		} finally {
-			this.isConnecting = false;
-		}
-	}
-
-	/// Keep taps on an overlay element from reaching the Scene's
-	/// window level touch handlers, which would fling the layers
-	///
-	/// - Parameter element: The element to isolate
-	stopSceneEvents(element) {
-		// Release events (mouseup/touchend) deliberately propagate:
-		// they only clear the scene's touch state, and swallowing
-		// them would leave isTouchDown stuck when a drag that began
-		// on the canvas releases over this element
-		const eventNames = [
-			"mousedown",
-			"mousemove",
-			"touchstart",
-			"touchmove",
-		];
-		for (const eventName of eventNames) {
-			element.addEventListener(eventName, (event) =>
-				event.stopPropagation()
-			);
+			this.walletUI.show("🔗 Link Wallet");
 		}
 	}
 
@@ -271,10 +153,7 @@ export default class MainScene extends Scene {
 						if (generation !== this.loadGeneration) {
 							return;
 						}
-						if (
-							width !== this.canvas.width ||
-							height !== this.canvas.height
-						) {
+						if (width !== this.canvas.width || height !== this.canvas.height) {
 							// Canvas resized mid flight: recompose at
 							// the current size (fragments are cached)
 							composeAttempt();
@@ -297,7 +176,7 @@ export default class MainScene extends Scene {
 						}
 						console.warn(
 							`trait composition failed for ${tokenId}, using legacy path`,
-							error
+							error,
 						);
 						loadFunction(complete);
 					});
@@ -319,7 +198,37 @@ export default class MainScene extends Scene {
 		}
 		this.isLoading = false;
 		this.preloader.style.opacity = 0;
-		this.updateSelectedThumbnail();
+		this.pickerUI.updateSelectedThumbnail();
+	}
+
+	/// Load a picked Avastar and collapse the picker. The current
+	/// Avastar keeps animating while the new one loads.
+	///
+	/// - Parameters:
+	///		- tokenId: The token id to load
+	///		- isSilent: When true no preloader is shown (used for
+	///			the automatic swap to the wallet's first Avastar)
+	selectAvastar(tokenId, isSilent) {
+		this.pickerUI.collapse();
+		// Guard against the latest REQUESTED token (recorded
+		// synchronously in beginLoad), not the loader's last
+		// completed one - re-picking the displayed token while a
+		// different load is in flight must start a fresh load that
+		// supersedes it
+		const current =
+			this.requestedTokenId != null
+				? this.requestedTokenId
+				: String(this.avastarLoader.tokenId);
+		if (String(tokenId) === current) {
+			return;
+		}
+		if (!isSilent) {
+			this.preloader.style.opacity = 1;
+		}
+		this.beginLoad(
+			(complete) => this.avastarLoader.loadToken(tokenId, complete),
+			tokenId,
+		);
 	}
 
 	// MARK: Overridden Methods
@@ -344,10 +253,7 @@ export default class MainScene extends Scene {
 					if (!this.avastar || this.avastar.tokenId !== recomposeToken) {
 						return;
 					}
-					if (
-						width !== this.canvas.width ||
-						height !== this.canvas.height
-					) {
+					if (width !== this.canvas.width || height !== this.canvas.height) {
 						return;
 					}
 					this.avastar = composed;
@@ -381,53 +287,25 @@ export default class MainScene extends Scene {
 			0,
 			0,
 			this.canvas.width,
-			this.canvas.height
+			this.canvas.height,
 		);
 
 		const centerPoint = new Point(
 			this.canvas.width / 2,
-			this.canvas.height / 2
+			this.canvas.height / 2,
+		);
+		this.layerSprings.step(
+			dt,
+			now,
+			centerPoint,
+			this.isTouchDown ? this.touchPoint : null,
 		);
 		for (let index = 0; index < this.avastar.layers.length; index++) {
-			const layer = this.avastar.layers[index];
-			const spring = this.layerSprings[index];
-
-			// Resting target is the center, drifting on slow sine
-			// waves so the Avastar "breathes" while idle
-			let targetX =
-				centerPoint.x +
-				Math.sin(now * 0.6 + spring.phase) * spring.swayAmp;
-			let targetY =
-				centerPoint.y +
-				Math.sin(now * 0.9 + spring.phase) * spring.breatheAmp;
-			if (this.isTouchDown) {
-				// Front layers overshoot toward the pointer more than
-				// back layers, separating them for a parallax feel
-				targetX =
-					centerPoint.x +
-					(this.touchPoint.x - centerPoint.x) * spring.reach;
-				targetY =
-					centerPoint.y +
-					(this.touchPoint.y - centerPoint.y) * spring.reach;
-			}
-
-			// Underdamped spring integration so layers overshoot
-			// and settle instead of moving linearly
-			const ax =
-				(targetX - spring.x) * spring.stiffness -
-				spring.vx * spring.damping;
-			const ay =
-				(targetY - spring.y) * spring.stiffness -
-				spring.vy * spring.damping;
-			spring.vx += ax * dt;
-			spring.vy += ay * dt;
-			spring.x += spring.vx * dt;
-			spring.y += spring.vy * dt;
-
+			const spring = this.layerSprings.at(index);
 			context.drawImage(
-				layer,
+				this.avastar.layers[index],
 				spring.x - this.canvas.width / 2,
-				spring.y - this.canvas.height / 2
+				spring.y - this.canvas.height / 2,
 			);
 		}
 	}
@@ -459,149 +337,6 @@ export default class MainScene extends Scene {
 		this.rootContainer.appendChild(this.preloader);
 	}
 
-	/// Create an img element for an SVG string. The backing blob
-	/// URL is revoked once the image has loaded, so thumbnails do
-	/// not leak object URLs across Avastar swaps.
-	///
-	/// - Parameter svgString: The SVG string to convert
-	svgToImage(svgString) {
-		const blob = new Blob([svgString], { type: "image/svg+xml" });
-		const url = URL.createObjectURL(blob);
-		const image = document.createElement("img");
-		image.src = url;
-		// Revoke on error too: a malformed SVG fires error instead
-		// of load and would otherwise leak the URL
-		const revoke = () => URL.revokeObjectURL(url);
-		image.addEventListener("load", revoke, { once: true });
-		image.addEventListener("error", revoke, { once: true });
-		return image;
-	}
-
-	/// Build the upper left thumbnail that expands into a picker
-	/// listing every Avastar the connected wallet owns
-	///
-	/// - Parameter tokenIds: The owned token ids to list
-	buildAvastarPicker(tokenIds) {
-		this.ownedTokenIds = tokenIds;
-		this.thumbnailCache = {};
-
-		this.picker = document.createElement("div");
-		this.picker.setAttribute("id", "avastarPicker");
-		this.stopSceneEvents(this.picker);
-
-		// The always visible thumbnail showing the current Avastar
-		this.selectedThumbnail = document.createElement("div");
-		this.selectedThumbnail.setAttribute("class", "pickerThumb current");
-		this.selectedThumbnail.addEventListener(
-			"click",
-			function () {
-				this.togglePicker();
-			}.bind(this)
-		);
-		this.picker.appendChild(this.selectedThumbnail);
-
-		// The expandable list of owned Avastars
-		this.pickerList = document.createElement("div");
-		this.pickerList.setAttribute("id", "pickerList");
-		for (const tokenId of tokenIds) {
-			const item = document.createElement("div");
-			item.setAttribute("class", "pickerThumb");
-			const label = document.createElement("span");
-			label.innerText = tokenId;
-			item.appendChild(label);
-			item.addEventListener(
-				"click",
-				function () {
-					this.selectAvastar(tokenId);
-				}.bind(this)
-			);
-			this.pickerItems = this.pickerItems || {};
-			this.pickerItems[tokenId] = item;
-			this.pickerList.appendChild(item);
-		}
-		this.picker.appendChild(this.pickerList);
-		this.rootContainer.appendChild(this.picker);
-		// The first load may have completed before the picker
-		// existed, so backfill the thumbnail
-		this.updateSelectedThumbnail();
-	}
-
-	/// Expand or collapse the picker list. Thumbnails render
-	/// lazily on first expand and are cached after that.
-	togglePicker() {
-		const isExpanded = this.pickerList.classList.toggle("expanded");
-		if (isExpanded) {
-			this.loadPickerThumbnails();
-		}
-	}
-
-	/// Render each owned Avastar into its picker thumbnail,
-	/// one at a time to keep the wallet RPC happy
-	async loadPickerThumbnails() {
-		if (this.isLoadingThumbnails) {
-			return;
-		}
-		this.isLoadingThumbnails = true;
-		for (const tokenId of this.ownedTokenIds) {
-			if (this.thumbnailCache[tokenId]) {
-				continue;
-			}
-			try {
-				const svgString = await this.avastarLoader.renderTokenSVG(
-					tokenId
-				);
-				this.thumbnailCache[tokenId] = true;
-				const item = this.pickerItems[tokenId];
-				item.innerHTML = "";
-				item.appendChild(this.svgToImage(svgString));
-			} catch (error) {
-				// Leave the token id label as the fallback thumbnail
-			}
-		}
-		this.isLoadingThumbnails = false;
-	}
-
-	/// Load a picked Avastar and collapse the picker. The current
-	/// Avastar keeps animating while the new one loads.
-	///
-	/// - Parameters:
-	///		- tokenId: The token id to load
-	///		- isSilent: When true no preloader is shown (used for
-	///			the automatic swap to the wallet's first Avastar)
-	selectAvastar(tokenId, isSilent) {
-		this.pickerList.classList.remove("expanded");
-		// Guard against the latest REQUESTED token (recorded
-		// synchronously in beginLoad), not the loader's last
-		// completed one - re-picking the displayed token while a
-		// different load is in flight must start a fresh load that
-		// supersedes it
-		const current =
-			this.requestedTokenId != null
-				? this.requestedTokenId
-				: String(this.avastarLoader.tokenId);
-		if (String(tokenId) === current) {
-			return;
-		}
-		if (!isSilent) {
-			this.preloader.style.opacity = 1;
-		}
-		this.beginLoad(
-			(complete) => this.avastarLoader.loadToken(tokenId, complete),
-			tokenId
-		);
-	}
-
-	/// Show the currently loaded Avastar in the collapsed thumbnail
-	updateSelectedThumbnail() {
-		if (!this.selectedThumbnail || !this.avastarLoader.currentAvastar) {
-			return;
-		}
-		this.selectedThumbnail.innerHTML = "";
-		this.selectedThumbnail.appendChild(
-			this.svgToImage(this.avastarLoader.currentAvastar)
-		);
-	}
-
 	/// Method used to trigger the parse of the currently loaded avastar.
 	parseAvastarSVG() {
 		// Check the avastar loader for an Avastar
@@ -613,7 +348,7 @@ export default class MainScene extends Scene {
 		// Create a new AvastarParser and pass in the currently loaded Avastar
 		this.avastar = new AvastarParser(
 			svgString,
-			new Size(this.canvas.width, this.canvas.height)
+			new Size(this.canvas.width, this.canvas.height),
 		);
 		this.avastar.debug = this.isParserDebugEnabled;
 		// Parse the Avastar SVG
@@ -625,34 +360,12 @@ export default class MainScene extends Scene {
 		this.setupLayerSprings();
 	}
 
-	/// Setup a spring for each layer so each moves independently.
-	/// Layer 0 is the deepest, the last layer is in front: front
-	/// layers get looser springs, larger breathing motion, and more
-	/// reach toward the pointer. Shared by the parser and trait
-	/// composition paths.
+	/// Rebuild the spring rig for the current Avastar's layers.
+	/// Shared by the parser and trait composition paths.
 	setupLayerSprings() {
-		this.layerSprings = [];
-		const layerCount = this.avastar.layers.length;
-		for (let index = 0; index < layerCount; index++) {
-			// Normalized depth 0 (back) to 1 (front): avastars can
-			// slice into very different layer counts depending on
-			// their traits, and raw index scaling made many layered
-			// ones fly apart
-			const depth = layerCount > 1 ? index / (layerCount - 1) : 0;
-			const stiffness = 90 - depth * 55;
-			const explodeScale = this.isExplodeEnabled ? 4 : 1;
-			this.layerSprings.push({
-				x: this.canvas.width / 2,
-				y: this.canvas.height / 2,
-				vx: 0,
-				vy: 0,
-				stiffness: stiffness,
-				damping: 2 * Math.sqrt(stiffness) * 0.45,
-				reach: 1 + depth * 0.35 * explodeScale,
-				phase: depth * 2.4,
-				swayAmp: 1 + depth * 3.5,
-				breatheAmp: 2 + depth * 6.5,
-			});
-		}
+		this.layerSprings.setup(
+			this.avastar.layers.length,
+			new Point(this.canvas.width / 2, this.canvas.height / 2),
+		);
 	}
 }

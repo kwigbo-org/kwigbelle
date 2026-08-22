@@ -21,6 +21,7 @@ URL flags: `?tokenid=N` · `?traitcompose=0` (legacy render path) ·
 `?explode=1` · `?parserdebug=1`
 
 Tests: see [Tests/README.md](Tests/README.md).
+Lint/format: `npm install` once, then `npm run check` (local only).
 Contributor/agent guide: [CLAUDE.md](CLAUDE.md).
 
 ## Deploy
