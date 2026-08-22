@@ -19,7 +19,7 @@ export default class MainScene extends Scene {
 	/// Overridden constructor
 	constructor(rootContainer) {
 		super(rootContainer);
-		console.log("kwigbelle build 2026-08-22.4 (side panel)");
+		console.log("kwigbelle build 2026-08-22.5 (trait cards)");
 		// Build the UI
 		this.buildUI();
 		// Start loading

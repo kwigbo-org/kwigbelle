@@ -92,7 +92,12 @@ export default class TraitComposer {
 		// Primary tone of each color gene (skin_fill, hair_fill,
 		// eye_iris, bg_color are the first fill in their blocks) -
 		// the trait panel shows these as swatches
-		const geneColors = fragments.slice(0, 4).map((fragment) => {
+		const geneColors = fragments.slice(0, 4).map((fragment, gene) => {
+			// The bg swatch must always agree with the canvas
+			// background: reuse the anchored .bg_color match
+			if (gene === 3) {
+				return bgMatch ? bgMatch[1] : null;
+			}
 			const match = fragment.match(/fill:\s*(#[0-9A-Fa-f]{3,8})/);
 			return match ? match[1] : null;
 		});
