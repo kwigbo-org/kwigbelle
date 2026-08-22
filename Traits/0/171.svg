@@ -1,0 +1,1 @@
+<defs><path id="backdrop_a" d="M0 0h1000v1000H0z"/></defs><use class="bg_color" overflow="visible" xlink:href="#backdrop_a"/><clipPath id="backdrop_b"><use overflow="visible" xlink:href="#backdrop_a"/></clipPath><circle cx="898.2" cy="185.3" r="400" fill="none" class="bg_stroke_3" stroke-miterlimit="10" clip-path="url(#backdrop_b)"/>

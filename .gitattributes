@@ -1,0 +1,6 @@
+# Generated on-chain art assets: integrity is enforced by sha256 in
+# Traits/index.json + extract-traits.js --verify and the held-out
+# byte-parity validation, not by eyeball review. Suppressing diffs
+# keeps PR reviews focused on the reviewable surface.
+/Traits/** -diff
+/Tools/data/hashes.json -diff

@@ -71,6 +71,11 @@ cp style.css build
 cp -r Lib build
 cp -r SVG build
 cp -r favicon build
+cp -r Traits build
+# Trait composition needs the hash corpus at the same path it has in
+# the repo (Lib/TraitComposer.js fetches ./Tools/data/hashes.json)
+mkdir -p build/Tools/data
+cp Tools/data/hashes.json build/Tools/data/hashes.json
 
 # Keep macOS metadata out of every deploy target
 find build -name '.DS_Store' -delete
