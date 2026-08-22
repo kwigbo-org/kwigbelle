@@ -100,8 +100,10 @@ MainScene (extended)
 
 1. **Composer split + `hasToken`/`traitsForGene`.**
    Action: refactor compose; add corpus/membership helpers.
-   Validate: compose-test parity stays byte-identical; new unit
-   assertions via harness (picksFor(8014) names match index).
+   Validate: compose-test content parity (whitespace-stripped)
+   stays unchanged — byte parity remains covered by
+   Tools/validate-composition.js; new harness assertions
+   (picksFor(8014) names match index).
    Rollback: single-commit revert; wrapper keeps old callers.
 2. **Load section (PR #8 completes here).**
    Action: LoadSection at top of panel; inline validation; wire to
@@ -140,3 +142,15 @@ Single-lane feature; no cross-lane consumers.
 - 2026-08-22 — Draft written from operator directive; opened as
   PR #8 for panel review before implementation (pattern (a):
   implementation lands as follow-up commits to this PR).
+- 2026-08-22 — Panel round 1 on TAD content: STATUS:CLEAN (2/3;
+  both Claude reviewers fact-checked claims against source).
+  Minority catch fixed: Step 1 validation wording claimed byte
+  parity where compose-test checks whitespace-stripped content
+  parity. Beginning Steps 1-2.
+- 2026-08-22 — Steps 1-2 applied: composer split (picksFor /
+  composePicks / hasToken / traitsForGene; compose is the wrapper)
+  and LoadSection wired as the top panel section. Validated by
+  Tests/load-test.js: composePicks(picksFor(8014)).fullSVG ===
+  compose(8014).fullSVG; hasToken membership; traitsForGene(11) =
+  78 sorted records; walletless load of 12345 via Enter; junk and
+  unknown ids rejected inline with no load started. Full suite 9/9.

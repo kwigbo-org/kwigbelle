@@ -32,6 +32,7 @@ node switch-test.js    # wrong-network -> Switch to Mainnet button -> reload -> 
 node eip-test.js       # EIP-6963 discovery, legacy fallback, tap-to-connect
 node failure-test.js   # happy mainnet / wrong chain / failing RPC render
 node panel-test.js     # side panel: open, pause/resume, trait visibility, persistence
+node load-test.js      # Load Avastar section: walletless load, validation, composer split
 ```
 
 Every test prints its own pass evidence and exits nonzero on any

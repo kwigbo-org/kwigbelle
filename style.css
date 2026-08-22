@@ -203,6 +203,50 @@
 	display: none;
 }
 
+.loadControls {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.loadNote {
+	font-size: 12px;
+	color: #666;
+	line-height: 1.35;
+}
+
+.loadRow {
+	display: flex;
+	gap: 8px;
+}
+
+#loadTokenInput {
+	flex: 1;
+	min-width: 0;
+	padding: 8px 12px;
+	border-radius: 10px;
+	border: 1px solid rgba(0, 0, 0, 0.2);
+	font-size: 14px;
+	font-family: inherit;
+}
+
+.loadButton {
+	padding: 8px 16px;
+	border-radius: 10px;
+	background: #333;
+	color: #fff;
+	font-size: 14px;
+	font-weight: 600;
+	cursor: pointer;
+	-webkit-tap-highlight-color: transparent;
+}
+
+.loadError {
+	font-size: 12px;
+	color: #b00020;
+	min-height: 1em;
+}
+
 .effectRow {
 	display: flex;
 	align-items: center;

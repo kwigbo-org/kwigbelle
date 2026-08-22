@@ -55,16 +55,36 @@ export default class TraitComposer {
 		return this.fragmentCache.get(trait.traitId);
 	}
 
-	/// Compose a token into display layers.
+	/// - Parameter tokenId: A token id to test
+	/// - Returns: True when the token exists in the hash corpus
+	async hasToken(tokenId) {
+		await this.loadLibrary();
+		return this.hashes[tokenId] !== undefined;
+	}
+
+	/// Every library trait that can occupy a gene slot, in stable
+	/// variation order. Used by the trait edit modal.
 	///
-	/// - Parameters:
-	///		- tokenId: The Avastar token id
-	///		- displaySize: Size the layer images should render at
-	///	- Returns: { backgroundLayer, layers, layerInfo, traits,
-	///		backgroundColor, fullSVG } - a drop-in for the shape
-	///		MainScene consumes from AvastarParser, plus trait
-	///		metadata and the byte-exact full SVG.
-	async compose(tokenId, displaySize) {
+	/// - Parameter gene: The gene slot (0-11)
+	/// - Returns: Array of trait records
+	async traitsForGene(gene) {
+		await this.loadLibrary();
+		const records = [];
+		for (const record of this.byKey.values()) {
+			if (record.gene === gene) {
+				records.push(record);
+			}
+		}
+		records.sort((a, b) => a.variation - b.variation);
+		return records;
+	}
+
+	/// Resolve a token's trait hash into its 12 trait records
+	/// (gene-ordered: index = gene id).
+	///
+	/// - Parameter tokenId: The Avastar token id
+	/// - Returns: Array of 12 trait records
+	async picksFor(tokenId) {
 		await this.loadLibrary();
 		const entry = this.hashes[tokenId];
 		if (!entry) {
@@ -82,6 +102,35 @@ export default class TraitComposer {
 			}
 			picks.push(record);
 		}
+		return picks;
+	}
+
+	/// Compose a token into display layers.
+	///
+	/// - Parameters:
+	///		- tokenId: The Avastar token id
+	///		- displaySize: Size the layer images should render at
+	///	- Returns: The composePicks display object with tokenId set
+	async compose(tokenId, displaySize) {
+		const picks = await this.picksFor(tokenId);
+		const composed = await this.composePicks(picks, displaySize);
+		composed.tokenId = String(tokenId);
+		return composed;
+	}
+
+	/// Compose an arbitrary set of trait picks into display layers.
+	/// This is the surface the trait swap preview renders through -
+	/// the picks need not correspond to any minted token.
+	///
+	/// - Parameters:
+	///		- picks: 12 gene-ordered trait records (see picksFor)
+	///		- displaySize: Size the layer images should render at
+	///	- Returns: { tokenId: null, backgroundLayer, layers,
+	///		layerInfo, traits, geneColors, backgroundColor, fullSVG }
+	///		- the shape MainScene consumes; fullSVG stays the exact
+	///		renderAvastar reconstruction for real-token picks.
+	async composePicks(picks, displaySize) {
+		await this.loadLibrary();
 		const fragments = await Promise.all(picks.map((p) => this.fragmentFor(p)));
 		// Genes 0-3 are the color style blocks; they must be present
 		// in every layer document so class fills resolve
@@ -109,8 +158,9 @@ export default class TraitComposer {
 		}
 		return {
 			// The token this composition belongs to: consumers guard
-			// stale async results against it
-			tokenId: String(tokenId),
+			// stale async results against it. compose() fills it in;
+			// preview compositions have no token.
+			tokenId: null,
 			// Backdrop (gene 4) stretches to fill like the parser's
 			// background bucket did
 			backgroundLayer: this.toImage(styles + fragments[4], true, displaySize),
