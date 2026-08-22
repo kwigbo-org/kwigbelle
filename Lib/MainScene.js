@@ -25,7 +25,7 @@ export default class MainScene extends Scene {
 	/// Overridden constructor
 	constructor(rootContainer) {
 		super(rootContainer);
-		console.log("kwigbelle build 2026-08-22.8 (vrm viewer)");
+		console.log("kwigbelle build 2026-08-23.1 (design cues)");
 		// Build the UI
 		this.buildUI();
 		// Start loading
@@ -70,6 +70,7 @@ export default class MainScene extends Scene {
 			onEdit: (gene) => this.openTraitEditor(gene),
 			onUndo: (gene) => this.undoOverride(gene),
 			onResetAll: () => this.resetOverrides(),
+			ubFor: (tokenId) => this.traitComposer.ubFor(tokenId),
 		});
 		this.sidePanel.addSection("Traits", this.traitsSection.build());
 		this.traitEditModal = new TraitEditModal(this.traitComposer);
@@ -210,6 +211,11 @@ export default class MainScene extends Scene {
 					// A fresh token load resets the trait swap preview
 					this.baselinePicks = composed.traits;
 					this.baseGender = composed.gender;
+					// Identity facts are properties of the loaded
+					// TOKEN: previews re-stamp them from here
+					this.baseKind = composed.kind;
+					this.baseSeries = composed.series;
+					this.baseRanking = composed.ranking;
 					this.overrides = new Map();
 					this.setupLayerSprings();
 					this.finishLoad(generation);
@@ -250,6 +256,12 @@ export default class MainScene extends Scene {
 		if (generation !== this.loadGeneration) {
 			return;
 		}
+		// Identity chips need no composition - pure hash-corpus
+		// lookup, so even a failed composition shows kind/series
+		const info = await this.traitComposer.tokenInfo(tokenId).catch(() => null);
+		if (generation !== this.loadGeneration) {
+			return;
+		}
 		const attempt = () => {
 			// Captured-size staleness: staticImage sizes from the
 			// canvas at call time, so a resize while the image was
@@ -277,6 +289,8 @@ export default class MainScene extends Scene {
 					this.avastar = {
 						tokenId: tokenId != null ? String(tokenId) : null,
 						isStatic: true,
+						kind: info ? info.kind : null,
+						series: info ? info.series : null,
 						sourceSVG: svgString,
 						backgroundLayer: null,
 						layers: [image],
@@ -678,6 +692,9 @@ export default class MainScene extends Scene {
 				}
 				composed.tokenId = previewToken;
 				composed.gender = this.baseGender;
+				composed.kind = this.baseKind;
+				composed.series = this.baseSeries;
+				composed.ranking = this.baseRanking;
 				this.avastar = composed;
 				// Keep the collapsed picker thumbnail honest about
 				// what is on screen

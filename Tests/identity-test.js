@@ -27,7 +27,7 @@ const { check } = require("./check.js");
 
 	const readCard = () =>
 		page.evaluate(() => ({
-			title: document.querySelector(".identityTitle")?.innerText || "",
+			title: document.querySelector(".identityTitle")?.textContent || "",
 			chips: [...document.querySelectorAll(".identityChip")].map(
 				(c) => c.innerText,
 			),
@@ -73,6 +73,23 @@ const { check } = require("./check.js");
 		"identity card should carry 6 icons (score + 5 dist): " + card.cardIcons,
 	);
 	check(card.rowIcons === 12, "every trait card needs a tier icon");
+
+	// Unique-By line fills in async from the frozen table; 8014 is
+	// a lottery prime with locally-verified anchors u2=1 / u3=41
+	await page.waitForSelector(".identityUB", { timeout: 15000 });
+	const ubLine = await page.evaluate(() => ({
+		line: document.querySelector(".identityUB")?.innerText || "",
+		note: document.querySelector(".identityUBNote")?.innerText || "",
+	}));
+	console.log("UB:", JSON.stringify(ubLine));
+	check(
+		ubLine.line === "Unique-By combos: 2-trait 1 · 3-trait 41",
+		"wrong UB line: " + ubLine.line,
+	);
+	check(
+		ubLine.note.includes("Series 1-5 primes"),
+		"UB qualifier missing: " + ubLine.note,
+	);
 
 	// Modal option tiles carry icons too
 	await page.locator(".traitRow .traitEdit").last().click();
@@ -123,7 +140,8 @@ const { check } = require("./check.js");
 	await page.press("#loadTokenInput", "Enter");
 	await page.waitForFunction(
 		() =>
-			document.querySelector(".identityTitle")?.innerText === "Avastar #25500",
+			document.querySelector(".identityTitle")?.textContent ===
+			"Avastar #25500",
 		{ timeout: 15000 },
 	);
 	const replicant = await readCard();
@@ -140,12 +158,21 @@ const { check } = require("./check.js");
 		replicant.score === "Score 61 · Legendary",
 		"wrong replicant score line: " + replicant.score,
 	);
+	// Replicants did not play the mint lottery: no Unique-By line
+	// (table already cached in-page, so no async wait needed beyond
+	// this settle)
+	await page.waitForTimeout(600);
+	check(
+		!(await page.evaluate(() => !!document.querySelector(".identityUB"))),
+		"replicant shows a Unique-By line",
+	);
 
 	// Founder: promo kind chip + Series 0 (token 50 -> score 62)
 	await page.fill("#loadTokenInput", "50");
 	await page.press("#loadTokenInput", "Enter");
 	await page.waitForFunction(
-		() => document.querySelector(".identityTitle")?.innerText === "Avastar #50",
+		() =>
+			document.querySelector(".identityTitle")?.textContent === "Avastar #50",
 		{ timeout: 15000 },
 	);
 	const founder = await readCard();
@@ -158,6 +185,11 @@ const { check } = require("./check.js");
 	check(
 		founder.score === "Score 62 · Legendary",
 		"wrong founder score line: " + founder.score,
+	);
+	await page.waitForTimeout(600);
+	check(
+		!(await page.evaluate(() => !!document.querySelector(".identityUB"))),
+		"founder shows a Unique-By line (hand-picked traits, no lottery)",
 	);
 
 	console.log("errors:", errors.length ? errors : "none");

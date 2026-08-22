@@ -1,4 +1,5 @@
 import { stopSceneEvents, svgToImage } from "./UIHelpers.js";
+import { rarityIcon } from "./RarityIcons.js";
 
 /// The trait chooser overlay: every library trait that can occupy a
 /// gene slot, rendered as true thumbnails styled with the current
@@ -255,7 +256,12 @@ export default class TraitEditModal {
 		element.appendChild(name);
 		const tag = document.createElement("span");
 		tag.setAttribute("class", "traitRarity");
-		tag.innerText = record.rarityName || "";
+		if (typeof record.rarity === "number") {
+			tag.appendChild(rarityIcon(record.rarity));
+		}
+		const tagName = document.createElement("span");
+		tagName.innerText = record.rarityName || "";
+		tag.appendChild(tagName);
 		element.appendChild(tag);
 
 		const fill = async () => {

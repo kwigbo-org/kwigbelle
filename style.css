@@ -1,3 +1,35 @@
+/* Design tokens (docs/tads/design-cues.md): the avastars.io
+   language - deep navy chrome, Inconsolata mono, blue headings,
+   purple accents. Rarity tier colors match Lib/RarityIcons.js;
+   series colors follow the Gen-1 sheet. The Avastar ART AREA is
+   exempt: the canvas backdrop stays the token's own color. */
+:root {
+	--bg: #150437;
+	--surface: rgba(255, 255, 255, 0.06);
+	--surface-2: rgba(255, 255, 255, 0.12);
+	--panel: rgba(16, 3, 43, 0.92);
+	--sheet: #1a0741;
+	--border: rgba(172, 29, 255, 0.35);
+	--border-soft: rgba(255, 255, 255, 0.14);
+	--heading: #0d8ffb;
+	--accent: #ac1dff;
+	--text: #f7f8fc;
+	--muted: #aaa8ad;
+	--error: #ff6b81;
+	--font: "Inconsolata", monospace;
+	--tier-common: #0d8ffb;
+	--tier-uncommon: #2ecc71;
+	--tier-rare: #f5a623;
+	--tier-epic: #7b52d4;
+	--tier-legendary: #ff4757;
+	--series-0: #1fa88c;
+	--series-1: #9c27b0;
+	--series-2: #e648c2;
+	--series-3: #4a6cf7;
+	--series-4: #26c6da;
+	--series-5: #7c4dff;
+}
+
 /*Avastar Picker*/
 
 #avastarPicker,
@@ -17,9 +49,9 @@
 	height: 64px;
 	flex: 0 0 64px;
 	border-radius: 50%;
-	border: 2px solid #fff;
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
-	background: rgba(255, 255, 255, 0.4);
+	border: 2px solid var(--border);
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+	background: rgba(21, 4, 55, 0.6);
 	overflow: hidden;
 	cursor: pointer;
 	display: flex;
@@ -29,7 +61,7 @@
 }
 
 .pickerThumb.current {
-	border-color: #333;
+	border-color: var(--heading);
 }
 
 .pickerThumb img {
@@ -40,20 +72,20 @@
 
 .pickerThumb span {
 	font-size: 13px;
-	color: #333;
+	color: var(--text);
 	pointer-events: none;
 }
 
 .connectButton {
 	padding: 12px 20px;
 	border-radius: 32px;
-	border: 2px solid #fff;
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
-	background: rgba(255, 255, 255, 0.6);
-	color: #333;
-	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+	border: 2px solid var(--border);
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+	background: rgba(21, 4, 55, 0.85);
+	color: var(--text);
+	font-family: var(--font);
 	font-size: 15px;
-	font-weight: 600;
+	font-weight: 700;
 	white-space: nowrap;
 	cursor: pointer;
 	-webkit-tap-highlight-color: transparent;
@@ -71,13 +103,13 @@
 	gap: 10px;
 	padding: 10px 16px;
 	border-radius: 24px;
-	border: 2px solid #fff;
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
-	background: rgba(255, 255, 255, 0.6);
-	color: #333;
-	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+	border: 2px solid var(--border);
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+	background: rgba(21, 4, 55, 0.85);
+	color: var(--text);
+	font-family: var(--font);
 	font-size: 14px;
-	font-weight: 600;
+	font-weight: 700;
 	white-space: nowrap;
 	cursor: pointer;
 	-webkit-tap-highlight-color: transparent;
@@ -137,11 +169,11 @@
 	/* Sized to read as a peer of the 64px picker thumbnail */
 	padding: 14px 16px;
 	border-radius: 20px 0 0 20px;
-	border: 2px solid #fff;
+	border: 2px solid var(--border);
 	border-right: none;
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
-	background: rgba(255, 255, 255, 0.6);
-	color: #333;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+	background: rgba(21, 4, 55, 0.85);
+	color: var(--text);
 	font-size: 44px;
 	line-height: 1;
 	cursor: pointer;
@@ -158,18 +190,23 @@
 	display: flex;
 	flex-direction: column;
 	gap: 10px;
-	background: rgba(255, 255, 255, 0.85);
+	background: var(--panel);
 	backdrop-filter: blur(6px);
-	box-shadow: -2px 0 12px rgba(0, 0, 0, 0.2);
-	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-	color: #333;
+	box-shadow: -2px 0 12px rgba(0, 0, 0, 0.5);
+	font-family: var(--font);
+	color: var(--text);
+}
+
+/* Range sliders and checkboxes pick up the accent */
+#panelSections input,
+#traitModal input {
+	accent-color: var(--accent);
 }
 
 .panelSection {
-	border: 2px solid #fff;
+	border: 1px solid var(--border);
 	border-radius: 16px;
-	background: rgba(255, 255, 255, 0.6);
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+	background: var(--surface);
 	overflow: hidden;
 	/* Never compress to fit: the column (#panelSections) scrolls.
 	   Without this, flex shrinks sections and clips their content. */
@@ -181,8 +218,12 @@
 	justify-content: space-between;
 	align-items: center;
 	padding: 10px 14px;
-	font-size: 15px;
-	font-weight: 600;
+	font-size: 14px;
+	font-weight: 700;
+	/* avastars.io heading voice: blue uppercase mono */
+	color: var(--heading);
+	text-transform: uppercase;
+	letter-spacing: 1px;
 	cursor: pointer;
 	-webkit-tap-highlight-color: transparent;
 }
@@ -211,7 +252,7 @@
 
 .loadNote {
 	font-size: 12px;
-	color: #666;
+	color: var(--muted);
 	line-height: 1.35;
 }
 
@@ -225,7 +266,9 @@
 	min-width: 0;
 	padding: 8px 12px;
 	border-radius: 10px;
-	border: 1px solid rgba(0, 0, 0, 0.2);
+	border: 1px solid var(--border-soft);
+	background: var(--surface);
+	color: var(--text);
 	font-size: 14px;
 	font-family: inherit;
 }
@@ -233,17 +276,19 @@
 .loadButton {
 	padding: 8px 16px;
 	border-radius: 10px;
-	background: #333;
+	border: none;
+	background: var(--accent);
 	color: #fff;
 	font-size: 14px;
-	font-weight: 600;
+	font-weight: 700;
+	font-family: inherit;
 	cursor: pointer;
 	-webkit-tap-highlight-color: transparent;
 }
 
 .loadError {
 	font-size: 12px;
-	color: #b00020;
+	color: var(--error);
 	min-height: 1em;
 }
 
@@ -274,9 +319,8 @@
 	gap: 10px;
 	padding: 10px 12px;
 	border-radius: 12px;
-	background: rgba(255, 255, 255, 0.9);
-	border: 1px solid rgba(0, 0, 0, 0.06);
-	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+	background: var(--surface);
+	border: 1px solid var(--border-soft);
 	font-size: 14px;
 	cursor: pointer;
 }
@@ -296,7 +340,7 @@
 	height: 13px;
 	flex: 0 0 13px;
 	border-radius: 50%;
-	border: 1px solid rgba(0, 0, 0, 0.25);
+	border: 1px solid rgba(255, 255, 255, 0.4);
 	background: transparent;
 }
 
@@ -317,7 +361,7 @@
 	/* Full trait names always show - wrap instead of truncating */
 	overflow-wrap: anywhere;
 	line-height: 1.25;
-	color: #555;
+	color: var(--muted);
 }
 
 .traitRarity {
@@ -325,9 +369,12 @@
 	font-weight: 600;
 	padding: 2px 8px;
 	border-radius: 10px;
-	background: rgba(0, 0, 0, 0.08);
+	background: var(--surface-2);
 	white-space: nowrap;
 	margin-top: 1px;
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
 }
 
 .traitSide {
@@ -341,7 +388,7 @@
 	font-size: 15px;
 	padding: 1px 8px;
 	border-radius: 8px;
-	background: rgba(0, 0, 0, 0.08);
+	background: var(--surface-2);
 	cursor: pointer;
 	-webkit-tap-highlight-color: transparent;
 }
@@ -351,17 +398,17 @@
 	gap: 8px;
 	align-items: center;
 	font-size: 12px;
-	color: #777;
+	color: var(--muted);
 	font-style: italic;
 }
 
 .traitUndo {
 	font-style: normal;
 	font-weight: 600;
-	color: #333;
+	color: var(--text);
 	padding: 1px 8px;
 	border-radius: 8px;
-	background: rgba(0, 0, 0, 0.08);
+	background: var(--surface-2);
 	cursor: pointer;
 	white-space: nowrap;
 	-webkit-tap-highlight-color: transparent;
@@ -370,10 +417,10 @@
 .resetAll {
 	padding: 8px 12px;
 	border-radius: 12px;
-	background: #333;
+	background: var(--accent);
 	color: #fff;
 	font-size: 13px;
-	font-weight: 600;
+	font-weight: 700;
 	text-align: center;
 	cursor: pointer;
 	-webkit-tap-highlight-color: transparent;
@@ -385,12 +432,12 @@
 	position: fixed;
 	inset: 0;
 	z-index: 40;
-	background: rgba(0, 0, 0, 0.45);
+	background: rgba(5, 0, 20, 0.65);
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-	color: #333;
+	font-family: var(--font);
+	color: var(--text);
 }
 
 .modalSheet {
@@ -399,8 +446,9 @@
 	display: flex;
 	flex-direction: column;
 	border-radius: 18px;
-	background: rgba(255, 255, 255, 0.97);
-	box-shadow: 0 8px 40px rgba(0, 0, 0, 0.35);
+	border: 1px solid var(--border);
+	background: var(--sheet);
+	box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6);
 	overflow: hidden;
 }
 
@@ -409,13 +457,16 @@
 	align-items: center;
 	gap: 12px;
 	padding: 14px 18px;
-	border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+	border-bottom: 1px solid var(--border-soft);
 }
 
 .modalTitle {
 	flex: 1;
-	font-size: 17px;
+	font-size: 16px;
 	font-weight: 700;
+	color: var(--heading);
+	text-transform: uppercase;
+	letter-spacing: 1px;
 }
 
 .modalShowAll {
@@ -430,7 +481,7 @@
 	font-size: 18px;
 	padding: 4px 10px;
 	border-radius: 8px;
-	background: rgba(0, 0, 0, 0.08);
+	background: var(--surface-2);
 	cursor: pointer;
 	-webkit-tap-highlight-color: transparent;
 }
@@ -439,7 +490,7 @@
 	display: flex;
 	gap: 10px;
 	padding: 10px 18px;
-	border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+	border-bottom: 1px solid var(--border-soft);
 }
 
 .modalFilterText {
@@ -447,7 +498,9 @@
 	min-width: 0;
 	padding: 8px 12px;
 	border-radius: 10px;
-	border: 1px solid rgba(0, 0, 0, 0.2);
+	border: 1px solid var(--border-soft);
+	background: var(--surface);
+	color: var(--text);
 	font-size: 14px;
 	font-family: inherit;
 }
@@ -456,10 +509,11 @@
 .modalFilterSeries {
 	padding: 8px 10px;
 	border-radius: 10px;
-	border: 1px solid rgba(0, 0, 0, 0.2);
+	border: 1px solid var(--border-soft);
 	font-size: 14px;
 	font-family: inherit;
-	background: #fff;
+	background: var(--sheet);
+	color: var(--text);
 }
 
 .modalGrid {
@@ -478,14 +532,14 @@
 	padding: 10px 8px;
 	border-radius: 12px;
 	border: 2px solid transparent;
-	background: rgba(0, 0, 0, 0.04);
+	background: var(--surface);
 	cursor: pointer;
 	text-align: center;
 	-webkit-tap-highlight-color: transparent;
 }
 
 .modalOption.current {
-	border-color: #333;
+	border-color: var(--heading);
 }
 
 .modalPreview {
@@ -494,6 +548,10 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
+	/* Art thumbnails keep a light plate: fragments are drawn for
+	   the token's light face colors, not for the dark chrome */
+	background: #f7f8fc;
+	border-radius: 10px;
 }
 
 .modalPreview img {
@@ -506,7 +564,7 @@
 	width: 76px;
 	height: 76px;
 	border-radius: 50%;
-	border: 1px solid rgba(0, 0, 0, 0.25);
+	border: 1px solid rgba(255, 255, 255, 0.35);
 }
 
 .modalOptionName {
@@ -518,6 +576,7 @@
 .traitNote {
 	font-size: 13px;
 	font-style: italic;
+	color: var(--muted);
 	padding: 6px 0;
 }
 
@@ -527,7 +586,8 @@
 	font-size: 30px;
 	padding: 20px;
 	display: inline-block;
-	background-color: #ccc; /* Light */
+	background-color: rgba(21, 4, 55, 0.85);
+	border: 1px solid var(--border);
 	border-radius: 25px;
 	margin: 0;
 	position: absolute;
@@ -593,10 +653,11 @@
 	min-width: 44px;
 	padding: 12px 14px;
 	border-radius: 20px;
-	border: 2px solid #fff;
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
-	background: rgba(255, 255, 255, 0.6);
-	color: #333;
+	border: 2px solid var(--border);
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+	background: rgba(21, 4, 55, 0.85);
+	color: var(--text);
+	font-family: var(--font);
 	font-size: 26px;
 	font-weight: 700;
 	line-height: 1;
@@ -618,9 +679,10 @@
 	max-width: 240px;
 	padding: 8px 12px;
 	border-radius: 10px;
-	background: rgba(20, 20, 20, 0.85);
-	color: #fff;
-	font-family: sans-serif;
+	border: 1px solid var(--border);
+	background: rgba(21, 4, 55, 0.9);
+	color: var(--text);
+	font-family: var(--font);
 	font-size: 14px;
 	opacity: 0;
 	transition: opacity 0.3s;
@@ -633,9 +695,9 @@
 
 /* 3D model section */
 .vrmProgress {
-	font-family: sans-serif;
+	font-family: var(--font);
 	font-size: 13px;
-	color: #444;
+	color: var(--muted);
 	padding: 2px 0;
 }
 
@@ -651,8 +713,8 @@
 	z-index: 15;
 	text-align: center;
 	pointer-events: none;
-	background-color: rgba(40, 40, 40, 0.75);
-	color: #fff;
+	background-color: rgba(21, 4, 55, 0.88);
+	color: var(--text);
 }
 
 #vrmLoading.visible {
@@ -660,7 +722,7 @@
 }
 
 #vrmLoadingText {
-	font-family: sans-serif;
+	font-family: var(--font);
 	font-size: 16px;
 	padding-top: 10px;
 	white-space: nowrap;
@@ -680,7 +742,7 @@
 	height: 100%;
 	width: 0%;
 	border-radius: 4px;
-	background: #fff;
+	background: var(--heading);
 	transition: width 0.15s linear;
 }
 
@@ -700,9 +762,101 @@
 }
 
 #vrmLoadingHint {
-	font-family: sans-serif;
+	font-family: var(--font);
 	font-size: 12px;
 	opacity: 0.7;
 	padding-top: 8px;
 	white-space: nowrap;
+}
+
+.rarityIcon {
+	width: 13px;
+	height: 13px;
+	flex-shrink: 0;
+	vertical-align: -2px;
+}
+
+/* Identity card at the top of the Traits section */
+.identityCard {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	padding: 12px;
+	border-radius: 10px;
+	border: 1px solid var(--border);
+	background: var(--surface);
+	font-family: var(--font);
+}
+
+.identityTitle {
+	font-weight: 700;
+	font-size: 15px;
+	color: var(--heading);
+	text-transform: uppercase;
+	letter-spacing: 1px;
+}
+
+.identityChips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+}
+
+.identityChip {
+	padding: 2px 10px;
+	border-radius: 999px;
+	font-size: 12px;
+	font-weight: 700;
+	color: #fff;
+	background: rgba(255, 255, 255, 0.22);
+}
+
+.identityChip.series-0 {
+	background: var(--series-0);
+}
+.identityChip.series-1 {
+	background: var(--series-1);
+}
+.identityChip.series-2 {
+	background: var(--series-2);
+}
+.identityChip.series-3 {
+	background: var(--series-3);
+}
+.identityChip.series-4 {
+	background: var(--series-4);
+}
+.identityChip.series-5 {
+	background: var(--series-5);
+}
+
+.identityScore {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	font-weight: 700;
+	font-size: 14px;
+}
+
+.identityDist {
+	display: flex;
+	gap: 12px;
+	font-size: 13px;
+}
+
+.identityDistItem {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.identityUB {
+	font-size: 13px;
+	font-weight: 600;
+}
+
+.identityUBNote {
+	font-size: 11px;
+	color: var(--muted);
+	margin-top: -4px;
 }

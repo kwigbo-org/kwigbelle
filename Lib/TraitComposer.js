@@ -62,6 +62,50 @@ export default class TraitComposer {
 		return this.hashes[tokenId] !== undefined;
 	}
 
+	/// Unique-By combo counts for a LOTTERY PRIME (#200-25199) from
+	/// the precomputed frozen table (docs/tads/design-cues.md
+	/// Decision 6; Tools/compute-ub.js). Founders, exclusives, and
+	/// replicants did not play the mint lottery and have no entry.
+	/// The 600KB table is fetched lazily on first ask and cached.
+	///
+	/// - Parameter tokenId: A token id
+	/// - Returns: { u2, u3 } or null (non-lottery token, unknown
+	///		token, or table unavailable)
+	async ubFor(tokenId) {
+		const id = Number(tokenId);
+		if (!(id >= 200 && id < 25200)) {
+			return null;
+		}
+		if (this.ubPromise === undefined) {
+			this.ubPromise = fetch("./Tools/data/ub.json")
+				.then((r) => (r.ok ? r.json() : null))
+				.catch(() => null);
+		}
+		const table = await this.ubPromise;
+		return table ? table[id] || null : null;
+	}
+
+	/// Identity facts for a token straight from the hash corpus -
+	/// no composition needed, so the static-fallback path can use
+	/// it too (docs/tads/design-cues.md)
+	///
+	/// - Parameter tokenId: A token id
+	/// - Returns: { kind, series, ranking, gender } or null when
+	///		the token is not in the corpus
+	async tokenInfo(tokenId) {
+		await this.loadLibrary();
+		const entry = this.hashes[tokenId];
+		if (!entry) {
+			return null;
+		}
+		return {
+			kind: entry.kind,
+			series: entry.series !== undefined ? entry.series : null,
+			ranking: entry.ranking,
+			gender: entry.gender,
+		};
+	}
+
 	/// Every library trait that can occupy a gene slot, in stable
 	/// variation order. Used by the trait edit modal.
 	///
@@ -118,6 +162,12 @@ export default class TraitComposer {
 		// Token gender (0 any / 1 male / 2 female): the trait edit
 		// modal filters gendered art by it
 		composed.gender = this.hashes[tokenId].gender;
+		// Identity-card facts (docs/tads/design-cues.md): kind,
+		// series (null for replicants), and the 1-100 rarity score
+		const entry = this.hashes[tokenId];
+		composed.kind = entry.kind;
+		composed.series = entry.series !== undefined ? entry.series : null;
+		composed.ranking = entry.ranking;
 		return composed;
 	}
 
@@ -175,6 +225,12 @@ export default class TraitComposer {
 			traits: picks,
 			geneColors,
 			gender: null,
+			// Identity facts are token properties: compose() fills
+			// them in, previews inherit the loaded token's via the
+			// scene (same contract as gender)
+			kind: null,
+			series: null,
+			ranking: null,
 			// The joined color style blocks - the trait edit modal
 			// styles its option thumbnails with these so previews
 			// match the current face's colors

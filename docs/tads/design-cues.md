@@ -1,6 +1,6 @@
 # TAD: avastars.io design cues (dark theme, rarity icons, identity card)
 
-- **Status:** DRAFT (2026-08-23)
+- **Status:** Steps 1-4 applied — in review (2026-08-23, PR #12)
 - **Driver:** Operator: "We need to match the design cues of the
   avastars site... including the rarity icons." + "We need to mark
   avastars with these indicators" (series ranges infographic) +
@@ -270,3 +270,36 @@ in Step 3 with no structural change (vrm-viewer TAD unaffected).
   stack); `level` clarified as the tokenURI metadata attribute,
   not a hashes.json field; stale "(gated Step 4)" label in the
   design surface updated to the lottery-prime definition.
+- 2026-08-23 — Panel round 2: STATUS:CLEAN (3/3). Beginning
+  implementation as follow-up commits.
+- 2026-08-23 — Steps 1-2 applied: composer stamps kind/series/
+  ranking (+ tokenInfo for the static path); Lib/RarityIcons.js
+  (tier shapes/colors/bands + kindLabel); identity card in
+  TraitsSection; icons in trait cards, modal tiles, distribution
+  row. Validated by Tests/identity-test.js: 8014 (Prime, Series 2,
+  Score 36 Uncommon, distribution 6/4/1/0/1 matching the index),
+  25500 (Replicant, no series chip, Score 61 Legendary), 50
+  (Founder + Series 0); overrides keep token identity and undo
+  restores the distribution. Suite 14/14.
+- 2026-08-23 — Step 3 applied: dark chrome theme (tokens in
+  :root; every surface restyled - panel, cards, modal, picker,
+  wallet, toggles, overlays; art area untouched per Decision 1);
+  Inconsolata linked with monospace fallback; heading voice
+  (uppercase, letterspaced, #0D8FFB); initial page background is
+  the navy until the token's own color lands. Stamp 2026-08-23.1.
+  One test-side truth: `text-transform: uppercase` changes
+  innerText, so tests compare textContent for transformed
+  elements (title, section headers). Deviation from draft: the
+  modal's art thumbnails keep a LIGHT plate (#F7F8FC) - the
+  fragments are drawn for the token's face colors and go
+  illegible on navy. Suite 14/14 against the themed build.
+- 2026-08-23 — Step 4 applied: Tools/compute-ub.js (lottery
+  primes #200-25,199, all invariants enforced in-script);
+  Tools/data/ub.json committed (611KB, -diff, deterministic -
+  identical sha256 across runs); deploy.sh ships it (verified in
+  the build output); composer.ubFor lazy-loads the table; the
+  identity card's Unique-By line fills in async with the
+  "(all 12 traits, among Series 1-5 primes)" qualifier and is
+  absent for founders/exclusives/replicants. Anchors asserted in
+  the harness (8014: 2-trait 1 / 3-trait 41; absent on 50 and
+  25500).

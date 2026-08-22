@@ -1,3 +1,5 @@
+import { rarityIcon, tierForScore, kindLabel } from "./RarityIcons.js";
+
 /// The Traits section of the side panel: one card per trait with
 /// visibility checkboxes for drawn layers, plus the trait swap
 /// preview affordances (Edit per card, "was" + undo on overridden
@@ -6,7 +8,8 @@
 /// state, so recomposition and the load machinery are untouched.
 export default class TraitsSection {
 	/// - Parameter callbacks: { onEdit(gene), onUndo(gene),
-	///		onResetAll() } - wired to the scene's override state
+	///		onResetAll(), ubFor(tokenId) -> Promise } - wired to the
+	///		scene's override state and the frozen Unique-By table
 	constructor(callbacks) {
 		this.callbacks = callbacks || {};
 		this.hiddenLayers = new Set();
@@ -87,8 +90,13 @@ export default class TraitsSection {
 	rebuildRows() {
 		const avastar = this.avastar;
 		this.content.innerHTML = "";
-		if (!avastar || !avastar.layerInfo) {
-			// The static fallback renders one unsliced image
+		if (!avastar) {
+			return;
+		}
+		this.content.appendChild(this.identityCard());
+		if (!avastar.layerInfo) {
+			// The static fallback renders one unsliced image; the
+			// identity chips above are hash-derived and still true
 			const note = document.createElement("div");
 			note.setAttribute("class", "traitNote");
 			note.innerText = "Trait data unavailable for this display";
@@ -166,6 +174,96 @@ export default class TraitsSection {
 		});
 	}
 
+	/// The identity card (docs/tads/design-cues.md): token id, kind
+	/// chip (Prime/Replicant/Founder/Exclusive), series chip in the
+	/// series color, score + tier, and the trait distribution row.
+	/// Score/series belong to the loaded TOKEN even under preview
+	/// overrides; the distribution follows the DISPLAYED traits.
+	identityCard() {
+		const avastar = this.avastar;
+		const card = document.createElement("div");
+		card.setAttribute("class", "identityCard");
+		const title = document.createElement("div");
+		title.setAttribute("class", "identityTitle");
+		title.innerText =
+			avastar.tokenId != null ? `Avastar #${avastar.tokenId}` : "Avastar";
+		card.appendChild(title);
+		const chips = document.createElement("div");
+		chips.setAttribute("class", "identityChips");
+		if (avastar.kind) {
+			const kind = document.createElement("span");
+			const isPromo = avastar.kind === "prime" && Number(avastar.tokenId) < 200;
+			kind.setAttribute(
+				"class",
+				"identityChip kindChip" + (isPromo ? " series-0" : ""),
+			);
+			kind.innerText = kindLabel(avastar.tokenId, avastar.kind);
+			chips.appendChild(kind);
+		}
+		if (avastar.series !== null && avastar.series !== undefined) {
+			const series = document.createElement("span");
+			series.setAttribute(
+				"class",
+				`identityChip seriesChip series-${avastar.series}`,
+			);
+			series.innerText = `Gen 1 · Series ${avastar.series}`;
+			chips.appendChild(series);
+		}
+		if (chips.childNodes.length > 0) {
+			card.appendChild(chips);
+		}
+		if (typeof avastar.ranking === "number") {
+			const score = document.createElement("div");
+			score.setAttribute("class", "identityScore");
+			const tier = tierForScore(avastar.ranking);
+			score.appendChild(rarityIcon(tier.rarity));
+			const text = document.createElement("span");
+			text.innerText = `Score ${avastar.ranking} · ${tier.name}`;
+			text.style.color = tier.color;
+			score.appendChild(text);
+			card.appendChild(score);
+		}
+		if (avastar.traits) {
+			const dist = document.createElement("div");
+			dist.setAttribute("class", "identityDist");
+			const counts = [0, 0, 0, 0, 0];
+			for (const trait of avastar.traits) {
+				counts[trait.rarity]++;
+			}
+			counts.forEach((count, rarity) => {
+				const item = document.createElement("span");
+				item.setAttribute("class", "identityDistItem");
+				item.appendChild(rarityIcon(rarity));
+				const value = document.createElement("span");
+				value.innerText = String(count);
+				item.appendChild(value);
+				dist.appendChild(item);
+			});
+			card.appendChild(dist);
+		}
+		// Unique-By line: lottery primes only (the table has no
+		// entry for founders/exclusives/replicants - they didn't
+		// play the mint lottery). Fills in async from the frozen
+		// table; a token swap re-renders the card, so a stale
+		// resolve must find its own card still attached.
+		if (this.callbacks.ubFor && avastar.tokenId != null) {
+			this.callbacks.ubFor(avastar.tokenId).then((ub) => {
+				if (!ub || !card.isConnected) {
+					return;
+				}
+				const line = document.createElement("div");
+				line.setAttribute("class", "identityUB");
+				line.innerText = `Unique-By combos: 2-trait ${ub.u2} · 3-trait ${ub.u3}`;
+				const qualifier = document.createElement("div");
+				qualifier.setAttribute("class", "identityUBNote");
+				qualifier.innerText = "(all 12 traits, among Series 1-5 primes)";
+				card.appendChild(line);
+				card.appendChild(qualifier);
+			});
+		}
+		return card;
+	}
+
 	/// A trait card: the gene as a bold title with the trait value
 	/// below it and the rarity tag on the right. Layer traits get a
 	/// visibility checkbox (options.onToggle); the color genes get a
@@ -237,7 +335,12 @@ export default class TraitsSection {
 		side.setAttribute("class", "traitSide");
 		const tag = document.createElement("span");
 		tag.setAttribute("class", "traitRarity");
-		tag.innerText = info.rarityName || "";
+		if (typeof info.rarity === "number") {
+			tag.appendChild(rarityIcon(info.rarity));
+		}
+		const tagName = document.createElement("span");
+		tagName.innerText = info.rarityName || "";
+		tag.appendChild(tagName);
 		side.appendChild(tag);
 		if (this.callbacks.onEdit && !this.isReadOnly) {
 			const edit = document.createElement("span");
