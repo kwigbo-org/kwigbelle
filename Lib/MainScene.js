@@ -291,6 +291,7 @@ export default class MainScene extends Scene {
 						isStatic: true,
 						kind: info ? info.kind : null,
 						series: info ? info.series : null,
+						ranking: info ? info.ranking : null,
 						sourceSVG: svgString,
 						backgroundLayer: null,
 						layers: [image],

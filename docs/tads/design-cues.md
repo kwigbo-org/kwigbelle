@@ -114,8 +114,9 @@ the counts are computed ONCE and never change.
    - Trait distribution row: the five tier icons each with the
      count of the token's 12 traits in that tier (bot-style)
    - Static-fallback displays (no picks) keep today's
-     "trait data unavailable" note and show only id + kind/series
-     chips (all hash-derived, no composition needed).
+     "trait data unavailable" note and show id, kind/series
+     chips, AND the score line — everything hash-derived (no
+     composition needed); only the distribution row needs picks.
    Data plumbing: `TraitComposer.compose` already reads the
    hashes entry (it stamps `gender`) — it additionally stamps
    `series`, `kind`, and `ranking`. `composePicks` output for
@@ -303,3 +304,9 @@ in Step 3 with no structural change (vrm-viewer TAD unaffected).
   absent for founders/exclusives/replicants. Anchors asserted in
   the harness (8014: 2-trait 1 / 3-trait 41; absent on 50 and
   25500).
+- 2026-08-23 — Panel round 3 on the implementation: 3/4 CLEAN.
+  Codex minority catch fixed as a fix-push (and Decision 4
+  truth-fixed): the static fallback stamped kind/series but
+  dropped ranking, losing the score line the hash lookup already
+  had — the real constraint is "no composition", not "chips
+  only", so the fallback now carries ranking too.
