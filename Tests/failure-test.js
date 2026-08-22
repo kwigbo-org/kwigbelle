@@ -1,6 +1,12 @@
 const { chromium } = require("playwright-core");
+const { check } = require("./check.js");
 
 function mockProvider({ chainId, renderFails }) {
+	// chainId is interpolated into executed page JS below — reject
+	// anything that isn't a plain hex chain id before it gets there.
+	if (!/^0x[0-9a-fA-F]+$/.test(chainId)) {
+		throw new Error("invalid mock chainId: " + chainId);
+	}
 	return `
 window.__ownedIds = [8014, 25495, 25470];
 window.ethereum = {
@@ -77,6 +83,13 @@ async function run(name, opts) {
 	console.log(
 		`${name}: loaded=${loaded} avatarDrawn=${state.canvasDrawn} picker=${state.picker} alerts=${JSON.stringify(alerts)} pageErrors=${JSON.stringify(pageErrors)}`
 	);
+	// Trait composition renders without the chain, so every scenario —
+	// including wrong chain and failing render RPC — must still load
+	// and draw, with no alerts or page errors.
+	check(loaded, `${name}: preloader never cleared`);
+	check(state.canvasDrawn, `${name}: avatar not drawn`);
+	check(alerts.length === 0, `${name}: alerts: ` + JSON.stringify(alerts));
+	check(pageErrors.length === 0, `${name}: page errors: ` + JSON.stringify(pageErrors));
 	await browser.close();
 }
 

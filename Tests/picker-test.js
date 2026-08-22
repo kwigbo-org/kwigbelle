@@ -1,4 +1,5 @@
 const { chromium } = require("playwright-core");
+const { check } = require("./check.js");
 
 const MOCK_PROVIDER = `
 window.__ownedIds = [8014, 25495, 25470];
@@ -72,6 +73,10 @@ window.ethereum = {
 		itemCount: document.querySelectorAll("#pickerList .pickerThumb").length,
 	}));
 	console.log("collapsed state:", JSON.stringify(collapsed));
+	check(collapsed.hasPicker, "picker not built");
+	check(collapsed.thumbHasImg, "current thumbnail has no image");
+	check(!collapsed.listVisible, "picker list expanded before any tap");
+	check(collapsed.itemCount === 3, "expected 3 owned items, got " + collapsed.itemCount);
 	await page.screenshot({ path: "picker-collapsed.png" });
 
 	// Expand: all three owned Avastars listed, thumbnails render in
@@ -82,7 +87,13 @@ window.ethereum = {
 	);
 	await page.screenshot({ path: "picker-expanded.png" });
 
-	// Pick the second Avastar: loads it and collapses the list
+	// Pick the second Avastar: loads it and collapses the list. The
+	// collapsed thumbnail is rebuilt with a fresh blob URL only when a
+	// load actually completes (the same-token guard skips the rebuild),
+	// so a changed img src is the evidence the pick took effect.
+	const thumbSrcBefore = await page.evaluate(
+		() => document.querySelector(".pickerThumb.current img").src
+	);
 	await page
 		.locator("#pickerList .pickerThumb")
 		.nth(1)
@@ -96,9 +107,17 @@ window.ethereum = {
 		{ timeout: 15000 }
 	);
 	await page.waitForTimeout(800);
-	const picked = await page.evaluate(() => window.__pickedCheck);
+	const thumbSrcAfter = await page.evaluate(
+		() => document.querySelector(".pickerThumb.current img").src
+	);
+	console.log("pick reloaded thumbnail:", thumbSrcAfter !== thumbSrcBefore);
+	check(
+		thumbSrcAfter !== thumbSrcBefore,
+		"picking the second Avastar did not reload the current thumbnail"
+	);
 	await page.screenshot({ path: "picker-picked.png" });
 
 	console.log("errors:", errors.length ? errors : "none");
+	check(errors.length === 0, "page errors: " + JSON.stringify(errors));
 	await browser.close();
 })();

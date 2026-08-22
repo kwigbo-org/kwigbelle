@@ -1,4 +1,5 @@
 const { chromium } = require("playwright-core");
+const { check } = require("./check.js");
 
 // Two EIP-6963 wallets. "RabbyMock" announces first and is on Base.
 // "HotMock" is on mainnet, owns the Avastars, and authorizes on
@@ -82,6 +83,10 @@ announce();
 		[...document.querySelectorAll(".walletRow span")].map((s) => s.innerText)
 	);
 	console.log("chooser lists:", JSON.stringify(names));
+	check(
+		JSON.stringify(names) === JSON.stringify(["RabbyMock", "HotMock"]),
+		"chooser did not list both wallets: " + JSON.stringify(names)
+	);
 	await page.screenshot({ path: "wallet-chooser.png" });
 
 	// Pick HotMock: expect connect + picker, and Rabby never prompted
@@ -94,6 +99,8 @@ announce();
 	console.log(
 		`picked HotMock: picker up, rabbyPrompts=${rabbyPrompts}, stored=${JSON.stringify(stored)}`
 	);
+	check(rabbyPrompts === 0, "unchosen wallet was prompted " + rabbyPrompts + "x");
+	check(stored === "io.mock.hotmock", "choice not persisted: " + stored);
 
 	// Reload: the stored choice + authorized account should go
 	// straight to the picker with no button and no chooser
@@ -105,5 +112,8 @@ announce();
 	console.log(
 		`after reload: picker restored, connectButton=${buttonAfter}, alerts=${JSON.stringify(alerts)} pageErrors=${JSON.stringify(pageErrors)}`
 	);
+	check(!buttonAfter, "connect button reappeared after reload");
+	check(alerts.length === 0, "alerts: " + JSON.stringify(alerts));
+	check(pageErrors.length === 0, "page errors: " + JSON.stringify(pageErrors));
 	await browser.close();
 })();

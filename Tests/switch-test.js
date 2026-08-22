@@ -1,4 +1,5 @@
 const { chromium } = require("playwright-core");
+const { check } = require("./check.js");
 
 // Wallet authorized for the site but pinned to Base (0x2105).
 // wallet_switchEthereumChain updates the chain (persisted in
@@ -69,6 +70,10 @@ window.ethereum = {
 	await page.waitForSelector(".connectButton", { timeout: 10000 });
 	const label = await page.locator(".connectButton").innerText();
 	console.log("button label:", JSON.stringify(label));
+	check(
+		label.includes("Switch to Mainnet"),
+		"wrong-network button label: " + JSON.stringify(label)
+	);
 	await page.screenshot({ path: "switch-button.png" });
 
 	// Tap: wallet "switches" to mainnet, page reloads, picker appears
@@ -80,6 +85,9 @@ window.ethereum = {
 	console.log(
 		`after switch: picker with ${items} items, alerts=${JSON.stringify(alerts)} pageErrors=${JSON.stringify(pageErrors)}`
 	);
+	check(items === 3, "expected 3 picker items after switch, got " + items);
+	check(alerts.length === 0, "alerts: " + JSON.stringify(alerts));
+	check(pageErrors.length === 0, "page errors: " + JSON.stringify(pageErrors));
 	await page.screenshot({ path: "switch-after.png" });
 	await browser.close();
 })();

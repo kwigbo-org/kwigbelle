@@ -2,6 +2,7 @@
 // library with no wallet, layers carry trait metadata, and the
 // composed full SVG byte-matches the bundled on-chain render.
 const { chromium } = require("playwright-core");
+const { check } = require("./check.js");
 
 (async () => {
 	const browser = await chromium.launch({ channel: "chrome", headless: true });
@@ -47,10 +48,26 @@ const { chromium } = require("playwright-core");
 	});
 	console.log(JSON.stringify(state, null, 1));
 	console.log("errors:", errors.length ? errors : "none");
+	check(state.drawn, "composed avatar not drawn");
+	check(state.contentParity, "composed SVG does not match bundled render");
+	check(state.layerCount > 0, "no composed layers");
+	check(
+		state.layerNames.length === state.layerCount,
+		"layerInfo/layers length mismatch"
+	);
+	check(!!state.backgroundColor, "no background color extracted");
+	check(errors.length === 0, "page errors: " + JSON.stringify(errors));
 
-	// Regression: explicit opt-out must keep the legacy path working
+	// Regression: explicit opt-out must keep the legacy path working.
+	// Detach the nav-1 listeners first so nav-2 events land only in
+	// errors2 instead of double-reporting into both arrays.
+	page.removeAllListeners("pageerror");
+	page.removeAllListeners("console");
 	const errors2 = [];
 	page.on("pageerror", (e) => errors2.push(e.message));
+	page.on("console", (m) => {
+		if (m.type() === "error") errors2.push("console: " + m.text());
+	});
 	await page.goto("http://localhost:8741/index.html?tokenid=8014&traitcompose=0");
 	await page.waitForFunction(
 		() => document.getElementById("preloader")?.style.opacity === "0",
@@ -62,6 +79,8 @@ const { chromium } = require("playwright-core");
 		return c.getContext("2d").getImageData(c.width / 2, c.height / 2, 1, 1).data[3] !== 0;
 	});
 	console.log("legacy opt-out drawn:", legacyDrawn, "errors:", errors2.length ? errors2 : "none");
+	check(legacyDrawn, "legacy opt-out did not draw");
+	check(errors2.length === 0, "opt-out page errors: " + JSON.stringify(errors2));
 
 	// Forced failure: library unreachable -> automatic fallback to
 	// the legacy path, with the console warn as evidence
@@ -88,5 +107,8 @@ const { chromium } = require("playwright-core");
 		"warned:", warns.length > 0,
 		"errors:", errors3.length ? errors3 : "none"
 	);
+	check(fallbackDrawn, "forced-failure fallback did not draw");
+	check(warns.length > 0, "fallback happened without the legacy-path warn");
+	check(errors3.length === 0, "fallback page errors: " + JSON.stringify(errors3));
 	await browser.close();
 })();

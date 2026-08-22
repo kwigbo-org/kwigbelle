@@ -1,4 +1,5 @@
 const { chromium } = require("playwright-core");
+const { check } = require("./check.js");
 
 (async () => {
 	const browser = await chromium.launch({ channel: "chrome", headless: true });
@@ -32,6 +33,15 @@ const { chromium } = require("playwright-core");
 	await page.waitForTimeout(400);
 	await page.screenshot({ path: "release.png" });
 
-	console.log("errors:", errors.length ? errors : "none");
+	const drawn = await page.evaluate(() => {
+		const c = document.getElementById("mainCanvas");
+		return (
+			c.getContext("2d").getImageData(c.width / 2, c.height / 2, 1, 1)
+				.data[3] !== 0
+		);
+	});
+	console.log("drawn:", drawn, "errors:", errors.length ? errors : "none");
+	check(drawn, "avatar not drawn on canvas");
+	check(errors.length === 0, "page errors: " + JSON.stringify(errors));
 	await browser.close();
 })();

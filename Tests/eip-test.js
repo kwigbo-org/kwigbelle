@@ -1,4 +1,5 @@
 const { chromium } = require("playwright-core");
+const { check } = require("./check.js");
 
 // EIP-6963 wallet mock. No window.ethereum unless `legacy`.
 // `gestureRequired` makes eth_requestAccounts fail the first time
@@ -89,6 +90,9 @@ async function run(name, opts) {
 	console.log(
 		`${name}: picker with ${items} items, alerts=${JSON.stringify(alerts)} pageErrors=${JSON.stringify(pageErrors)}`
 	);
+	check(items === 3, `${name}: expected 3 picker items, got ${items}`);
+	check(alerts.length === 0, `${name}: alerts: ` + JSON.stringify(alerts));
+	check(pageErrors.length === 0, `${name}: page errors: ` + JSON.stringify(pageErrors));
 	await browser.close();
 }
 

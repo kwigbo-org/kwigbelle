@@ -7,7 +7,7 @@ been verified against; they are NOT deployed (deploy.sh doesn't copy
 
 ## Setup (once)
 
-Requires Node 18+ and Google Chrome installed (`playwright-core` uses
+Requires Node 20+ and Google Chrome installed (`playwright-core` uses
 the installed Chrome via `channel: "chrome"` — no browser download).
 
 ```bash
@@ -33,7 +33,8 @@ node eip-test.js       # EIP-6963 discovery, legacy fallback, tap-to-connect
 node failure-test.js   # happy mainnet / wrong chain / failing RPC render
 ```
 
-Every test prints its own pass evidence and `errors: none` on success;
+Every test prints its own pass evidence and exits nonzero on any
+failed check (look for `FAIL:` lines on stderr);
 screenshots land in the `Tests/` working directory (gitignored noise —
 delete freely).
 
