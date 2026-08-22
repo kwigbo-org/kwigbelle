@@ -47,7 +47,11 @@ const isCapacityError = (e) =>
 async function rpcBatch(calls) {
 	const out = {};
 	let remaining = calls;
-	for (let attempt = 0; remaining.length > 0 && attempt <= MAX_RETRIES; attempt++) {
+	for (
+		let attempt = 0;
+		remaining.length > 0 && attempt <= MAX_RETRIES;
+		attempt++
+	) {
 		if (attempt > 0) await sleep(1500 * Math.pow(1.6, attempt));
 		const body = remaining.map((c) => ({
 			jsonrpc: "2.0",
@@ -116,7 +120,9 @@ async function main() {
 	const supplyHex = (await rpcBatch([{ id: 0, data: SEL.totalSupply }]))[0];
 	if (supplyHex instanceof Error) throw supplyHex;
 	const supply = Number(num(supplyHex, 0));
-	console.log(`totalSupply: ${supply}; already fetched: ${Object.keys(hashes).length}`);
+	console.log(
+		`totalSupply: ${supply}; already fetched: ${Object.keys(hashes).length}`,
+	);
 
 	const pending = [];
 	for (let tokenId = 0; tokenId < supply; tokenId++) {
@@ -128,7 +134,7 @@ async function main() {
 		const chunk = pending.slice(i, i + BATCH_SIZE);
 		// Pass 1: assume prime
 		const primes = await rpcBatch(
-			chunk.map((t) => ({ id: t, data: SEL.getPrimeByTokenId + pad(t) }))
+			chunk.map((t) => ({ id: t, data: SEL.getPrimeByTokenId + pad(t) })),
 		);
 		const replicantIds = [];
 		for (const t of chunk) {
@@ -142,7 +148,10 @@ async function main() {
 		// Pass 2: retry non-primes as replicants
 		if (replicantIds.length > 0) {
 			const reps = await rpcBatch(
-				replicantIds.map((t) => ({ id: t, data: SEL.getReplicantByTokenId + pad(t) }))
+				replicantIds.map((t) => ({
+					id: t,
+					data: SEL.getReplicantByTokenId + pad(t),
+				})),
 			);
 			for (const t of replicantIds) {
 				const hex = reps[t];
@@ -155,7 +164,10 @@ async function main() {
 			}
 		}
 		const doneCount = Math.min(i + BATCH_SIZE, pending.length);
-		if (doneCount % (BATCH_SIZE * 10) < BATCH_SIZE || doneCount >= pending.length) {
+		if (
+			doneCount % (BATCH_SIZE * 10) < BATCH_SIZE ||
+			doneCount >= pending.length
+		) {
 			fs.writeFileSync(OUT_FILE, JSON.stringify(hashes));
 			console.log(`progress: ${doneCount}/${pending.length} (saved)`);
 		}
@@ -166,7 +178,9 @@ async function main() {
 		a[h.kind] = (a[h.kind] || 0) + 1;
 		return a;
 	}, {});
-	console.log(`done: ${Object.keys(hashes).length} tokens ${JSON.stringify(kinds)}; hard failures: ${hardFailures}`);
+	console.log(
+		`done: ${Object.keys(hashes).length} tokens ${JSON.stringify(kinds)}; hard failures: ${hardFailures}`,
+	);
 	if (Object.keys(hashes).length < supply) process.exitCode = 1;
 }
 

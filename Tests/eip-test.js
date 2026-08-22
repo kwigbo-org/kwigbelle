@@ -72,7 +72,7 @@ async function run(name, opts) {
 	await page.goto("http://localhost:8741/index.html");
 	await page.waitForFunction(
 		() => document.getElementById("preloader")?.style.opacity === "0",
-		{ timeout: 15000 }
+		{ timeout: 15000 },
 	);
 
 	if (opts.gestureRequired) {
@@ -85,14 +85,17 @@ async function run(name, opts) {
 	}
 	await page.waitForSelector(".pickerThumb.current img", { timeout: 15000 });
 	const items = await page.evaluate(
-		() => document.querySelectorAll("#pickerList .pickerThumb").length
+		() => document.querySelectorAll("#pickerList .pickerThumb").length,
 	);
 	console.log(
-		`${name}: picker with ${items} items, alerts=${JSON.stringify(alerts)} pageErrors=${JSON.stringify(pageErrors)}`
+		`${name}: picker with ${items} items, alerts=${JSON.stringify(alerts)} pageErrors=${JSON.stringify(pageErrors)}`,
 	);
 	check(items === 3, `${name}: expected 3 picker items, got ${items}`);
 	check(alerts.length === 0, `${name}: alerts: ` + JSON.stringify(alerts));
-	check(pageErrors.length === 0, `${name}: page errors: ` + JSON.stringify(pageErrors));
+	check(
+		pageErrors.length === 0,
+		`${name}: page errors: ` + JSON.stringify(pageErrors),
+	);
 	await browser.close();
 }
 

@@ -40,8 +40,18 @@ const TRAITS_DIR = path.join(__dirname, "..", "Traits");
 const VERIFY = process.argv.includes("--verify");
 
 const GENE_NAMES = [
-	"Skin Tone", "Hair Color", "Eye Color", "BG Color", "Backdrop",
-	"Ears", "Face", "Nose", "Mouth", "Facial Feature", "Eyes", "Hair Style",
+	"Skin Tone",
+	"Hair Color",
+	"Eye Color",
+	"BG Color",
+	"Backdrop",
+	"Ears",
+	"Face",
+	"Nose",
+	"Mouth",
+	"Facial Feature",
+	"Eyes",
+	"Hair Style",
 ];
 const RARITY_NAMES = ["Common", "Uncommon", "Rare", "Epic", "Legendary"];
 const GENE_COUNT = 12;
@@ -57,7 +67,7 @@ function decodeString(hex, slot = 0) {
 	const len = Number(num(hex, off));
 	return Buffer.from(
 		hex.slice(2 + (off + 1) * 64, 2 + (off + 1) * 64 + len * 2),
-		"hex"
+		"hex",
 	).toString("utf8");
 }
 
@@ -68,7 +78,9 @@ async function ethCall(data) {
 				method: "POST",
 				headers: { "content-type": "application/json" },
 				body: JSON.stringify({
-					jsonrpc: "2.0", id: 1, method: "eth_call",
+					jsonrpc: "2.0",
+					id: 1,
+					method: "eth_call",
 					params: [{ to: CONTRACT, data }, "latest"],
 				}),
 			});
@@ -99,7 +111,9 @@ function selectCoverage(hashes) {
 	const byTrait = new Map(); // key -> [tokenId]
 	const tokenTraits = new Map(); // tokenId -> [key x12]
 	for (const [tokenId, entry] of Object.entries(hashes)) {
-		const keys = variationsOf(entry).map((v, g) => keyOf(entry.generation, g, v));
+		const keys = variationsOf(entry).map((v, g) =>
+			keyOf(entry.generation, g, v),
+		);
 		tokenTraits.set(tokenId, keys);
 		for (const k of keys) {
 			if (!byTrait.has(k)) byTrait.set(k, []);
@@ -122,7 +136,8 @@ function selectCoverage(hashes) {
 		for (const list of buckets.values()) {
 			// Only tokens whose gene-variations actually differ pair up
 			for (let i = 1; i < list.length && found < 6; i++) {
-				const a = list[0], b = list[i];
+				const a = list[0],
+					b = list[i];
 				if (tokenTraits.get(a)[gene] === tokenTraits.get(b)[gene]) continue;
 				const pk = a + "|" + b;
 				if (seenPair.has(pk)) continue;
@@ -138,7 +153,10 @@ function selectCoverage(hashes) {
 	const need = new Map();
 	for (const [k, tokens] of byTrait) need.set(k, Math.min(2, tokens.length));
 	const chosen = new Set();
-	for (const p of pairs) { chosen.add(p.a); chosen.add(p.b); }
+	for (const p of pairs) {
+		chosen.add(p.a);
+		chosen.add(p.b);
+	}
 	const creditToken = (tokenId) => {
 		for (const k of tokenTraits.get(tokenId)) {
 			need.set(k, Math.max(0, need.get(k) - 1));
@@ -146,16 +164,22 @@ function selectCoverage(hashes) {
 	};
 	for (const t of chosen) creditToken(t);
 	// Rarest-first
-	const traitOrder = [...byTrait.entries()].sort((x, y) => x[1].length - y[1].length);
+	const traitOrder = [...byTrait.entries()].sort(
+		(x, y) => x[1].length - y[1].length,
+	);
 	for (const [k, tokens] of traitOrder) {
 		while (need.get(k) > 0) {
 			// token covering this trait with max residual need elsewhere
-			let best = null, bestScore = -1;
+			let best = null,
+				bestScore = -1;
 			for (const t of tokens) {
 				if (chosen.has(t)) continue;
 				let score = 0;
 				for (const tk of tokenTraits.get(t)) score += need.get(tk) > 0 ? 1 : 0;
-				if (score > bestScore) { bestScore = score; best = t; }
+				if (score > bestScore) {
+					bestScore = score;
+					best = t;
+				}
 			}
 			if (best === null) break; // no more tokens carry this trait
 			chosen.add(best);
@@ -163,7 +187,9 @@ function selectCoverage(hashes) {
 		}
 	}
 	const uncovered = [...need.entries()].filter(([, n]) => n > 0);
-	console.log(`traits: ${byTrait.size}; coverage set: ${chosen.size} tokens; single-source traits: ${uncovered.length}`);
+	console.log(
+		`traits: ${byTrait.size}; coverage set: ${chosen.size} tokens; single-source traits: ${uncovered.length}`,
+	);
 	return { chosen: [...chosen], tokenTraits, byTrait, pairs };
 }
 
@@ -298,24 +324,37 @@ function extractFragments(renderOf, coverage) {
 	// top-level elements. The wrapper must be constant across
 	// renders (it becomes part of the composer's fixed header).
 	const elsOf = new Map();
-	let docOpen = null, docClose = null;
+	let docOpen = null,
+		docClose = null;
 	for (const t of chosen) {
 		const { open, inner, close } = unwrapDocument(renderOf(t));
-		if (docOpen === null) { docOpen = open; docClose = close; }
-		else if (docOpen !== open || docClose !== close) {
+		if (docOpen === null) {
+			docOpen = open;
+			docClose = close;
+		} else if (docOpen !== open || docClose !== close) {
 			throw new Error(`non-constant <svg> wrapper on token ${t}`);
 		}
 		elsOf.set(t, splitTopLevel(inner));
 	}
-	console.log(`document wrapper: open ${docOpen.length}B, close ${docClose.length}B (constant)`);
+	console.log(
+		`document wrapper: open ${docOpen.length}B, close ${docClose.length}B (constant)`,
+	);
 	const all = chosen.map((t) => elsOf.get(t));
 	let headerN = all[0].length;
-	for (const els of all) headerN = Math.min(headerN, commonPrefixLen(all[0], els));
+	for (const els of all)
+		headerN = Math.min(headerN, commonPrefixLen(all[0], els));
 	let footerN = all[0].length - headerN;
-	for (const els of all) footerN = Math.min(footerN, commonSuffixLen(all[0], els, els.length - headerN));
+	for (const els of all)
+		footerN = Math.min(
+			footerN,
+			commonSuffixLen(all[0], els, els.length - headerN),
+		);
 	const header = docOpen + all[0].slice(0, headerN).join("");
-	const footer = (footerN > 0 ? all[0].slice(-footerN).join("") : "") + docClose;
-	console.log(`header ${headerN} common element(s), ${header.length}B total; footer ${footerN} element(s), ${footer.length}B total`);
+	const footer =
+		(footerN > 0 ? all[0].slice(-footerN).join("") : "") + docClose;
+	console.log(
+		`header ${headerN} common element(s), ${header.length}B total; footer ${footerN} element(s), ${footer.length}B total`,
+	);
 	const bodies = new Map();
 	for (const t of chosen) {
 		const els = elsOf.get(t);
@@ -364,8 +403,14 @@ function extractFragments(renderOf, coverage) {
 	// the first-tagged..last-tagged span seeds a CORE fragment;
 	// repair extends cores over untagged margins later.
 	const ART_PREFIX = {
-		backdrop: 4, ear: 5, face: 6, nose: 7,
-		mouth: 8, feat: 9, eye: 10, hair: 11,
+		backdrop: 4,
+		ear: 5,
+		face: 6,
+		nose: 7,
+		mouth: 8,
+		feat: 9,
+		eye: 10,
+		hair: 11,
 	};
 	const STYLE_MARKERS = [".skin_", ".hair_", ".eye_", ".bg_"];
 	const tagGene = (el) => {
@@ -395,12 +440,15 @@ function extractFragments(renderOf, coverage) {
 			}
 		}
 		if (!styleOk) {
-			console.warn(`token ${t}: unexpected style block layout, skipping style seeds`);
+			console.warn(
+				`token ${t}: unexpected style block layout, skipping style seeds`,
+			);
 		} else {
 			for (let g = 0; g < 4; g++) setKnown(keys[g], [body[g]]);
 		}
 		// Art genes: first..last tagged element per gene
-		const first = {}, last = {};
+		const first = {},
+			last = {};
 		for (let i = 4; i < body.length; i++) {
 			const g = tagGene(body[i]);
 			if (g === null) continue;
@@ -416,7 +464,8 @@ function extractFragments(renderOf, coverage) {
 	// Hamming-1 pairs still contribute (they can capture full
 	// fragments including untagged edges the cores miss)
 	for (const { gene, a, b } of pairs) {
-		const A = bodies.get(a), B = bodies.get(b);
+		const A = bodies.get(a),
+			B = bodies.get(b);
 		if (A === undefined || B === undefined) continue;
 		const p = commonPrefixLen(A, B);
 		const s = commonSuffixLen(A, B, Math.min(A.length, B.length) - p);
@@ -441,18 +490,34 @@ function extractFragments(renderOf, coverage) {
 		let lastAnchor = -1;
 		for (let g = 0; g <= keys.length; g++) {
 			const frag = g < keys.length ? known.get(keys[g]) : null; // null = END sentinel
-			if (frag === undefined) { pendingUnknown.push(g); continue; }
+			if (frag === undefined) {
+				pendingUnknown.push(g);
+				continue;
+			}
 			if (frag !== null && frag.length === 0) continue; // empty known: no anchor info
 			const idx = frag === null ? body.length : indexOfSub(body, frag, cursor);
 			if (idx < 0) return { fail: `locate gene ${g}` };
 			if (idx > cursor) {
 				segments.push(
 					pendingUnknown.length > 0
-						? { type: "unknownRun", genes: [...pendingUnknown], span: [cursor, idx] }
-						: { type: "orphan", left: lastAnchor, right: g, span: [cursor, idx] }
+						? {
+								type: "unknownRun",
+								genes: [...pendingUnknown],
+								span: [cursor, idx],
+							}
+						: {
+								type: "orphan",
+								left: lastAnchor,
+								right: g,
+								span: [cursor, idx],
+							},
 				);
 			} else if (pendingUnknown.length > 0) {
-				segments.push({ type: "unknownRun", genes: [...pendingUnknown], span: [cursor, cursor] });
+				segments.push({
+					type: "unknownRun",
+					genes: [...pendingUnknown],
+					span: [cursor, cursor],
+				});
 			}
 			pendingUnknown = [];
 			if (frag !== null) {
@@ -489,101 +554,110 @@ function extractFragments(renderOf, coverage) {
 
 	let cycleProgress = true;
 	for (let cycle = 0; cycle < 20 && cycleProgress; cycle++) {
-	cycleProgress = false;
-	for (let round = 0; round < 100; round++) {
-		let progress = false;
-		for (const t of chosen) {
-			const res = walk(t);
-			if (res.fail) continue;
-			for (const seg of res.segments) {
-				const piece = res.body.slice(seg.span[0], seg.span[1]);
-				if (seg.type === "unknownRun") {
-					if (seg.genes.length !== 1) continue;
-					const key = res.keys[seg.genes[0]];
-					if (!known.has(key)) {
-						setKnown(key, piece);
-						progress = true;
-					}
-				} else {
-					// Orphan between two known anchors. May be MIXED:
-					// the left gene's clipped tail followed by the
-					// right gene's clipped head. Try every split
-					// point; accept one where both sides validate
-					// across their carriers. k = piece.length is
-					// "all to left tail", k = 0 is "all to right
-					// head" (tried first: constant lead patterns
-					// like eye_i naturally head their own gene).
-					const rightKey = seg.right < res.keys.length ? res.keys[seg.right] : null;
-					const leftKey = seg.left >= 0 ? res.keys[seg.left] : null;
-					let applied = false;
-					for (let k = 0; k <= piece.length && !applied; k++) {
-						const toLeft = piece.slice(0, k);
-						const toRight = piece.slice(k);
-						// Guards precede the spreads so a broken
-						// anchor invariant skips cleanly instead of
-						// spreading undefined
-						if (toLeft.length > 0 && (!leftKey || !known.has(leftKey))) continue;
-						if (toRight.length > 0 && (!rightKey || !known.has(rightKey))) continue;
-						const candL = leftKey && toLeft.length > 0
-							? [...known.get(leftKey), ...toLeft]
-							: null;
-						const candR = rightKey && toRight.length > 0
-							? [...toRight, ...known.get(rightKey)]
-							: null;
-						if (candL === null && candR === null) continue;
-						if (candL && !appearsInAll(leftKey, candL)) continue;
-						if (candR && !appearsInAll(rightKey, candR)) continue;
-						if (candL) known.set(leftKey, candL);
-						if (candR) known.set(rightKey, candR);
-						applied = true;
-						progress = true;
+		cycleProgress = false;
+		for (let round = 0; round < 100; round++) {
+			let progress = false;
+			for (const t of chosen) {
+				const res = walk(t);
+				if (res.fail) continue;
+				for (const seg of res.segments) {
+					const piece = res.body.slice(seg.span[0], seg.span[1]);
+					if (seg.type === "unknownRun") {
+						if (seg.genes.length !== 1) continue;
+						const key = res.keys[seg.genes[0]];
+						if (!known.has(key)) {
+							setKnown(key, piece);
+							progress = true;
+						}
+					} else {
+						// Orphan between two known anchors. May be MIXED:
+						// the left gene's clipped tail followed by the
+						// right gene's clipped head. Try every split
+						// point; accept one where both sides validate
+						// across their carriers. k = piece.length is
+						// "all to left tail", k = 0 is "all to right
+						// head" (tried first: constant lead patterns
+						// like eye_i naturally head their own gene).
+						const rightKey =
+							seg.right < res.keys.length ? res.keys[seg.right] : null;
+						const leftKey = seg.left >= 0 ? res.keys[seg.left] : null;
+						let applied = false;
+						for (let k = 0; k <= piece.length && !applied; k++) {
+							const toLeft = piece.slice(0, k);
+							const toRight = piece.slice(k);
+							// Guards precede the spreads so a broken
+							// anchor invariant skips cleanly instead of
+							// spreading undefined
+							if (toLeft.length > 0 && (!leftKey || !known.has(leftKey)))
+								continue;
+							if (toRight.length > 0 && (!rightKey || !known.has(rightKey)))
+								continue;
+							const candL =
+								leftKey && toLeft.length > 0
+									? [...known.get(leftKey), ...toLeft]
+									: null;
+							const candR =
+								rightKey && toRight.length > 0
+									? [...toRight, ...known.get(rightKey)]
+									: null;
+							if (candL === null && candR === null) continue;
+							if (candL && !appearsInAll(leftKey, candL)) continue;
+							if (candR && !appearsInAll(rightKey, candR)) continue;
+							if (candL) known.set(leftKey, candL);
+							if (candR) known.set(rightKey, candR);
+							applied = true;
+							progress = true;
+						}
 					}
 				}
 			}
-		}
-		if (!progress) {
-			if (round > 0) cycleProgress = true;
-			console.log(`cycle ${cycle + 1}: repair/propagation converged after ${round} round(s); ${known.size} fragments known`);
-			break;
-		}
-	}
-
-	// Reconciliation: the split-repair resolves each boundary per
-	// render, so traits sharing a boundary can adopt INCONSISTENT
-	// conventions (constant boundary elements validate on either
-	// side). For each failing render, re-derive the breaking
-	// trait's fragment from that render's own gap (cursor to the
-	// next locatable anchor), carrier-validated, and override.
-	for (let round = 0; round < 25; round++) {
-		let overrides = 0;
-		for (const t of chosen) {
-			const brk = tileCheck(t);
-			if (!brk || brk.g >= tokenTraits.get(t).length) continue;
-			const body = bodies.get(t);
-			const keys = tokenTraits.get(t);
-			let anchorPos = -1;
-			for (let h = brk.g + 1; h < keys.length; h++) {
-				const f = known.get(keys[h]);
-				if (f === undefined || f.length === 0) continue;
-				const idx = indexOfSub(body, f, brk.cursor);
-				if (idx >= 0) anchorPos = idx;
+			if (!progress) {
+				if (round > 0) cycleProgress = true;
+				console.log(
+					`cycle ${cycle + 1}: repair/propagation converged after ${round} round(s); ${known.size} fragments known`,
+				);
 				break;
 			}
-			if (anchorPos < 0) anchorPos = body.length;
-			const candidate = body.slice(brk.cursor, anchorPos);
-			const key = keys[brk.g];
-			if (
-				candidate.join("") !== (known.get(key) || []).join("") &&
-				(candidate.length === 0 || appearsInAll(key, candidate))
-			) {
-				known.set(key, candidate);
-				overrides++;
-			}
 		}
-		if (overrides === 0) break;
-		cycleProgress = true;
-		console.log(`cycle ${cycle + 1}: reconciliation round ${round + 1}: ${overrides} override(s)`);
-	}
+
+		// Reconciliation: the split-repair resolves each boundary per
+		// render, so traits sharing a boundary can adopt INCONSISTENT
+		// conventions (constant boundary elements validate on either
+		// side). For each failing render, re-derive the breaking
+		// trait's fragment from that render's own gap (cursor to the
+		// next locatable anchor), carrier-validated, and override.
+		for (let round = 0; round < 25; round++) {
+			let overrides = 0;
+			for (const t of chosen) {
+				const brk = tileCheck(t);
+				if (!brk || brk.g >= tokenTraits.get(t).length) continue;
+				const body = bodies.get(t);
+				const keys = tokenTraits.get(t);
+				let anchorPos = -1;
+				for (let h = brk.g + 1; h < keys.length; h++) {
+					const f = known.get(keys[h]);
+					if (f === undefined || f.length === 0) continue;
+					const idx = indexOfSub(body, f, brk.cursor);
+					if (idx >= 0) anchorPos = idx;
+					break;
+				}
+				if (anchorPos < 0) anchorPos = body.length;
+				const candidate = body.slice(brk.cursor, anchorPos);
+				const key = keys[brk.g];
+				if (
+					candidate.join("") !== (known.get(key) || []).join("") &&
+					(candidate.length === 0 || appearsInAll(key, candidate))
+				) {
+					known.set(key, candidate);
+					overrides++;
+				}
+			}
+			if (overrides === 0) break;
+			cycleProgress = true;
+			console.log(
+				`cycle ${cycle + 1}: reconciliation round ${round + 1}: ${overrides} override(s)`,
+			);
+		}
 	} // outer cycle
 
 	// Full-partition cross-validation: every render must tile as
@@ -595,21 +669,28 @@ function extractFragments(renderOf, coverage) {
 		if (brk) {
 			if (brk.missing) missing.add(brk.missing);
 			failures++;
-			if (failures <= 5) console.warn(`partition failure on token ${t} (gene ${brk.g})`);
+			if (failures <= 5)
+				console.warn(`partition failure on token ${t} (gene ${brk.g})`);
 		}
 	}
 	if (missing.size > 0) {
-		console.warn(`unresolved traits (${missing.size}): ${[...missing].slice(0, 12).join(", ")}...`);
+		console.warn(
+			`unresolved traits (${missing.size}): ${[...missing].slice(0, 12).join(", ")}...`,
+		);
 	}
 	// Dump the working set for offline diagnosis regardless of outcome
 	fs.writeFileSync(
 		path.join(DATA_DIR, "known-debug.json"),
-		JSON.stringify(Object.fromEntries(known))
+		JSON.stringify(Object.fromEntries(known)),
 	);
 	if (failures > 0) {
-		throw new Error(`${failures}/${chosen.length} renders failed exact partition - extraction unsound (Q5/Decision 7 deep fallback applies)`);
+		throw new Error(
+			`${failures}/${chosen.length} renders failed exact partition - extraction unsound (Q5/Decision 7 deep fallback applies)`,
+		);
 	}
-	console.log(`cross-validation: all ${chosen.length} renders partition exactly in gene order`);
+	console.log(
+		`cross-validation: all ${chosen.length} renders partition exactly in gene order`,
+	);
 	// Join to strings for the writer
 	const knownStrings = new Map();
 	for (const [k, frag] of known) knownStrings.set(k, frag.join(""));
@@ -617,13 +698,16 @@ function extractFragments(renderOf, coverage) {
 }
 
 // ---- trait info + output ----
-async function writeLibrary(known, hashes) {
+async function writeLibrary(known) {
 	const index = {};
 	let done = 0;
 	for (const [key, frag] of known) {
 		const [gen, gene, variation] = key.split(":").map(Number);
 		const tidHex = await ethCall(
-			SEL.getTraitIdByGenerationGeneAndVariation + pad(gen) + pad(gene) + pad(variation)
+			SEL.getTraitIdByGenerationGeneAndVariation +
+				pad(gen) +
+				pad(gene) +
+				pad(variation),
 		);
 		const traitId = num(tidHex, 0).toString();
 		const infoHex = await ethCall(SEL.getTraitInfoById + pad(traitId));
@@ -644,7 +728,9 @@ async function writeLibrary(known, hashes) {
 			bytes: frag.length,
 		};
 		if (VERIFY) {
-			const existing = fs.existsSync(file) ? fs.readFileSync(file, "utf8") : null;
+			const existing = fs.existsSync(file)
+				? fs.readFileSync(file, "utf8")
+				: null;
 			if (existing === null || sha256(existing) !== record.sha256) {
 				console.error(`VERIFY MISMATCH: trait ${traitId} (${record.name})`);
 				process.exitCode = 1;
@@ -660,7 +746,7 @@ async function writeLibrary(known, hashes) {
 	if (!VERIFY) {
 		fs.writeFileSync(
 			path.join(TRAITS_DIR, "index.json"),
-			JSON.stringify(index, null, 1)
+			JSON.stringify(index, null, 1),
 		);
 	}
 	console.log(`${VERIFY ? "verified" : "wrote"} ${done} traits`);
@@ -672,7 +758,7 @@ async function main() {
 		process.exit(1);
 	}
 	const hashes = JSON.parse(
-		fs.readFileSync(path.join(DATA_DIR, "hashes.json"), "utf8")
+		fs.readFileSync(path.join(DATA_DIR, "hashes.json"), "utf8"),
 	);
 	const coverage = selectCoverage(hashes);
 	await fetchRenders(coverage.chosen);
@@ -688,7 +774,9 @@ async function main() {
 				chosenSet.add(id);
 			}
 		}
-		console.log(`corpus after absorbing cached renders: ${coverage.chosen.length}`);
+		console.log(
+			`corpus after absorbing cached renders: ${coverage.chosen.length}`,
+		);
 	}
 	const renderOf = (t) =>
 		fs.readFileSync(path.join(RENDERS_DIR, t + ".svg"), "utf8");
@@ -697,17 +785,17 @@ async function main() {
 		fs.mkdirSync(TRAITS_DIR, { recursive: true });
 		fs.writeFileSync(
 			path.join(TRAITS_DIR, "compose.json"),
-			JSON.stringify({ header, footer }, null, 1)
+			JSON.stringify({ header, footer }, null, 1),
 		);
 		// Committed manifest of every token used as extraction
 		// evidence: lets validate-composition.js derive a true
 		// held-out set on a fresh clone (renders/ is gitignored)
 		fs.writeFileSync(
 			path.join(TRAITS_DIR, "extraction-tokens.json"),
-			JSON.stringify(coverage.chosen.map(Number).sort((a, b) => a - b))
+			JSON.stringify(coverage.chosen.map(Number).sort((a, b) => a - b)),
 		);
 	}
-	await writeLibrary(known, hashes);
+	await writeLibrary(known);
 }
 
 if (require.main === module) {

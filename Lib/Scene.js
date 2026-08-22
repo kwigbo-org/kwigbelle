@@ -54,7 +54,7 @@ export default class Scene {
 	touchMove(event) {
 		this.touchPoint = new Point(
 			event.touches[0].clientX,
-			event.touches[0].clientY
+			event.touches[0].clientY,
 		);
 	}
 
@@ -65,7 +65,7 @@ export default class Scene {
 		this.isTouchDown = true;
 		this.touchPoint = new Point(
 			event.touches[0].clientX,
-			event.touches[0].clientY
+			event.touches[0].clientY,
 		);
 	}
 

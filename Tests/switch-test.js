@@ -64,7 +64,7 @@ window.ethereum = {
 	await page.goto("http://localhost:8741/index.html");
 	await page.waitForFunction(
 		() => document.getElementById("preloader")?.style.opacity === "0",
-		{ timeout: 15000 }
+		{ timeout: 15000 },
 	);
 	// Expect the network-fix button, labeled accordingly
 	await page.waitForSelector(".connectButton", { timeout: 10000 });
@@ -72,7 +72,7 @@ window.ethereum = {
 	console.log("button label:", JSON.stringify(label));
 	check(
 		label.includes("Switch to Mainnet"),
-		"wrong-network button label: " + JSON.stringify(label)
+		"wrong-network button label: " + JSON.stringify(label),
 	);
 	await page.screenshot({ path: "switch-button.png" });
 
@@ -80,10 +80,10 @@ window.ethereum = {
 	await page.click(".connectButton");
 	await page.waitForSelector(".pickerThumb.current img", { timeout: 20000 });
 	const items = await page.evaluate(
-		() => document.querySelectorAll("#pickerList .pickerThumb").length
+		() => document.querySelectorAll("#pickerList .pickerThumb").length,
 	);
 	console.log(
-		`after switch: picker with ${items} items, alerts=${JSON.stringify(alerts)} pageErrors=${JSON.stringify(pageErrors)}`
+		`after switch: picker with ${items} items, alerts=${JSON.stringify(alerts)} pageErrors=${JSON.stringify(pageErrors)}`,
 	);
 	check(items === 3, "expected 3 picker items after switch, got " + items);
 	check(alerts.length === 0, "alerts: " + JSON.stringify(alerts));

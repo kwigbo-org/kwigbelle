@@ -43,7 +43,7 @@ function decodeString(hex, slot = 0) {
 	const len = Number(num(hex, off));
 	return Buffer.from(
 		hex.slice(2 + (off + 1) * 64, 2 + (off + 1) * 64 + len * 2),
-		"hex"
+		"hex",
 	).toString("utf8");
 }
 async function ethCall(data) {
@@ -53,7 +53,9 @@ async function ethCall(data) {
 				method: "POST",
 				headers: { "content-type": "application/json" },
 				body: JSON.stringify({
-					jsonrpc: "2.0", id: 1, method: "eth_call",
+					jsonrpc: "2.0",
+					id: 1,
+					method: "eth_call",
 					params: [{ to: CONTRACT, data }, "latest"],
 				}),
 			});
@@ -79,13 +81,13 @@ function variationsOf(entry) {
 
 async function main() {
 	const hashes = JSON.parse(
-		fs.readFileSync(path.join(DATA_DIR, "hashes.json"), "utf8")
+		fs.readFileSync(path.join(DATA_DIR, "hashes.json"), "utf8"),
 	);
 	const { header, footer } = JSON.parse(
-		fs.readFileSync(path.join(TRAITS_DIR, "compose.json"), "utf8")
+		fs.readFileSync(path.join(TRAITS_DIR, "compose.json"), "utf8"),
 	);
 	const index = JSON.parse(
-		fs.readFileSync(path.join(TRAITS_DIR, "index.json"), "utf8")
+		fs.readFileSync(path.join(TRAITS_DIR, "index.json"), "utf8"),
 	);
 	// (generation:gene:variation) -> fragment
 	const fragByKey = new Map();
@@ -94,8 +96,8 @@ async function main() {
 			`${info.generation}:${info.gene}:${info.variation}`,
 			fs.readFileSync(
 				path.join(TRAITS_DIR, String(info.generation), traitId + ".svg"),
-				"utf8"
-			)
+				"utf8",
+			),
 		);
 	}
 	// Held-out = not in the committed extraction manifest. The
@@ -104,30 +106,40 @@ async function main() {
 	// are never miscounted as held-out.
 	const usedInExtraction = new Set(
 		JSON.parse(
-			fs.readFileSync(path.join(TRAITS_DIR, "extraction-tokens.json"), "utf8")
-		).map(String)
+			fs.readFileSync(path.join(TRAITS_DIR, "extraction-tokens.json"), "utf8"),
+		).map(String),
 	);
 	if (fs.existsSync(RENDERS_DIR)) {
 		for (const f of fs.readdirSync(RENDERS_DIR)) {
 			usedInExtraction.add(f.replace(".svg", ""));
 		}
 	}
-	const candidates = Object.keys(hashes).filter((t) => !usedInExtraction.has(t));
+	const candidates = Object.keys(hashes).filter(
+		(t) => !usedInExtraction.has(t),
+	);
 	// Deterministic sample: evenly spaced across the id range
 	const step = Math.max(1, Math.floor(candidates.length / SAMPLE));
 	const sample = [];
-	for (let i = OFFSET; i < candidates.length && sample.length < SAMPLE; i += step) {
+	for (
+		let i = OFFSET;
+		i < candidates.length && sample.length < SAMPLE;
+		i += step
+	) {
 		sample.push(candidates[i]);
 	}
 	if (sample.length === 0) {
 		console.error(
-			`no held-out tokens sampled (offset ${OFFSET}, ${candidates.length} candidates) - refusing to report a pass on zero validations`
+			`no held-out tokens sampled (offset ${OFFSET}, ${candidates.length} candidates) - refusing to report a pass on zero validations`,
 		);
 		process.exit(1);
 	}
-	console.log(`validating ${sample.length} held-out tokens (of ${candidates.length} never seen by extraction)`);
+	console.log(
+		`validating ${sample.length} held-out tokens (of ${candidates.length} never seen by extraction)`,
+	);
 
-	let pass = 0, fail = 0, skip = 0;
+	let pass = 0,
+		fail = 0,
+		skip = 0;
 	for (const tokenId of sample) {
 		const entry = hashes[tokenId];
 		const variations = variationsOf(entry);
@@ -136,16 +148,23 @@ async function main() {
 		for (let gene = 0; gene < GENE_COUNT; gene++) {
 			const key = `${entry.generation}:${gene}:${variations[gene]}`;
 			const frag = fragByKey.get(key);
-			if (frag === undefined) { missingTrait = key; break; }
+			if (frag === undefined) {
+				missingTrait = key;
+				break;
+			}
 			composed += frag;
 		}
 		if (missingTrait) {
 			skip++;
-			console.warn(`token ${tokenId}: trait ${missingTrait} not in library (SKIP)`);
+			console.warn(
+				`token ${tokenId}: trait ${missingTrait} not in library (SKIP)`,
+			);
 			continue;
 		}
 		composed += footer;
-		const onChain = decodeString(await ethCall(SEL.renderAvastar + pad(tokenId)));
+		const onChain = decodeString(
+			await ethCall(SEL.renderAvastar + pad(tokenId)),
+		);
 		if (composed === onChain) {
 			pass++;
 		} else {
@@ -156,19 +175,27 @@ async function main() {
 			}
 			if (fail <= 5) {
 				let i = 0;
-				while (i < Math.min(composed.length, onChain.length) && composed[i] === onChain[i]) i++;
+				while (
+					i < Math.min(composed.length, onChain.length) &&
+					composed[i] === onChain[i]
+				)
+					i++;
 				console.error(
 					`token ${tokenId}: MISMATCH len ${composed.length} vs ${onChain.length}, first diff @${i}: ` +
-					`composed "${composed.slice(i, i + 60)}" vs chain "${onChain.slice(i, i + 60)}"`
+						`composed "${composed.slice(i, i + 60)}" vs chain "${onChain.slice(i, i + 60)}"`,
 				);
 			}
 		}
 		if ((pass + fail + skip) % 20 === 0) {
-			console.log(`progress: ${pass + fail + skip}/${sample.length} (${pass} pass, ${fail} fail, ${skip} skip)`);
+			console.log(
+				`progress: ${pass + fail + skip}/${sample.length} (${pass} pass, ${fail} fail, ${skip} skip)`,
+			);
 		}
 		await sleep(200);
 	}
-	console.log(`RESULT: ${pass} pass, ${fail} fail, ${skip} skip of ${sample.length}`);
+	console.log(
+		`RESULT: ${pass} pass, ${fail} fail, ${skip} skip of ${sample.length}`,
+	);
 	if (fail > 0 || skip > 0) process.exitCode = 1;
 }
 

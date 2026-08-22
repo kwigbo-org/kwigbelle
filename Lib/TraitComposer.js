@@ -27,10 +27,10 @@ export default class TraitComposer {
 				// (generation:gene:variation) -> trait record
 				this.byKey = new Map();
 				for (const [traitId, info] of Object.entries(index)) {
-					this.byKey.set(
-						`${info.generation}:${info.gene}:${info.variation}`,
-						{ traitId, ...info }
-					);
+					this.byKey.set(`${info.generation}:${info.gene}:${info.variation}`, {
+						traitId,
+						...info,
+					});
 				}
 			})().catch((error) => {
 				// Allow a retry on transient fetch failure
@@ -45,7 +45,7 @@ export default class TraitComposer {
 	async fragmentFor(trait) {
 		if (!this.fragmentCache.has(trait.traitId)) {
 			const response = await fetch(
-				`./Traits/${trait.generation}/${trait.traitId}.svg`
+				`./Traits/${trait.generation}/${trait.traitId}.svg`,
 			);
 			if (!response.ok) {
 				throw new Error(`missing fragment for trait ${trait.traitId}`);
@@ -74,31 +74,25 @@ export default class TraitComposer {
 		const picks = [];
 		for (let gene = 0; gene < 12; gene++) {
 			const variation = Number((traitsHash >> BigInt(gene * 8)) & 0xffn);
-			const record = this.byKey.get(
-				`${entry.generation}:${gene}:${variation}`
-			);
+			const record = this.byKey.get(`${entry.generation}:${gene}:${variation}`);
 			if (!record) {
 				throw new Error(
-					`trait ${entry.generation}:${gene}:${variation} not in library`
+					`trait ${entry.generation}:${gene}:${variation} not in library`,
 				);
 			}
 			picks.push(record);
 		}
-		const fragments = await Promise.all(
-			picks.map((p) => this.fragmentFor(p))
-		);
+		const fragments = await Promise.all(picks.map((p) => this.fragmentFor(p)));
 		// Genes 0-3 are the color style blocks; they must be present
 		// in every layer document so class fills resolve
 		const styles = fragments.slice(0, 4).join("");
 		const bgMatch = fragments[3].match(
-			/\.bg_color\s*\{\s*fill:\s*(#[0-9A-Fa-f]{3,8})/
+			/\.bg_color\s*\{\s*fill:\s*(#[0-9A-Fa-f]{3,8})/,
 		);
 		const layers = [];
 		const layerInfo = [];
 		for (let gene = 5; gene < 12; gene++) {
-			layers.push(
-				this.toImage(styles + fragments[gene], false, displaySize)
-			);
+			layers.push(this.toImage(styles + fragments[gene], false, displaySize));
 			layerInfo.push(picks[gene]);
 		}
 		return {

@@ -18,7 +18,7 @@ export default class AvastarLoader {
 					(detail.info &&
 						detail.info.uuid &&
 						existing.info &&
-						existing.info.uuid === detail.info.uuid)
+						existing.info.uuid === detail.info.uuid),
 			);
 			if (!isDuplicate) {
 				this.announcedProviders.push(detail);
@@ -101,7 +101,7 @@ export default class AvastarLoader {
 		} catch (error) {}
 		if (stored) {
 			const match = wallets.find(
-				(wallet) => this.walletKey(wallet.info) === stored
+				(wallet) => this.walletKey(wallet.info) === stored,
 			);
 			if (match) {
 				this.provider = match.provider;
@@ -191,13 +191,11 @@ export default class AvastarLoader {
 	///		contract is ready
 	connect() {
 		if (!this.connectPromise) {
-			this.connectPromise = this.establishConnection().catch(
-				(error) => {
-					// Allow a retry after a failed initialization
-					this.connectPromise = null;
-					throw error;
-				}
-			);
+			this.connectPromise = this.establishConnection().catch((error) => {
+				// Allow a retry after a failed initialization
+				this.connectPromise = null;
+				throw error;
+			});
 		}
 		return this.connectPromise;
 	}
@@ -216,7 +214,7 @@ export default class AvastarLoader {
 		});
 		if (parseInt(chainId, 16) !== 1) {
 			console.warn(
-				`Wallet is on chain ${chainId}, Avastars lives on mainnet (0x1). Using local SVGs.`
+				`Wallet is on chain ${chainId}, Avastars lives on mainnet (0x1). Using local SVGs.`,
 			);
 			return false;
 		}
@@ -297,7 +295,7 @@ export default class AvastarLoader {
 		} catch (error) {
 			console.error(
 				`On chain render failed for Avastar ${requestedToken}`,
-				error
+				error,
 			);
 			await this.loadLocalAvastarSVG(complete);
 			return;
@@ -347,18 +345,14 @@ export default class AvastarLoader {
 			return [];
 		}
 		const owner = accounts[0];
-		const balance = await this.avastarContract.methods
-			.balanceOf(owner)
-			.call();
+		const balance = await this.avastarContract.methods.balanceOf(owner).call();
 		// Pure reads: safe to fetch in parallel so large
 		// collections don't serialize wallet round-trips
 		const indexes = Array.from({ length: Number(balance) }, (_, i) => i);
 		const tokenIds = await Promise.all(
 			indexes.map((index) =>
-				this.avastarContract.methods
-					.tokenOfOwnerByIndex(owner, index)
-					.call()
-			)
+				this.avastarContract.methods.tokenOfOwnerByIndex(owner, index).call(),
+			),
 		);
 		return tokenIds.map((tokenId) => tokenId.toString());
 	}
