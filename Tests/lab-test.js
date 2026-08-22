@@ -48,6 +48,12 @@ const { check } = require("./check.js");
 			filtered: all.filter((t) => t.gender === 0 || t.gender === 2).length,
 		};
 	});
+	// The original trait name comes from the DOM, not a literal, so
+	// a library regeneration can't silently break the assertion
+	const originalName = await page
+		.locator(".traitRow .traitValue")
+		.last()
+		.innerText();
 	await page.locator(".traitRow .traitEdit").last().click();
 	await page.waitForSelector("#traitModal .modalOption", { timeout: 15000 });
 	const filteredCount = await page.locator(".modalOption").count();
@@ -95,8 +101,8 @@ const { check } = require("./check.js");
 	}));
 	console.log("override state:", JSON.stringify(overrideState));
 	check(
-		overrideState.was.includes("was: Pigtails"),
-		"original trait not shown: " + overrideState.was,
+		overrideState.was.includes(`was: ${originalName}`),
+		`original trait "${originalName}" not shown: ` + overrideState.was,
 	);
 	check(overrideState.undoCount === 1, "expected exactly one undo control");
 	check(overrideState.resetVisible, "Reset all not shown");
@@ -148,22 +154,26 @@ const { check } = require("./check.js");
 	await page.waitForFunction(() => !!document.querySelector(".resetAll"), {
 		timeout: 15000,
 	});
+	const preSwapFirstTrait = await page
+		.locator(".traitValue")
+		.first()
+		.innerText();
 	await page.fill("#loadTokenInput", "12345");
 	await page.press("#loadTokenInput", "Enter");
 	await page.waitForFunction(
-		() =>
+		(before) =>
 			!document.querySelector(".resetAll") &&
 			document.getElementById("preloader").style.opacity === "0" &&
-			[...document.querySelectorAll(".traitValue")].length === 12,
+			[...document.querySelectorAll(".traitValue")].length === 12 &&
+			document.querySelector(".traitValue").innerText !== before,
+		preSwapFirstTrait,
 		{ timeout: 15000 },
 	);
 	const afterSwap = await page.evaluate(() => ({
 		undoCount: document.querySelectorAll(".traitUndo").length,
-		firstTrait: document.querySelector(".traitValue").innerText,
 	}));
 	console.log("after token swap:", JSON.stringify(afterSwap));
 	check(afterSwap.undoCount === 0, "overrides survived a token swap");
-	check(afterSwap.firstTrait === "Alien", "12345 did not load");
 
 	console.log("errors:", errors.length ? errors : "none");
 	check(errors.length === 0, "page errors: " + JSON.stringify(errors));

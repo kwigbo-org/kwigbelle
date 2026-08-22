@@ -423,10 +423,23 @@ export default class MainScene extends Scene {
 		if (!picks || !this.avastar || !this.avastar.styles) {
 			return;
 		}
+		// The modal can stay open across a background token load
+		// (e.g. the wallet auto-swap): capture the token and baseline
+		// it opened for, and discard the pick if either changed - a
+		// choice made for one token must never apply to another
+		const tokenAtOpen = this.avastar.tokenId;
+		const baselineAtOpen = this.baselinePicks;
 		const pick = await this.traitEditModal.open(gene, picks[gene], {
 			gender: this.baseGender,
 			styles: this.avastar.styles,
 		});
+		if (
+			!this.avastar ||
+			this.avastar.tokenId !== tokenAtOpen ||
+			this.baselinePicks !== baselineAtOpen
+		) {
+			return;
+		}
 		if (pick && pick.traitId !== picks[gene].traitId) {
 			if (
 				this.baselinePicks &&

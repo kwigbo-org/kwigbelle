@@ -21,8 +21,21 @@ export default class TraitEditModal {
 	///			style blocks for thumbnail rendering
 	/// - Returns: The picked trait record, or null when dismissed
 	open(gene, currentPick, context) {
+		// One chooser at a time: a second Edit tap while a modal is
+		// up (or still fetching) resolves immediately instead of
+		// stacking overlays with racing resolutions
+		if (this.isOpen) {
+			return Promise.resolve(null);
+		}
+		this.isOpen = true;
 		return new Promise((resolve) => {
-			this.buildOverlay(gene, currentPick, context, resolve);
+			// A failed build must settle the promise - callers await
+			// it, and a hung await would strand the edit flow
+			this.buildOverlay(gene, currentPick, context, resolve).catch((error) => {
+				console.warn("trait chooser failed to open", error);
+				this.isOpen = false;
+				resolve(null);
+			});
 		});
 	}
 
@@ -32,6 +45,7 @@ export default class TraitEditModal {
 		stopSceneEvents(overlay);
 		const done = (pick) => {
 			overlay.remove();
+			this.isOpen = false;
 			resolve(pick);
 		};
 		// Tapping the dimmed backdrop dismisses
@@ -71,8 +85,24 @@ export default class TraitEditModal {
 		grid.setAttribute("class", "modalGrid");
 		sheet.appendChild(grid);
 
-		const all = await this.traitComposer.traitsForGene(gene);
+		// Mount BEFORE fetching the trait list: a transient library
+		// failure then dismisses a visible (empty) modal instead of
+		// silently never showing one
+		document.body.appendChild(overlay);
+		let all = null;
+		try {
+			all = await this.traitComposer.traitsForGene(gene);
+		} catch (error) {
+			console.warn("trait list unavailable", error);
+			done(null);
+			return;
+		}
 		const renderOptions = async (isShowAll) => {
+			// Rapid show-all toggles: only the latest render may keep
+			// filling thumbnails; superseded runs stop at their next
+			// batch instead of decoding into detached nodes
+			this.renderGeneration = (this.renderGeneration || 0) + 1;
+			const generation = this.renderGeneration;
 			grid.innerHTML = "";
 			// Gender 0 traits are unisex; a gender-0 base sees all
 			const options = all.filter(
@@ -92,8 +122,8 @@ export default class TraitEditModal {
 			// slots don't fetch and rasterize everything in one burst
 			const BATCH = 12;
 			for (let start = 0; start < tiles.length; start += BATCH) {
-				// The overlay may have been dismissed mid-render
-				if (!overlay.isConnected) {
+				// The overlay may have been dismissed or re-rendered
+				if (!overlay.isConnected || generation !== this.renderGeneration) {
 					return;
 				}
 				await Promise.all(
@@ -104,7 +134,6 @@ export default class TraitEditModal {
 		showAllBox.addEventListener("change", () =>
 			renderOptions(showAllBox.checked),
 		);
-		document.body.appendChild(overlay);
 		renderOptions(false);
 	}
 
