@@ -10,6 +10,7 @@ import SidePanel from "./SidePanel.js";
 import LoadSection from "./LoadSection.js";
 import EffectsSection from "./EffectsSection.js";
 import TraitsSection from "./TraitsSection.js";
+import TraitEditModal from "./TraitEditModal.js";
 import { svgToImage } from "./UIHelpers.js";
 
 /// The Avastars scene: load orchestration and rendering. The
@@ -20,7 +21,7 @@ export default class MainScene extends Scene {
 	/// Overridden constructor
 	constructor(rootContainer) {
 		super(rootContainer);
-		console.log("kwigbelle build 2026-08-22.6 (load section)");
+		console.log("kwigbelle build 2026-08-22.7 (trait lab)");
 		// Build the UI
 		this.buildUI();
 		// Start loading
@@ -51,8 +52,17 @@ export default class MainScene extends Scene {
 			explodeParam !== null ? explodeParam !== "0" : null,
 		);
 		this.sidePanel.addSection("Effects", this.effectsSection.build());
-		this.traitsSection = new TraitsSection();
+		this.traitsSection = new TraitsSection({
+			onEdit: (gene) => this.openTraitEditor(gene),
+			onUndo: (gene) => this.undoOverride(gene),
+			onResetAll: () => this.resetOverrides(),
+		});
 		this.sidePanel.addSection("Traits", this.traitsSection.build());
+		this.traitEditModal = new TraitEditModal(this.traitComposer);
+		// Trait swap preview state (docs/tads/avastar-lab.md): the
+		// loaded token's picks plus per-gene overrides
+		this.baselinePicks = null;
+		this.overrides = new Map();
 		// Object used to load the Avastar SVG from on chain
 		this.avastarLoader = new AvastarLoader(null);
 		// Overlay UI components: picks and connects come back into
@@ -134,6 +144,11 @@ export default class MainScene extends Scene {
 	beginLoad(tokenId) {
 		this.loadGeneration = (this.loadGeneration || 0) + 1;
 		const generation = this.loadGeneration;
+		// Any in-flight preview recompose belongs to the previous
+		// display: invalidate it now, or an A->B->A reload could let
+		// a stale overridden render land on A's fresh baseline (its
+		// token id matches again, but overrides were reset)
+		this.previewGeneration = (this.previewGeneration || 0) + 1;
 		// Synchronous record of the latest REQUEST: async paths only
 		// update loader state on success, and the same-token guard
 		// must reflect what the user last asked for, not what last
@@ -159,6 +174,10 @@ export default class MainScene extends Scene {
 					this.avastarLoader.tokenId = tokenId;
 					this.avastarLoader.currentAvastar = composed.fullSVG;
 					this.avastar = composed;
+					// A fresh token load resets the trait swap preview
+					this.baselinePicks = composed.traits;
+					this.baseGender = composed.gender;
+					this.overrides = new Map();
 					this.setupLayerSprings();
 					this.finishLoad(generation);
 				})
@@ -218,6 +237,10 @@ export default class MainScene extends Scene {
 					}
 					this.avastarLoader.tokenId = tokenId;
 					this.avastarLoader.currentAvastar = svgString;
+					// No picks on the static path: trait editing is
+					// unavailable until a composed load succeeds
+					this.baselinePicks = null;
+					this.overrides = new Map();
 					this.avastar = {
 						tokenId: tokenId != null ? String(tokenId) : null,
 						isStatic: true,
@@ -364,21 +387,129 @@ export default class MainScene extends Scene {
 			);
 			return;
 		}
-		// Composed path: rebuild layer images at the new size
-		// (fragments are cached in the composer, no refetch)
+		// Composed path: a resize render IS a preview render (the
+		// current picks at the current size), so it goes through
+		// refreshPreview and inherits every staleness guard - preview
+		// generation, baseline identity, token identity, captured
+		// size. That closes the A->B->A hole a token-and-size-only
+		// guard leaves open, and a newer override render always
+		// supersedes an older resize render (fragments are cached in
+		// the composer, no refetch).
+		this.refreshPreview();
+	}
+
+	/// The trait picks currently on display: the loaded token's
+	/// baseline with any preview overrides applied
+	currentPicks() {
+		if (!this.baselinePicks) {
+			return null;
+		}
+		return this.baselinePicks.map((pick, gene) =>
+			this.overrides.has(gene) ? this.overrides.get(gene) : pick,
+		);
+	}
+
+	/// Open the trait chooser for a gene slot and apply the choice
+	async openTraitEditor(gene) {
+		const picks = this.currentPicks();
+		if (!picks || !this.avastar || !this.avastar.styles) {
+			return;
+		}
+		// The modal can stay open across a background token load
+		// (e.g. the wallet auto-swap): capture the token and baseline
+		// it opened for, and discard the pick if either changed - a
+		// choice made for one token must never apply to another
+		const tokenAtOpen = this.avastar.tokenId;
+		const baselineAtOpen = this.baselinePicks;
+		const pick = await this.traitEditModal.open(gene, picks[gene], {
+			gender: this.baseGender,
+			styles: this.avastar.styles,
+		});
+		if (
+			!this.avastar ||
+			this.avastar.tokenId !== tokenAtOpen ||
+			this.baselinePicks !== baselineAtOpen
+		) {
+			return;
+		}
+		if (pick && pick.traitId !== picks[gene].traitId) {
+			if (
+				this.baselinePicks &&
+				pick.traitId === this.baselinePicks[gene].traitId
+			) {
+				// Picking the original back IS the undo
+				this.overrides.delete(gene);
+			} else {
+				this.overrides.set(gene, pick);
+			}
+			this.refreshPreview();
+		}
+	}
+
+	/// Revert one gene to the loaded token's trait
+	undoOverride(gene) {
+		this.overrides.delete(gene);
+		this.refreshPreview();
+	}
+
+	/// Revert every gene to the loaded token's traits
+	resetOverrides() {
+		this.overrides.clear();
+		this.refreshPreview();
+	}
+
+	/// Re-render the display for the current picks. Preview-only
+	/// state change: guarded like resize (captured size + token
+	/// identity + its own generation for rapid apply/undo), never a
+	/// load-generation bump - a pick swap must not invalidate a
+	/// pending token load, and a stale swap render must never
+	/// overwrite a newer token.
+	refreshPreview() {
+		const picks = this.currentPicks();
+		if (!picks || !this.avastar) {
+			return;
+		}
+		const previewToken = this.avastar.tokenId;
+		// Baseline identity is the belt to the generation's braces:
+		// beginLoad allocates a fresh picks array even for the same
+		// token id, so a stale preview can never pass both checks
+		const baselineAtStart = this.baselinePicks;
+		const width = this.canvas.width;
+		const height = this.canvas.height;
+		this.previewGeneration = (this.previewGeneration || 0) + 1;
+		const generation = this.previewGeneration;
 		this.traitComposer
-			.compose(resizeToken, new Size(width, height))
+			.composePicks(picks, new Size(width, height))
 			.then((composed) => {
-				if (!this.avastar || this.avastar.tokenId !== resizeToken) {
+				if (generation !== this.previewGeneration) {
+					return;
+				}
+				if (this.baselinePicks !== baselineAtStart) {
+					return;
+				}
+				if (!this.avastar || this.avastar.tokenId !== previewToken) {
 					return;
 				}
 				if (width !== this.canvas.width || height !== this.canvas.height) {
 					return;
 				}
+				composed.tokenId = previewToken;
+				composed.gender = this.baseGender;
 				this.avastar = composed;
-				this.setupLayerSprings();
+				// Keep the collapsed picker thumbnail honest about
+				// what is on screen
+				this.avastarLoader.currentAvastar = composed.fullSVG;
+				const contentView = document.getElementById("contentView");
+				contentView.style.backgroundColor = composed.backgroundColor;
+				// The layer count is constant across overrides: keep
+				// the springs so the swap doesn't snap the motion
+				if (this.layerSprings.springs.length !== composed.layers.length) {
+					this.setupLayerSprings();
+				}
+				this.pickerUI.updateSelectedThumbnail();
+				this.traitsSection.setOverrides(composed, this.overrides);
 			})
-			.catch((error) => console.warn("recompose failed", error));
+			.catch((error) => console.warn("preview recompose failed", error));
 	}
 
 	render() {

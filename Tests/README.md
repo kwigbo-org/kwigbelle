@@ -33,6 +33,7 @@ node eip-test.js       # EIP-6963 discovery, legacy fallback, tap-to-connect
 node failure-test.js   # happy mainnet / wrong chain / failing RPC render
 node panel-test.js     # side panel: open, pause/resume, trait visibility, persistence
 node load-test.js      # Load Avastar section: walletless load, validation, composer split
+node lab-test.js       # trait swap preview: modal, override, undo, reset, swap-clears
 ```
 
 Every test prints its own pass evidence and exits nonzero on any

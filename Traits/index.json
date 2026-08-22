@@ -7,6 +7,13 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
   "name": "Pale Pink",
   "sha256": "fb45376b4e9c895ba2e891a212e091a5d22b1171f309427e2e1133093d23dfe6",
   "bytes": 172
@@ -19,6 +26,13 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
   "name": "Amber Brown",
   "sha256": "8dec2bb07c47914cd5feb5161582785ca7d6c9e7d9d9bc3732d9208cf14d5207",
   "bytes": 172
@@ -31,6 +45,13 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
   "name": "Tumbleweed",
   "sha256": "45fc439290a08908ef021b32ce0440c15b4747176acd96f21bbffd6190102b4e",
   "bytes": 172
@@ -43,6 +64,13 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 0,
+  "series": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
   "name": "Mellow Apricot",
   "sha256": "023ef2e9b35281862c8590b25e77935eb1e1dbcf7776aa570667f770064d5c8e",
   "bytes": 172
@@ -55,6 +83,13 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 0,
+  "series": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
   "name": "Mohave Sand",
   "sha256": "48c149d4d3fcac05767deddbaf942ebb29c50e62d9e98e241d3d61e7990f9cd3",
   "bytes": 172
@@ -67,6 +102,13 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 0,
+  "series": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
   "name": "Brown Sugar",
   "sha256": "b345eeee76e96f0fc8a70d2b3d2de3b174507cbfb1051376cbeeeb70b9555d5d",
   "bytes": 172
@@ -79,6 +121,13 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 0,
+  "series": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
   "name": "Navaho White",
   "sha256": "4259ca80169bbada8d505b9f8d920c00f982be2f9daa93b282da2bc3f3fd5d95",
   "bytes": 172
@@ -91,6 +140,13 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 0,
+  "series": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
   "name": "Deer",
   "sha256": "f51acc49dd25ec32ec4d4a8cb178b40bbb247213c4fcff408fc9c26e852fcb9d",
   "bytes": 172
@@ -103,6 +159,13 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 0,
+  "series": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
   "name": "Pale Chestnut",
   "sha256": "9b7c4ea9d1bb8d01ef94703353bf5e0ec816e9c5cf04089cb3eb7f211d118b66",
   "bytes": 172
@@ -115,6 +178,13 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 0,
+  "series": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
   "name": "Champagne Pink",
   "sha256": "b6841b13fb8b37564ae3bc49056825962dbfce8221a89825726d01417e4d85a5",
   "bytes": 172
@@ -127,6 +197,13 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 0,
+  "series": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
   "name": "Peach Puff",
   "sha256": "a068572055f50241ca7c716eeb0ff5d7a294a5050a7a22b19a09370205ebd63e",
   "bytes": 172
@@ -139,6 +216,13 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 0,
+  "series": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
   "name": "Pastel Pink",
   "sha256": "103574b082d34749ab438c4c5ef76239ed9cfdaec32c3bc397f2d3ec5de570c6",
   "bytes": 172
@@ -151,6 +235,13 @@
   "rarity": 4,
   "rarityName": "Legendary",
   "gender": 0,
+  "series": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
   "name": "Lavender Rose",
   "sha256": "cc620b971cba592960c051688e648eb2ecbc398862f71844c989998291b76d03",
   "bytes": 172
@@ -163,6 +254,13 @@
   "rarity": 4,
   "rarityName": "Legendary",
   "gender": 0,
+  "series": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
   "name": "Zombie",
   "sha256": "ffac6f7575b80f23d0eaabb020a21508f93a1a175d550234d8ccb0633c77d43d",
   "bytes": 172
@@ -175,6 +273,13 @@
   "rarity": 4,
   "rarityName": "Legendary",
   "gender": 0,
+  "series": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
   "name": "Alien",
   "sha256": "d5b66ff417152d23b4127e2c889f402185fbe99b28be74c7b43930c339485f83",
   "bytes": 172
@@ -187,6 +292,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   0
+  ],
   "name": "Bleached Blonde",
   "sha256": "35e6938ed53dd4c437710fd69d28fdc11f5c1ffdee127e63ac02d2dbf9a55ab2",
   "bytes": 140
@@ -199,6 +307,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   0
+  ],
   "name": "White Blonde",
   "sha256": "70b030fdd3cda265fefeb920f442e32e8aa73e27a4abb2d36f1b671133a7e5b3",
   "bytes": 140
@@ -211,6 +322,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   0
+  ],
   "name": "Light Blonde",
   "sha256": "c410632847c39386c83340704ce8a48a16eb611b4e5bcf59f8093eeaf01e6d95",
   "bytes": 140
@@ -223,6 +337,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   1
+  ],
   "name": "Strawberry Blonde",
   "sha256": "b48d21a0220fd600cc0a84bc7e138c632ac3ae123d00f1150ee498f64485c119",
   "bytes": 140
@@ -235,6 +352,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   1
+  ],
   "name": "Light Red",
   "sha256": "f5f10930ed009d7e3fb48b4ab134c93dcd69a18988705c870a186771419dc6a5",
   "bytes": 140
@@ -247,6 +367,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   1
+  ],
   "name": "Dark Red",
   "sha256": "ddff1c74717d57f66eb84f03a5208fa238d73541f638adf42010e64e16d5879c",
   "bytes": 140
@@ -259,6 +382,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   2
+  ],
   "name": "Brown",
   "sha256": "278de36ba0305c035c50af99096b2e2ba904f9f52d07ca606a7dbd368a4aa797",
   "bytes": 140
@@ -271,6 +397,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   2
+  ],
   "name": "Light Brown",
   "sha256": "b32df9183a6b857de536f499ae566eeca3ac9cc53fa397c4b357d292fa27e99c",
   "bytes": 140
@@ -283,6 +412,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   2
+  ],
   "name": "Ash Brown",
   "sha256": "6dcbde265e9d97ec63e6ae1409812823a5459dcc891a935099ec92f06888c772",
   "bytes": 140
@@ -295,6 +427,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   3
+  ],
   "name": "Orange",
   "sha256": "147914f9a781ba7ad4af660d63216eae50f37977895709e218efa346b31c0867",
   "bytes": 140
@@ -307,6 +442,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   3
+  ],
   "name": "Off Black",
   "sha256": "6186e25c9bf1fe18253733f3905dafbac5df62ff718691114eb0d9e8635aaede",
   "bytes": 140
@@ -319,6 +457,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   3
+  ],
   "name": "Dark Brown",
   "sha256": "8b38b1e2dbb23933cfbeabee285c03f7aea4a6353828f35fcd9df413bd4d43c9",
   "bytes": 140
@@ -331,6 +472,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   4
+  ],
   "name": "Light Grey",
   "sha256": "9ce02da837c58aa67e34aa754e8ef3ff44e70ba01962cbfaf1255eff4eadc1c8",
   "bytes": 140
@@ -343,6 +487,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   4
+  ],
   "name": "Medium Grey",
   "sha256": "5c3bef39f236ea9147a7b2bfdfc61d0c7dec05c2fd3de0101eca2e70fb49e42d",
   "bytes": 140
@@ -355,6 +502,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   4
+  ],
   "name": "Dark Grey",
   "sha256": "80eaa422b347e57791ca88400698f5df7cafac5788a9dcf93cecaedc63b8fca2",
   "bytes": 140
@@ -367,6 +517,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 0,
+  "series": [
+   0,
+   1
+  ],
   "name": "Golden Blonde",
   "sha256": "50af5fea9174e5eb1dd19a3f709099ecb33f80141671e1fc2a29ad4ac948d7ae",
   "bytes": 140
@@ -379,6 +533,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 0,
+  "series": [
+   0,
+   1
+  ],
   "name": "Ash Blonde",
   "sha256": "7dc792dc2b4798ddf0a5d35cc7978c72ad20838e36a83fbaf993915a81294fc8",
   "bytes": 140
@@ -391,6 +549,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 0,
+  "series": [
+   0,
+   1
+  ],
   "name": "Honey Blonde",
   "sha256": "798fb3324cac62a13502e14d6f26eb7baf9f9d92d960deea874f2def8d1b2420",
   "bytes": 140
@@ -403,6 +565,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 0,
+  "series": [
+   2,
+   3
+  ],
   "name": "Platinum Blonde",
   "sha256": "441f669cad34af24f1a37a185b4ac12c220ab55cbdd6e2bc137a8002c7025797",
   "bytes": 140
@@ -415,6 +581,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 0,
+  "series": [
+   2,
+   3
+  ],
   "name": "Light Auburn",
   "sha256": "1d35ca6ea15955338f35224b38c56cbdc7271cbda6da023ab9d8be83ab88d619",
   "bytes": 140
@@ -427,6 +597,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 0,
+  "series": [
+   2,
+   3
+  ],
   "name": "Dark Auburn",
   "sha256": "c6f4d5254e76c33518d9bfb1847ca1e7b3c3fc3283e0e1e0c68645b1770a4f13",
   "bytes": 140
@@ -439,6 +613,9 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 0,
+  "series": [
+   4
+  ],
   "name": "Medium Brown",
   "sha256": "f5e3b17eda8ac8442b061b791dad6e5f08d5300f813b21e1d74921cb9d0b07f5",
   "bytes": 140
@@ -451,6 +628,9 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 0,
+  "series": [
+   4
+  ],
   "name": "Reddish Brown",
   "sha256": "d8a81b23add47583093f18fb44ba159f6175204952992cc4a3f662821001687a",
   "bytes": 140
@@ -463,6 +643,9 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 0,
+  "series": [
+   4
+  ],
   "name": "Grey",
   "sha256": "0bea81e32816614231fd5ee1db0ff8ec6bc03937d2f7e12d90fffababf86673c",
   "bytes": 140
@@ -475,6 +658,11 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 0,
+  "series": [
+   0,
+   1,
+   2
+  ],
   "name": "Dark Sky",
   "sha256": "dee68b9a0156e595fde5938c93c60b2f952f7e4244f294981f410f176b32c3d0",
   "bytes": 140
@@ -487,6 +675,11 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 0,
+  "series": [
+   0,
+   1,
+   2
+  ],
   "name": "Spring Rain",
   "sha256": "ed2c706f9e8a8eb9209cbbf77a397a9c432ef87d56d18555f7763298a16b267c",
   "bytes": 140
@@ -499,6 +692,11 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 0,
+  "series": [
+   0,
+   1,
+   2
+  ],
   "name": "Black",
   "sha256": "115b23c2026965b960b57975e5eb22a576dcceb7258c8a051c52e9c21eccaded",
   "bytes": 140
@@ -511,6 +709,10 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 0,
+  "series": [
+   3,
+   4
+  ],
   "name": "Sun",
   "sha256": "38a6131ffe690cf9634ac662cc541701bfd283086bfadf6f32444f343a51ba8d",
   "bytes": 140
@@ -523,6 +725,10 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 0,
+  "series": [
+   3,
+   4
+  ],
   "name": "Fire",
   "sha256": "6cea8696db325ad5a735ac975ec18cd10195820ef7a2c20bcbc3e03540c7429b",
   "bytes": 140
@@ -535,6 +741,10 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 0,
+  "series": [
+   3,
+   4
+  ],
   "name": "Leaf",
   "sha256": "ea1c177d0cde7a8d3f8c067904c6b32ff65003095ee8c842eff641b8ad85860b",
   "bytes": 140
@@ -547,6 +757,12 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 0,
+  "series": [
+   0,
+   1,
+   2,
+   3
+  ],
   "name": "Blue",
   "sha256": "15c645fce631f5500bb1c8449d4b3aba52e1f5315aa21183561925a6379c7551",
   "bytes": 140
@@ -559,6 +775,12 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 0,
+  "series": [
+   0,
+   1,
+   2,
+   3
+  ],
   "name": "Yellow",
   "sha256": "0603cdfc038d189876c1adb58e9a2ac1eaf6157518c90c70886771dd6af89582",
   "bytes": 140
@@ -571,6 +793,12 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 0,
+  "series": [
+   0,
+   1,
+   2,
+   3
+  ],
   "name": "Daisies",
   "sha256": "dcc646e780ff88f0f99f762e70af0be56914a1f6b5d34e11b75534ac4b54cbfa",
   "bytes": 140
@@ -583,6 +811,9 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 0,
+  "series": [
+   4
+  ],
   "name": "Red Berry",
   "sha256": "fc5bcb582ede625a8fc320c3f6169dc4612b41b6d35a03cb13a14ef0d9a7a5d2",
   "bytes": 140
@@ -595,6 +826,9 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 0,
+  "series": [
+   4
+  ],
   "name": "Cyan",
   "sha256": "55d62eb3fdaced0df4767cf863d658a14923bf4c497fe6a6bd3b3a1c1578687b",
   "bytes": 140
@@ -607,6 +841,9 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 0,
+  "series": [
+   4
+  ],
   "name": "Lava",
   "sha256": "6abb3984b6a76c645748974ad1c2ce09b589a9643f1a717aa5ca2dc8a9e60e48",
   "bytes": 140
@@ -619,6 +856,13 @@
   "rarity": 4,
   "rarityName": "Legendary",
   "gender": 0,
+  "series": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
   "name": "Neon Green",
   "sha256": "1743ba7fee3ea2f8817738aa763ebdbb5313272c9bb390c2aac4a0b5ff2c1a1f",
   "bytes": 140
@@ -631,6 +875,13 @@
   "rarity": 4,
   "rarityName": "Legendary",
   "gender": 0,
+  "series": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
   "name": "Bright Purple",
   "sha256": "922fe9922678fb4a6eed0d56d79f4e0c356a6bd2f6808ecf6b395e4e879a31e0",
   "bytes": 140
@@ -643,6 +894,13 @@
   "rarity": 4,
   "rarityName": "Legendary",
   "gender": 0,
+  "series": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
   "name": "Neon Pink",
   "sha256": "c598670fd4cce83b859dff49d10cd2bc9e85ebb4685631b2d79e3a4bcc192b27",
   "bytes": 140
@@ -655,6 +913,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   0
+  ],
   "name": "Bubbles",
   "sha256": "2f7999c77b078682ec875c77eeaf30d98eb190746675efe518d46d65af43a037",
   "bytes": 56
@@ -667,6 +928,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   0
+  ],
   "name": "Rosewood",
   "sha256": "2a5104f108a34b882615c0d8020b20c5710dc5b4fe042deab696b6f205180c1f",
   "bytes": 56
@@ -679,6 +943,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   0
+  ],
   "name": "Baby",
   "sha256": "f00662711926a7c9fba7dec3001746af17e7049b34d91318d92b347933d80775",
   "bytes": 56
@@ -691,6 +958,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   0
+  ],
   "name": "Cerulean",
   "sha256": "3b4c9bae576adc7ee7dc599fa5b80b153861417a7231dc7bcd5cb906917bba29",
   "bytes": 56
@@ -703,6 +973,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   1
+  ],
   "name": "Inchworm",
   "sha256": "f2fc79bed34037d162b473d4b17dbb961c442448aa45268124e0610df502c176",
   "bytes": 56
@@ -715,6 +988,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   1
+  ],
   "name": "Celadon",
   "sha256": "cd5c0f9577f2fc774ace962ca2f0525fb2c266a5fa1bcd2c59491358f7f11e8d",
   "bytes": 56
@@ -727,6 +1003,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   1
+  ],
   "name": "Pistachio",
   "sha256": "0b3e8ecead91daabd06839b2ba65c1fa1268ac23818dc554aee82f6b628102cc",
   "bytes": 56
@@ -739,6 +1018,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   1
+  ],
   "name": "Dark Olive",
   "sha256": "265f75c5cdfa56192e213a219da59db4bec3d90555a271dd6bb813f99b51c35f",
   "bytes": 56
@@ -751,6 +1033,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   2
+  ],
   "name": "Bright Lavender",
   "sha256": "146ee920b9b42dc97ebab67a8e5f7f58983d0233d3a345cb076c936c38b65d28",
   "bytes": 56
@@ -763,6 +1048,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   2
+  ],
   "name": "Lavender",
   "sha256": "1bebb54f05ff16ce1845a66eefded5dcac45890fbe420664628bedb1f1a3e2d7",
   "bytes": 56
@@ -775,6 +1063,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   2
+  ],
   "name": "Grape",
   "sha256": "7911901b804484b186e8f8d8d155b979c8294d04c4ced39f211c28441c70c2d2",
   "bytes": 56
@@ -787,6 +1078,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   2
+  ],
   "name": "Purple Heart",
   "sha256": "4e5c89ee0d95bb92af63c38a8645b1bfaa8a9c19f3b5d14ece64c3cb4bac7400",
   "bytes": 56
@@ -799,6 +1093,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   3
+  ],
   "name": "Iceberg",
   "sha256": "564ec8478999d1949c859e568b26a6d60d6b0b97c892906f9b5b96ed587efa90",
   "bytes": 56
@@ -811,6 +1108,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   3
+  ],
   "name": "Cornflower",
   "sha256": "446d36e344bc16f8d2351157d43aa64a7dc6e9a6e587728a859c230c9875ad0e",
   "bytes": 56
@@ -823,6 +1123,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   3
+  ],
   "name": "Air Force Blue",
   "sha256": "02a2b60b6489e433912a1ca5977e6fbf76f5444218c5bbf50e88d5c74aba4b97",
   "bytes": 56
@@ -835,6 +1138,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   3
+  ],
   "name": "Denim",
   "sha256": "fc8e76f91d880d8513d38e950c1676cd3d611a6271a6f8f217820a4252d94a65",
   "bytes": 56
@@ -847,6 +1153,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   4
+  ],
   "name": "Classic Rose",
   "sha256": "e7d1f864d68e1f519332d12d75ebbd492eef813302969aaf2b7556de7c7ea9e1",
   "bytes": 56
@@ -859,6 +1168,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   4
+  ],
   "name": "Pastel Magenta",
   "sha256": "879d795273db519b2286787d2c894b2ac1fccac3d6852bb74aa2d431ee22ba77",
   "bytes": 56
@@ -871,6 +1183,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   4
+  ],
   "name": "Eggplant",
   "sha256": "c62bd61501c9efcacad91aa2ebbcdacc5c43f225e72ef87f310a2de8bf1103e7",
   "bytes": 56
@@ -883,6 +1198,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   4
+  ],
   "name": "Dark Raspberry",
   "sha256": "0ceaf07d60d69257588023734b929dceb94ee66f5f9e618e0f0c74446b506080",
   "bytes": 56
@@ -895,6 +1213,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 0,
+  "series": [
+   0,
+   1
+  ],
   "name": "Pastel Blue",
   "sha256": "b051c7c3ea44175796aa4fd68c7a44f33600dde3e2c09668e512834ed2e4ce60",
   "bytes": 56
@@ -907,6 +1229,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 0,
+  "series": [
+   0,
+   1
+  ],
   "name": "Dark Cyan",
   "sha256": "6c77164e520631e8402e06359bb42231a7cc7eb5260a49a361537f66e81559b8",
   "bytes": 56
@@ -919,6 +1245,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 0,
+  "series": [
+   0,
+   1
+  ],
   "name": "Pine Green",
   "sha256": "256040e1a0882446bdc346a538c3c84ba0eebdf380710028fe3f224c75e1c656",
   "bytes": 56
@@ -931,6 +1261,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 0,
+  "series": [
+   0,
+   1
+  ],
   "name": "Prune",
   "sha256": "61f4ec0eb7c57500a98586c57f303dd578b8050d1b5bea34fde98ecd56154c22",
   "bytes": 56
@@ -943,6 +1277,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 0,
+  "series": [
+   2,
+   3
+  ],
   "name": "Lawn Green",
   "sha256": "664ccd058aeea4a45ee03369160f9d92f0f57ddc4808a67fd1c40dfdf6983c32",
   "bytes": 56
@@ -955,6 +1293,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 0,
+  "series": [
+   2,
+   3
+  ],
   "name": "Pastel Green",
   "sha256": "149330bce7735d79624427f6ff4bede59048f2a3b32dc3595656a420284c2c61",
   "bytes": 56
@@ -967,6 +1309,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 0,
+  "series": [
+   2,
+   3
+  ],
   "name": "Violet",
   "sha256": "08c36ed4e0cce5ebca3df860e81ba87ddf0ba9f37c0fe9387061739732ef5c32",
   "bytes": 56
@@ -979,6 +1325,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 0,
+  "series": [
+   2,
+   3
+  ],
   "name": "Dark Lavender",
   "sha256": "b6375e80fe3b13b221ececd944541ee1477a74c7953d208c3c4d0f9540913782",
   "bytes": 56
@@ -991,6 +1341,9 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 0,
+  "series": [
+   4
+  ],
   "name": "Azure",
   "sha256": "0deb3c48289211b07a2ad3b1bba3e584bdde57ffcda607fe5e08cf3070c2c5f2",
   "bytes": 56
@@ -1003,6 +1356,9 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 0,
+  "series": [
+   4
+  ],
   "name": "Cobalt",
   "sha256": "e603403a2ff13e296e39abec1086e18d96a68d98fd68536e8224aaf31515842d",
   "bytes": 56
@@ -1015,6 +1371,9 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 0,
+  "series": [
+   4
+  ],
   "name": "Apricot",
   "sha256": "eec5a004b4e556ab405bde69406949303751a158d24fad1e81b1c869284f4ee3",
   "bytes": 56
@@ -1027,6 +1386,9 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 0,
+  "series": [
+   4
+  ],
   "name": "Sky Magenta",
   "sha256": "8aa0244d713116e545dab9826364dd29fde22ef16373d98f2153b1a83ab8af41",
   "bytes": 56
@@ -1039,6 +1401,11 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 0,
+  "series": [
+   0,
+   1,
+   2
+  ],
   "name": "Auburn",
   "sha256": "cc3e9ce71c07720fdb43ff66fe6f18be039a72eb875182d6b90c647050bd4783",
   "bytes": 56
@@ -1051,6 +1418,11 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 0,
+  "series": [
+   0,
+   1,
+   2
+  ],
   "name": "Lavender Blue",
   "sha256": "79034bb8cd4da44f2646430d6f15236aaf4628ef885634daf0f0fd88f31f36ce",
   "bytes": 56
@@ -1063,6 +1435,11 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 0,
+  "series": [
+   0,
+   1,
+   2
+  ],
   "name": "Byzantine",
   "sha256": "e3dae1f826acbc1d33087b011fa13c164a771336b71253221a41616584c2d46f",
   "bytes": 56
@@ -1075,6 +1452,11 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 0,
+  "series": [
+   0,
+   1,
+   2
+  ],
   "name": "Citrine",
   "sha256": "96e9c48e17aa7e3853a84959ba079e7619fd5c4069adc1f56139a6b8a78c4b26",
   "bytes": 56
@@ -1087,6 +1469,10 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 0,
+  "series": [
+   3,
+   4
+  ],
   "name": "Chestnut",
   "sha256": "2440c740223b2e38342d248a5eff325a578d7fdd40ad5ecdece47e839300426c",
   "bytes": 56
@@ -1099,6 +1485,10 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 0,
+  "series": [
+   3,
+   4
+  ],
   "name": "Jade",
   "sha256": "1cdafc3b8c39ff19b846646f3af4d61146dc68f9f330e1ea41b5aa3e0b7797bc",
   "bytes": 56
@@ -1111,6 +1501,10 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 0,
+  "series": [
+   3,
+   4
+  ],
   "name": "Gamboge",
   "sha256": "0ebf31226fc038d2cb486d4113522ea7d6a6d823743220e11cd2bf2b9c75d564",
   "bytes": 56
@@ -1123,6 +1517,10 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 0,
+  "series": [
+   3,
+   4
+  ],
   "name": "Bole",
   "sha256": "db6ab8bde0da09f94541273385b77a32ae43609bb46939739eb32c16074c2aa8",
   "bytes": 56
@@ -1135,6 +1533,12 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 0,
+  "series": [
+   0,
+   1,
+   2,
+   3
+  ],
   "name": "Duke Blue",
   "sha256": "209f5734c18205c62c5cca59a74b15e3404eec1603f8bddf243799477bfb056d",
   "bytes": 56
@@ -1147,6 +1551,12 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 0,
+  "series": [
+   0,
+   1,
+   2,
+   3
+  ],
   "name": "Plumb",
   "sha256": "c2a317a2d38235299c929ae3376a91fde8b514e55c03ec6c38505aa9831d4b37",
   "bytes": 56
@@ -1159,6 +1569,12 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 0,
+  "series": [
+   0,
+   1,
+   2,
+   3
+  ],
   "name": "Clover",
   "sha256": "f5787af6c2ae742d73700e3b42caa0da8127630046b3db8c5b7a7ac0154ea21a",
   "bytes": 56
@@ -1171,6 +1587,12 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 0,
+  "series": [
+   0,
+   1,
+   2,
+   3
+  ],
   "name": "Dark Slate Grey",
   "sha256": "948c7eddb54cdb3c616945b635ce61cc9cff5ccc61994ad724e11927d3577226",
   "bytes": 56
@@ -1183,6 +1605,9 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 0,
+  "series": [
+   4
+  ],
   "name": "Mint",
   "sha256": "d84142417f636e6828c31a5533cc2ce62bf4842841f66392094558f506a961c4",
   "bytes": 56
@@ -1195,6 +1620,9 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 0,
+  "series": [
+   4
+  ],
   "name": "Safety Orange",
   "sha256": "693515636b2029c56f6fbc33abbbb8b9ffac5c5ae2d2636de5209143f8538f70",
   "bytes": 56
@@ -1207,6 +1635,9 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 0,
+  "series": [
+   4
+  ],
   "name": "Bright Ube",
   "sha256": "7c8d4d8856f2530ae299d2ad86f5debd5e21879c0f815fcebdada015171629dc",
   "bytes": 56
@@ -1219,6 +1650,9 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 0,
+  "series": [
+   4
+  ],
   "name": "Lemon",
   "sha256": "688885dd187e96f6e5c02846545362d24669e85153c4928db02cfddc3a40c8b9",
   "bytes": 56
@@ -1231,6 +1665,13 @@
   "rarity": 4,
   "rarityName": "Legendary",
   "gender": 0,
+  "series": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
   "name": "Blue De France",
   "sha256": "e1294a9a24a44d2b03fdf81b24f7b72863a1e32fc373230801aa00d933826a90",
   "bytes": 56
@@ -1243,6 +1684,13 @@
   "rarity": 4,
   "rarityName": "Legendary",
   "gender": 0,
+  "series": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
   "name": "Candy Apple",
   "sha256": "b444b7aa42a2ab7772d80615d3e8152e1dceb4f8169faee7c85bf7c71dfc1fb8",
   "bytes": 56
@@ -1255,6 +1703,13 @@
   "rarity": 4,
   "rarityName": "Legendary",
   "gender": 0,
+  "series": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
   "name": "Golden",
   "sha256": "0ce961cf9271a5ee2e5a0146b1597647e5b2aec8710c60fec361cbbf37995c4d",
   "bytes": 56
@@ -1267,6 +1722,13 @@
   "rarity": 4,
   "rarityName": "Legendary",
   "gender": 0,
+  "series": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
   "name": "Bright Pink",
   "sha256": "9bcc822221e3fd22c21d6fb4335952df772fdd8b9c84c3064091b6a82c4aa950",
   "bytes": 56
@@ -1279,6 +1741,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   0
+  ],
   "name": "White",
   "sha256": "04a77c1438961326a0b96a842b36de1f898aa90e08256f1ddbe2ead5c725c4d1",
   "bytes": 295
@@ -1291,6 +1756,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   0
+  ],
   "name": "Clear Skies",
   "sha256": "af1af6eec50b98dc075171e1e1ba2b40a92fbf8f7a7003f13561f8b182c31f57",
   "bytes": 295
@@ -1303,6 +1771,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   0
+  ],
   "name": "Purple Urkle",
   "sha256": "133bbc6b4c6bd52b08b0465331570bc1d206693b0297278fb091fab8e87a98fa",
   "bytes": 295
@@ -1315,6 +1786,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   0
+  ],
   "name": "Winter Day",
   "sha256": "8791a63f9f41989b518f19a8df59f032b0258d17120f1054d9755b5cc704843e",
   "bytes": 295
@@ -1327,6 +1801,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   1
+  ],
   "name": "Twilight Blue",
   "sha256": "da5b194709985529c0744a6b10ad30d4a64633fe07cd4517232dadb2edcdd412",
   "bytes": 295
@@ -1339,6 +1816,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   1
+  ],
   "name": "Zircon",
   "sha256": "32e70420505a0694653efe8de509af426e54bb00f4fd04fa184d88b40ed26d2c",
   "bytes": 295
@@ -1351,6 +1831,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   1
+  ],
   "name": "Spring Breeze",
   "sha256": "07605bb90020515c188d7526b643f6bfbdae418a264167b01585fe1ce35b3d19",
   "bytes": 295
@@ -1363,6 +1846,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   1
+  ],
   "name": "Lilac White",
   "sha256": "5acb0679e4c854677a0745bfc70f1a0b0d3ef24279c7872051c1227660b2ce7b",
   "bytes": 295
@@ -1375,6 +1861,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   2
+  ],
   "name": "Titan White",
   "sha256": "cfdcc4a25d66c28c12761230ed622046fdebda5781b9398be616acb2a2cbfaef",
   "bytes": 295
@@ -1387,6 +1876,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   2
+  ],
   "name": "Purple Chalk",
   "sha256": "39249509d8c325dc71e9619a9973e9a38202ebd1a70f1ea53415d61460cf03e3",
   "bytes": 295
@@ -1399,6 +1891,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   2
+  ],
   "name": "Little Bird",
   "sha256": "26360af00bdd73bab4ce6aa4f711687cd28fdd1ba3c68b84b162b0af12e6ed2d",
   "bytes": 295
@@ -1411,6 +1906,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   2
+  ],
   "name": "Lily White",
   "sha256": "815b4b268eac4004e3776d78f46ed672bae89c45a37f0470679d5b102f2aa0d6",
   "bytes": 295
@@ -1423,6 +1921,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   3
+  ],
   "name": "Powder Blue",
   "sha256": "72c0f97926fae8ad4d11bb83258c2d1c2bda12278611196f05524ec8d9a558b9",
   "bytes": 295
@@ -1435,6 +1936,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   3
+  ],
   "name": "Pink Pointer",
   "sha256": "693a6b4c6d3b3f5f222b8309888273371f68837c55ba4489c4c96d5370c8cbc8",
   "bytes": 295
@@ -1447,6 +1951,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   3
+  ],
   "name": "After Rain",
   "sha256": "9400109472198dfaee9e3a0afc80a9898cd53417e9a7fa01008a137e96ff3af4",
   "bytes": 295
@@ -1459,6 +1966,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   3
+  ],
   "name": "Violet White",
   "sha256": "d85dbfefe74e94832c54c65c21be22eb1e4043805f48619de2c220b745d437ab",
   "bytes": 295
@@ -1471,6 +1981,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   4
+  ],
   "name": "Tutu",
   "sha256": "cada4f27481dcd310aac09464528a03c069337f9535258a47721448e4f3fdbc1",
   "bytes": 295
@@ -1483,6 +1996,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   4
+  ],
   "name": "Clearer Day",
   "sha256": "0ee28663e08316ab326a71372133c38c5b6ff84c9619add4b57c5bff5501c8fe",
   "bytes": 295
@@ -1495,6 +2011,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   4
+  ],
   "name": "Blue Chalk",
   "sha256": "0beaaf5a06125a19a43c0cdcf6afabcf9132731b509dec109467dc06c0a7466e",
   "bytes": 295
@@ -1507,6 +2026,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   4
+  ],
   "name": "Lavender White",
   "sha256": "ff4ac725ddf22cc0e00ba2650004fbdf0f6387657e5e05654e1b9cc5c9608833",
   "bytes": 295
@@ -1519,6 +2041,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 0,
+  "series": [
+   0,
+   1
+  ],
   "name": "Elephant Tusk",
   "sha256": "b7a7ed0a7de85b349d0cefdc501c1b6963fde023f10df8cb567fb1249883b2b6",
   "bytes": 295
@@ -1531,6 +2057,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 0,
+  "series": [
+   0,
+   1
+  ],
   "name": "Black White",
   "sha256": "25a7ceef99245e238cb228b3be834ab101c39197a14a6933155983af04b6921f",
   "bytes": 295
@@ -1543,6 +2073,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 0,
+  "series": [
+   0,
+   1
+  ],
   "name": "White Pointer",
   "sha256": "f376cc740726e090ad5ed8c8935abc4bd531d6b544c2188e9e1f3edd4c51beea",
   "bytes": 295
@@ -1555,6 +2089,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 0,
+  "series": [
+   0,
+   1
+  ],
   "name": "Ivory",
   "sha256": "4784fea6fdec11176eed91424fc4dd9668532cb49489d14ca4360c2b6cf27b9a",
   "bytes": 295
@@ -1567,6 +2105,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 0,
+  "series": [
+   2,
+   3
+  ],
   "name": "Dew",
   "sha256": "2dce80e2a788f5fa4b706a4e274473ec22b5dbd06d65e5f4fa009f9fdc59482e",
   "bytes": 295
@@ -1579,6 +2121,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 0,
+  "series": [
+   2,
+   3
+  ],
   "name": "Sunrise",
   "sha256": "76a2db40d0f16002b2ad8afdc5d448182f28e3b38e3b85cd509340b16e4e4a2d",
   "bytes": 295
@@ -1591,6 +2137,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 0,
+  "series": [
+   2,
+   3
+  ],
   "name": "Solitude",
   "sha256": "9dfc2e6be81b32d234bf92243b0e2ec0e45658b743987941f11795d3d634495e",
   "bytes": 295
@@ -1603,6 +2153,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 0,
+  "series": [
+   2,
+   3
+  ],
   "name": "Clear Day",
   "sha256": "6d6c5559b203470376b23e550b671ccd2204ca4d0549b3fdbb642b60235178f4",
   "bytes": 295
@@ -1615,6 +2169,9 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 0,
+  "series": [
+   4
+  ],
   "name": "Zumthor",
   "sha256": "b654e2920f8d805bf85fa14eab0633a79951393da1f6f0182e7b1da9fe3cb5e4",
   "bytes": 295
@@ -1627,6 +2184,9 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 0,
+  "series": [
+   4
+  ],
   "name": "Purple White",
   "sha256": "0d710c254d1dd45c67d30afb5b8564831d363f8f98c95f638dd42bd5ea10b9c2",
   "bytes": 295
@@ -1639,6 +2199,9 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 0,
+  "series": [
+   4
+  ],
   "name": "Blue Dream",
   "sha256": "35593b281b2b9b66ca37e38bc3f4fcab30bc2835df15bd04e21f886bc6315fc7",
   "bytes": 295
@@ -1651,6 +2214,9 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 0,
+  "series": [
+   4
+  ],
   "name": "Baby Blanket",
   "sha256": "7705af3e0b8fd76244d22bd1710c988c6c86d1ea76c344d67e2057cdfa8ba089",
   "bytes": 295
@@ -1663,6 +2229,11 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 0,
+  "series": [
+   0,
+   1,
+   2
+  ],
   "name": "Summer Rain",
   "sha256": "dd92047cd8087a50f1511b1087b0bd824580707c4582f9f83347a50a89ae4efa",
   "bytes": 295
@@ -1675,6 +2246,11 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 0,
+  "series": [
+   0,
+   1,
+   2
+  ],
   "name": "Sugar Cane",
   "sha256": "d5eb8175d311a734bf296a088df6ccb47f68bf5d2b264070a9404816669f9eda",
   "bytes": 295
@@ -1687,6 +2263,11 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 0,
+  "series": [
+   0,
+   1,
+   2
+  ],
   "name": "Violet Chalk",
   "sha256": "d4d46094d6e70e72c124d0271a97e73af8637991e1716a7b74a873df238c49a2",
   "bytes": 295
@@ -1699,6 +2280,11 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 0,
+  "series": [
+   0,
+   1,
+   2
+  ],
   "name": "Pink Chalk",
   "sha256": "2d82ca2a3d4c6223ff6e244aba29a7c500ab4ba6afebbe58a37c355c7d9956da",
   "bytes": 295
@@ -1711,6 +2297,10 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 0,
+  "series": [
+   3,
+   4
+  ],
   "name": "Pale Leaf",
   "sha256": "902365df4735c39232aea49338fc395d71a1623f6caa3f242b397d77637a1eca",
   "bytes": 295
@@ -1723,6 +2313,10 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 0,
+  "series": [
+   3,
+   4
+  ],
   "name": "Pink",
   "sha256": "ca45096836511d5931916a4a493958c34825b0757c9fc130a95a00d5f1550092",
   "bytes": 295
@@ -1735,6 +2329,10 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 0,
+  "series": [
+   3,
+   4
+  ],
   "name": "Ceramic",
   "sha256": "901e5b51c99b1f44e836c6c286f091ffddc358bff64956d2688edee579d05fec",
   "bytes": 295
@@ -1747,6 +2345,10 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 0,
+  "series": [
+   3,
+   4
+  ],
   "name": "Light Mint",
   "sha256": "c792ca89936272d7226f2bf9dc8342c56fc85f023a53c58ad318f34bcc7fac1f",
   "bytes": 295
@@ -1759,6 +2361,12 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 0,
+  "series": [
+   0,
+   1,
+   2,
+   3
+  ],
   "name": "Hint of Green",
   "sha256": "2ec572d21cd4c67303d23854cfafde10b13dc7f9e1c234d1759e8ff819b92546",
   "bytes": 295
@@ -1771,6 +2379,12 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 0,
+  "series": [
+   0,
+   1,
+   2,
+   3
+  ],
   "name": "Mellow Yellow",
   "sha256": "562391f3b624fad541dd1325fcb4d8bc3ec89a1ca697001aa98266f5ce7ae3d7",
   "bytes": 295
@@ -1783,6 +2397,12 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 0,
+  "series": [
+   0,
+   1,
+   2,
+   3
+  ],
   "name": "Pink Lace",
   "sha256": "17ea5a457f5810bb028e8334af4d5b0bc0f9c2cbe28390f64034e6b0932ac3dd",
   "bytes": 295
@@ -1795,6 +2415,12 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 0,
+  "series": [
+   0,
+   1,
+   2,
+   3
+  ],
   "name": "Pale Rose",
   "sha256": "c67ce63466f1ee12e31bf72c9215c7cac2273d6d475e5ee76d5d402424ad3305",
   "bytes": 295
@@ -1807,6 +2433,9 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 0,
+  "series": [
+   4
+  ],
   "name": "Easter Egg",
   "sha256": "3c6053eb08d2825694b49c12e66f2e9e73b1ee0e23b694cc4f89e25d72996249",
   "bytes": 295
@@ -1819,6 +2448,9 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 0,
+  "series": [
+   4
+  ],
   "name": "Pretty Pink",
   "sha256": "043df4a41220a56d8780cb12dacbf5299a954df4ab5e51064a46212e5848d9aa",
   "bytes": 295
@@ -1831,6 +2463,9 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 0,
+  "series": [
+   4
+  ],
   "name": "Spring Hug",
   "sha256": "ca8d0ab473a9632f1e9ec54f7c4626c0bbb782308c7abc1e0bbd8d140467f72d",
   "bytes": 295
@@ -1843,6 +2478,9 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 0,
+  "series": [
+   4
+  ],
   "name": "Pale Red Rose",
   "sha256": "056578feb944b4a1d25746b8ad79fd6ed9e92e60dc9a2ce2bcbf7b49449f9b6e",
   "bytes": 295
@@ -1855,6 +2493,13 @@
   "rarity": 4,
   "rarityName": "Legendary",
   "gender": 0,
+  "series": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
   "name": "Blue Bubbles",
   "sha256": "e839482ee6714c8e29f65e3ee3ed743352bbb8223441ee479fd7043c797b08ec",
   "bytes": 295
@@ -1867,6 +2512,13 @@
   "rarity": 4,
   "rarityName": "Legendary",
   "gender": 0,
+  "series": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
   "name": "Soft Lavender",
   "sha256": "74be4354c7ceae9d163e7c15c573a31f313c94d35fa82da6ac5ac480df33be7c",
   "bytes": 295
@@ -1879,6 +2531,13 @@
   "rarity": 4,
   "rarityName": "Legendary",
   "gender": 0,
+  "series": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
   "name": "Fabulous",
   "sha256": "f496797aa25eb067220b30da82940aa2ebfa611ea3e98adc1c1e064a4f906aaf",
   "bytes": 295
@@ -1891,6 +2550,13 @@
   "rarity": 4,
   "rarityName": "Legendary",
   "gender": 0,
+  "series": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
   "name": "Blush",
   "sha256": "c72d19e939f9adf88a84b141586ff0bc3d10e8b21080c6c40f607834bc5aebf9",
   "bytes": 295
@@ -1903,6 +2569,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   0
+  ],
   "name": "Backdrop 1",
   "sha256": "a3bfa3ccaa21116d70bd1f0b6f38f4c38e3c1a5cceb1e4026200b15d30fdb82e",
   "bytes": 243
@@ -1915,6 +2584,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   0
+  ],
   "name": "Backdrop 2",
   "sha256": "1a79d926dd6a1cb035e1beab975b1a0890bc188e69748d4d183e3c0135e6717e",
   "bytes": 243
@@ -1927,6 +2599,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   0
+  ],
   "name": "Backdrop 3",
   "sha256": "0a2e0d5ee0765acb7a9376c30117936435fcef07cb73167d21c8643dc06c0f5d",
   "bytes": 243
@@ -1939,6 +2614,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   0
+  ],
   "name": "Backdrop 4",
   "sha256": "480c9974e43494294ccc023d1537cc8053032c8da22d0811502a75dff7a0ab0d",
   "bytes": 240
@@ -1951,6 +2629,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   1
+  ],
   "name": "Backdrop 5",
   "sha256": "73ae32a9a1530c3707e938452c1f6530242c692e211d558814b1167b0d8805fb",
   "bytes": 239
@@ -1963,6 +2644,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   1
+  ],
   "name": "Backdrop 6",
   "sha256": "a5b2ad466fe14f01750b958f266d78ae0f519f9f48a4334c70f8ba18d6883bce",
   "bytes": 239
@@ -1975,6 +2659,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   1
+  ],
   "name": "Backdrop 7",
   "sha256": "61218b120c13fa2acaa225796b1dbe7009776fb389d31afd6ae1d400b01a32ad",
   "bytes": 238
@@ -1987,6 +2674,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   1
+  ],
   "name": "Backdrop 17",
   "sha256": "7c6b98f724249f9233e9c7c2b969b473426676c07ca3b79cf7f4c0879457f991",
   "bytes": 1745
@@ -1999,6 +2689,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   2
+  ],
   "name": "Backdrop 9",
   "sha256": "95307b9cbd0b0b695bc3766d0690084dea30255851d41bef6c6a891fe7138865",
   "bytes": 744
@@ -2011,6 +2704,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   2
+  ],
   "name": "Backdrop 10",
   "sha256": "fbfe2f010e72dec6b2e4b2093fd92ce9e828e513b8781f92243668cd0b90ded5",
   "bytes": 761
@@ -2023,6 +2719,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   2
+  ],
   "name": "Backdrop 11",
   "sha256": "b78e42fb756a23c18b8819eae19507596ac675852162f53a195c0140b24f213c",
   "bytes": 791
@@ -2035,6 +2734,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   2
+  ],
   "name": "Backdrop 12",
   "sha256": "3fb16307b5d7cd7949d890aae5fbd15fce0192690255ee59cedb1007b1b1aec6",
   "bytes": 285
@@ -2047,6 +2749,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   3
+  ],
   "name": "Backdrop 13",
   "sha256": "8021df60e09097cd2a1e2c73e7278bb413d74c82225a59a04a0cb5f28f27e96c",
   "bytes": 332
@@ -2059,6 +2764,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   3
+  ],
   "name": "Backdrop 14",
   "sha256": "1444c11a90430c3e49a61ceba38ccf663df9b62cbb2632d50fccdb7a2f5b1a93",
   "bytes": 335
@@ -2071,6 +2779,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   3
+  ],
   "name": "Backdrop 15",
   "sha256": "3f6044a2723fce95890c2175588c11657180d03f0769259fca6a07061ad04838",
   "bytes": 1665
@@ -2083,6 +2794,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   3
+  ],
   "name": "Backdrop 16",
   "sha256": "3738ad30955fc8a900233fdf11ac83ab7252e6683d89e845b02ca80f7858a8ca",
   "bytes": 1671
@@ -2095,6 +2809,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   4
+  ],
   "name": "Backdrop 37",
   "sha256": "123954f39f159c125504b1f76e6459fe89c3d4ceaae8ec637d84095bf32a41f6",
   "bytes": 13767
@@ -2107,6 +2824,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   4
+  ],
   "name": "Backdrop 18",
   "sha256": "4cfdee25f0188d1840a81b94abb637db63c35de33216c1e17a5aa6f474a26546",
   "bytes": 3525
@@ -2119,6 +2839,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   4
+  ],
   "name": "Backdrop 19",
   "sha256": "0de4db3d5e1ad88c8822496e25f600640711b555bfc9c7dde76f2a861beba8b9",
   "bytes": 9448
@@ -2131,6 +2854,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   4
+  ],
   "name": "Backdrop 20",
   "sha256": "6519a6a716415cfc9eebefa5bd073425f7e500c20a99bdb0d54d7c823f75945c",
   "bytes": 2693
@@ -2143,6 +2869,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 0,
+  "series": [
+   0,
+   1
+  ],
   "name": "Backdrop 21",
   "sha256": "ee563f2fb04f3f42bc5839347d33c653dc286a1af63e8e4a8c8576b3fd49591c",
   "bytes": 1942
@@ -2155,6 +2885,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 0,
+  "series": [
+   0,
+   1
+  ],
   "name": "Backdrop 22",
   "sha256": "70538fd0849317198682e0f09ae268fc72ad05d385a776ed8d4c29dfed58daad",
   "bytes": 1991
@@ -2167,6 +2901,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 0,
+  "series": [
+   0,
+   1
+  ],
   "name": "Backdrop 23",
   "sha256": "36473ca3279d2086ebea937316f68b83809b6480d917a81b572194b5f1c5b75c",
   "bytes": 2125
@@ -2179,6 +2917,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 0,
+  "series": [
+   0,
+   1
+  ],
   "name": "Backdrop 24",
   "sha256": "83d144f084ba27bbefb75d0e56ceed1d8e23946182cced2dec6f5a297a0c9cf3",
   "bytes": 2231
@@ -2191,6 +2933,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 0,
+  "series": [
+   2,
+   3
+  ],
   "name": "Backdrop 25",
   "sha256": "97064d3e5bbfaa8eb705cf5db42861470ef771c9c39f64b50db70e791462530e",
   "bytes": 2606
@@ -2203,6 +2949,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 0,
+  "series": [
+   2,
+   3
+  ],
   "name": "Backdrop 26",
   "sha256": "600a40518331c4ebf452d04d50f492c0a3038fa5ad452f202ab8b4da261ef5c2",
   "bytes": 2535
@@ -2215,6 +2965,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 0,
+  "series": [
+   2,
+   3
+  ],
   "name": "Backdrop 27",
   "sha256": "f2590c86a8c2827ee73b6da89fb686e5a5c967a01ee3911264593ed39b786dce",
   "bytes": 2363
@@ -2227,6 +2981,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 0,
+  "series": [
+   2,
+   3
+  ],
   "name": "Backdrop 28",
   "sha256": "feeb04b4ce71a3639b434dd78f49d11f6110316b9dc67e36c7285900d8476075",
   "bytes": 3018
@@ -2239,6 +2997,9 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 0,
+  "series": [
+   4
+  ],
   "name": "Backdrop 29",
   "sha256": "72454a118d6c79940e9718d2e8896c2e49c5a6d015c6d84f08a4fd91cca94c40",
   "bytes": 3092
@@ -2251,6 +3012,9 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 0,
+  "series": [
+   4
+  ],
   "name": "Backdrop 30",
   "sha256": "b54bd8be6218b0381eef0c2f0599dc9fb7b1e0d92c336d0495a0597c7ceb250b",
   "bytes": 3014
@@ -2263,6 +3027,9 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 0,
+  "series": [
+   4
+  ],
   "name": "Backdrop 31",
   "sha256": "0a09dc6560bafc94868e6314b2d2d565fcfc671683654532c6c4750cec94374d",
   "bytes": 3220
@@ -2275,6 +3042,9 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 0,
+  "series": [
+   4
+  ],
   "name": "Backdrop 32",
   "sha256": "46b3990069fffdd6363f3477c61fd3c3473edef45b94cca56d0a17e17e01bf50",
   "bytes": 2699
@@ -2287,6 +3057,11 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 0,
+  "series": [
+   0,
+   1,
+   2
+  ],
   "name": "Backdrop 33",
   "sha256": "1eb04a6194eeebc9e851fdea30bd3a8becdf9dfc69a425b2464347461ae742a8",
   "bytes": 1331
@@ -2299,6 +3074,11 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 0,
+  "series": [
+   0,
+   1,
+   2
+  ],
   "name": "Backdrop 34",
   "sha256": "fb6d6a178902c89b75cb202d94157e0156200ff902007b6de495d6b0d6dd92cc",
   "bytes": 4692
@@ -2311,6 +3091,11 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 0,
+  "series": [
+   0,
+   1,
+   2
+  ],
   "name": "Backdrop 35",
   "sha256": "e08a676549692c4b35a412c0042f43f66435670c0eb42eedfd05e2ca79caac99",
   "bytes": 2613
@@ -2323,6 +3108,11 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 0,
+  "series": [
+   0,
+   1,
+   2
+  ],
   "name": "Backdrop 36",
   "sha256": "c29040c6215cd41f2f71eff2c0925d0b3771c0cafbc98935b90f31dba3dd31a2",
   "bytes": 4792
@@ -2335,6 +3125,10 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 0,
+  "series": [
+   3,
+   4
+  ],
   "name": "Backdrop 41",
   "sha256": "ebcfdca9707d38168777764381553bfc264ff43e97a7eda8f33817c3a37dc305",
   "bytes": 2713
@@ -2347,6 +3141,10 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 0,
+  "series": [
+   3,
+   4
+  ],
   "name": "Backdrop 38",
   "sha256": "c0c846591388a14d1bdba41012d674e541ef784e26102d08f63b34bd5825ee54",
   "bytes": 2754
@@ -2359,6 +3157,10 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 0,
+  "series": [
+   3,
+   4
+  ],
   "name": "Backdrop 39",
   "sha256": "7cabce1d17a288d3a1a40f48d5434deff5570f673791d64cbe8060ab86c42708",
   "bytes": 4133
@@ -2371,6 +3173,10 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 0,
+  "series": [
+   3,
+   4
+  ],
   "name": "Backdrop 40",
   "sha256": "853817bc662a1952c51595b7e868c4914a0691f222e2391cb86a8c6c4f4872b6",
   "bytes": 5679
@@ -2383,6 +3189,12 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 0,
+  "series": [
+   0,
+   1,
+   2,
+   3
+  ],
   "name": "Backdrop 8",
   "sha256": "fdf2345e9bc8fc42e865a20813ca66e388e4bad2c3c703dc57715f83ce7135a7",
   "bytes": 238
@@ -2395,6 +3207,12 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 0,
+  "series": [
+   0,
+   1,
+   2,
+   3
+  ],
   "name": "Backdrop 42",
   "sha256": "291a318557dda9ad43a8a2dd162ce0c0a1ff1ccbacf98fc0e3cf9a874ac3380a",
   "bytes": 3822
@@ -2407,6 +3225,12 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 0,
+  "series": [
+   0,
+   1,
+   2,
+   3
+  ],
   "name": "Backdrop 43",
   "sha256": "77fc6e554a19cd0f71fba71b57567d5bcb9e6657a168ed9722adfcbfa8d18614",
   "bytes": 3568
@@ -2419,6 +3243,12 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 0,
+  "series": [
+   0,
+   1,
+   2,
+   3
+  ],
   "name": "Backdrop 44",
   "sha256": "55d500286600d79dc3bad53ed80388bebb481b889e2b2fddcf6acf8dca6a7f44",
   "bytes": 6023
@@ -2431,6 +3261,9 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 0,
+  "series": [
+   4
+  ],
   "name": "Backdrop 51",
   "sha256": "c0b1e19dafda69d352b64b6ea70b526ed8555c0e35fae4cd045bb9cd688ce564",
   "bytes": 6513
@@ -2443,6 +3276,9 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 0,
+  "series": [
+   4
+  ],
   "name": "Backdrop 48",
   "sha256": "703e563432a3814c26e55957b0525f0b7b320ae1cc572dcfebbe7724b3a4d4dc",
   "bytes": 8680
@@ -2455,6 +3291,13 @@
   "rarity": 4,
   "rarityName": "Legendary",
   "gender": 0,
+  "series": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
   "name": "Backdrop 49",
   "sha256": "2c7a4bbdbb49bda9a29d983c2d1f748212a3f750f207687c0e75128cb853536e",
   "bytes": 1929
@@ -2467,6 +3310,13 @@
   "rarity": 4,
   "rarityName": "Legendary",
   "gender": 0,
+  "series": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
   "name": "Backdrop 50",
   "sha256": "66823177b49368da5a1e2886019c85fc51d88f107cfc63bc6c134a6978cf8ded",
   "bytes": 6128
@@ -2479,6 +3329,13 @@
   "rarity": 4,
   "rarityName": "Legendary",
   "gender": 0,
+  "series": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
   "name": "Backdrop 47",
   "sha256": "8c89aa2b6cb7142d6eb09c93c0e5155fa8e47f7d8dbe83b86f20e2bd0ba701c2",
   "bytes": 6102
@@ -2491,6 +3348,13 @@
   "rarity": 4,
   "rarityName": "Legendary",
   "gender": 0,
+  "series": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
   "name": "Backdrop 52",
   "sha256": "8e67eb1c34c8f607d89b820b30c1c72e991e3c71440fbc251cd91df595292360",
   "bytes": 4655
@@ -2503,6 +3367,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 1,
+  "series": [
+   0
+  ],
   "name": "Narrow",
   "sha256": "c2b8c68831274faa1fbf53f1c24f17f51d5fa75896be86c4b0551375feca6961",
   "bytes": 2852
@@ -2515,6 +3382,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 2,
+  "series": [
+   0
+  ],
   "name": "Square Gold Stud",
   "sha256": "68f2e8687a3e11f5ec64d2463f538456add7f43c52b54a4164a30f797e99ab85",
   "bytes": 6486
@@ -2527,6 +3397,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 1,
+  "series": [
+   0
+  ],
   "name": "Attached",
   "sha256": "bd135d8a4d1461392a40f23de5ebb8d93a03c42823829d8ab31c9e82cef5356d",
   "bytes": 3133
@@ -2539,6 +3412,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 2,
+  "series": [
+   0
+  ],
   "name": "Pointed",
   "sha256": "a6c4632a21d02a30104b6d2cbf88fa104bfffba2134e18a7bf8b46e7fd008287",
   "bytes": 3127
@@ -2551,6 +3427,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 1,
+  "series": [
+   1
+  ],
   "name": "Square",
   "sha256": "6b1f0146e54cd8fcffc68523b7428a450ceee824eeeeb785518fcd996e2f71e7",
   "bytes": 2844
@@ -2563,6 +3442,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 2,
+  "series": [
+   1
+  ],
   "name": "Narrow",
   "sha256": "03b976d98cb344cdc988e7b17661c526af35a6865f3c74bc00593d921e68cbb9",
   "bytes": 3074
@@ -2575,6 +3457,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 1,
+  "series": [
+   1
+  ],
   "name": "Sticking Out",
   "sha256": "c9539d12c5497133c0d218101a400e7517e1e3e41c0be79b22ee3d9cdfeb7d3d",
   "bytes": 3037
@@ -2587,6 +3472,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 2,
+  "series": [
+   1
+  ],
   "name": "Narrow Gold Stud",
   "sha256": "45b449545f6ca9eb386b9ce132c09339d599a3c3a7384eae08d0fe9de9dd9180",
   "bytes": 3311
@@ -2599,6 +3487,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 1,
+  "series": [
+   2
+  ],
   "name": "Rounded",
   "sha256": "ea9df17fa1887cfa9fd9bd3296771a9a0e0a396c8205fe942de4ad8a7991e82d",
   "bytes": 3040
@@ -2611,6 +3502,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 2,
+  "series": [
+   2
+  ],
   "name": "Sticking Out",
   "sha256": "72db124e545c506db8f85c35299f6f1719cd3c60516e9a70fce394ccc8e09f7a",
   "bytes": 3263
@@ -2623,6 +3517,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 1,
+  "series": [
+   2
+  ],
   "name": "Pointed",
   "sha256": "7daabdfaf3779d98cb2dfa692920b0bd5672da969af4258d28908e18238f68fc",
   "bytes": 2916
@@ -2635,6 +3532,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 2,
+  "series": [
+   2
+  ],
   "name": "Attached",
   "sha256": "bd135d8a4d1461392a40f23de5ebb8d93a03c42823829d8ab31c9e82cef5356d",
   "bytes": 3133
@@ -2647,6 +3547,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 1,
+  "series": [
+   3
+  ],
   "name": "Pointed Ear Cuff",
   "sha256": "7a0d76c5dc4d35f0b973f949b74bb9893edd5212931648a4d85547380d2d01bd",
   "bytes": 3474
@@ -2659,6 +3562,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 2,
+  "series": [
+   3
+  ],
   "name": "Broad",
   "sha256": "855008761bac5e90617d0307736b1a268c2130489c5250e0b57537de19814a5b",
   "bytes": 3256
@@ -2671,6 +3577,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 1,
+  "series": [
+   3
+  ],
   "name": "Narrow Gold Stud",
   "sha256": "a9a029fcba2c1e7b9d5fed756c6a4804b8350222475bb5308fbde376b098be71",
   "bytes": 3215
@@ -2683,6 +3592,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 2,
+  "series": [
+   3
+  ],
   "name": "Rounded",
   "sha256": "a396fad95a63dcf56da89d806498f19c2abf8f95c989dd41cf9ee357b4ec3a0b",
   "bytes": 3295
@@ -2695,6 +3607,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 1,
+  "series": [
+   4
+  ],
   "name": "Broad",
   "sha256": "855008761bac5e90617d0307736b1a268c2130489c5250e0b57537de19814a5b",
   "bytes": 3256
@@ -2707,6 +3622,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 2,
+  "series": [
+   4
+  ],
   "name": "Pointed Ear Cuff",
   "sha256": "d92bbedb4601f6b9d183ae83502d8c847719ed3ccf24eb3747a275df64d154eb",
   "bytes": 4828
@@ -2719,6 +3637,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 1,
+  "series": [
+   4
+  ],
   "name": "Square Gold Stud",
   "sha256": "f0726bd94715ce7224c5ae0d7f4e7e662a2019281586e6ffeb6e6e1316cb44e6",
   "bytes": 6504
@@ -2731,6 +3652,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 2,
+  "series": [
+   4
+  ],
   "name": "Square",
   "sha256": "9ddb18aa730c5f5712c737f48c93d0cf5cd3e8cbc8d69632739540d34fc162d8",
   "bytes": 3047
@@ -2743,6 +3667,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 1,
+  "series": [
+   0,
+   1
+  ],
   "name": "Rounded Bitcoin Stud",
   "sha256": "48d7a1b2c4f7896fed616800370fc6dafb243dc7bbebe211a255ebfb392f2905",
   "bytes": 3961
@@ -2755,6 +3683,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 2,
+  "series": [
+   0,
+   1
+  ],
   "name": "Broad CryptoVoxels Earrings",
   "sha256": "855008761bac5e90617d0307736b1a268c2130489c5250e0b57537de19814a5b",
   "bytes": 3256
@@ -2767,6 +3699,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 1,
+  "series": [
+   0,
+   1
+  ],
   "name": "Narrow Small Hoop",
   "sha256": "cc298f7690e03fa63e540121fdbd14110b1e82aaf842737189cdc265a252314d",
   "bytes": 3597
@@ -2779,6 +3715,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 2,
+  "series": [
+   0,
+   1
+  ],
   "name": "Rounded Bitcoin Earrings",
   "sha256": "a0df81312e9ef516150dfc0cf762b5cdd6da56e5e56a01875e20fa0d605861e1",
   "bytes": 4133
@@ -2791,6 +3731,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 1,
+  "series": [
+   2,
+   3
+  ],
   "name": "Broad CryptoVoxels Stud",
   "sha256": "e3fc6b209d7b91a037cbe4a4f802207d6c03159649c42407e296d6941611bca6",
   "bytes": 8318
@@ -2803,6 +3747,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 2,
+  "series": [
+   2,
+   3
+  ],
   "name": "Narrow Small Hoops",
   "sha256": "3fcd6b508be2ee87396b4556c094ac39422cf494e7c163932462e0871d252d59",
   "bytes": 3947
@@ -2815,6 +3763,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 1,
+  "series": [
+   2,
+   3
+  ],
   "name": "Van Gogh (one ear)",
   "sha256": "d970e2b17e212ee4b036198a4ebf648a9d2678ba76af417431c7506f59d604cb",
   "bytes": 4303
@@ -2827,6 +3779,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 2,
+  "series": [
+   2,
+   3
+  ],
   "name": "Attached Bluetooth",
   "sha256": "23f31970156128e71a6eb62267d8e0addc220237b1a4c20275e43956776b2dc5",
   "bytes": 20885
@@ -2839,6 +3795,9 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 1,
+  "series": [
+   4
+  ],
   "name": "Sticking Out Ear Clip",
   "sha256": "c4b5c4df9d4aa1ed064addfa1cc11a0f973d689e8d48802481877613182ce9ce",
   "bytes": 3947
@@ -2851,6 +3810,9 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 2,
+  "series": [
+   4
+  ],
   "name": "Van Gogh (one ear)",
   "sha256": "d970e2b17e212ee4b036198a4ebf648a9d2678ba76af417431c7506f59d604cb",
   "bytes": 4303
@@ -2863,6 +3825,9 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 1,
+  "series": [
+   4
+  ],
   "name": "Attached Bluetooth",
   "sha256": "320f9db2ee3bc4f2d6c21cf3c9b3c1c3e087e5880f936033ca78590a2adc47e7",
   "bytes": 4286
@@ -2875,6 +3840,9 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 2,
+  "series": [
+   4
+  ],
   "name": "Sticking Out Ear Clip",
   "sha256": "bc1deebd249c82b19b4323366af976371f211863f8bd1648f1cdca52a0602d36",
   "bytes": 5096
@@ -2887,6 +3855,11 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 1,
+  "series": [
+   0,
+   1,
+   2
+  ],
   "name": "Rounded Gauges",
   "sha256": "9e56e3d4ead494be88c4c2f4d216e4fad9e04689cef8f8ed8da428ff743bd5cb",
   "bytes": 3648
@@ -2899,6 +3872,11 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 2,
+  "series": [
+   0,
+   1,
+   2
+  ],
   "name": "Elf",
   "sha256": "d8a6741b2738d8dc18f7ab56454c67f9c29c5f7c46afc6c6a80d00671e877862",
   "bytes": 3250
@@ -2911,6 +3889,11 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 1,
+  "series": [
+   0,
+   1,
+   2
+  ],
   "name": "Marmota x Milky Potato",
   "sha256": "31608a8a84d7a68f53ad116442c8029e796d4ea4eb529df26c3d49c3ac13aad6",
   "bytes": 4624
@@ -2923,6 +3906,11 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 2,
+  "series": [
+   0,
+   1,
+   2
+  ],
   "name": "Rounded Gauges",
   "sha256": "c2e50d42ff6acb814125d8fbf914643c3204212622b05e1f8c4412c773adcfde",
   "bytes": 3732
@@ -2935,6 +3923,10 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 1,
+  "series": [
+   3,
+   4
+  ],
   "name": "Pointed Cheeze Wedge Stud",
   "sha256": "55a3661af50c2dcefeaa5f22db6eac02d04fe9b7cae2ecb6c0e4c378daeecbfc",
   "bytes": 4087
@@ -2947,6 +3939,10 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 2,
+  "series": [
+   3,
+   4
+  ],
   "name": "Pointed Cheeze Wedge Earrings",
   "sha256": "294e674351c6edd8e25a2651e901cedef7b0450c3752fc022dab0e0c992d84f0",
   "bytes": 6420
@@ -2959,6 +3955,10 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 1,
+  "series": [
+   3,
+   4
+  ],
   "name": "Elf",
   "sha256": "857edfcce081d4a20a59438da104b355c8bc68a154770f96fa038c137ee30bd8",
   "bytes": 3045
@@ -2971,6 +3971,10 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 2,
+  "series": [
+   3,
+   4
+  ],
   "name": "Marmota x Milky Potato",
   "sha256": "6db0bbeef221195c77b6614fc133be850d045b7ecbd2fa533b65ec1e06b0fa71",
   "bytes": 3921
@@ -2983,6 +3987,12 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 1,
+  "series": [
+   0,
+   1,
+   2,
+   3
+  ],
   "name": "Square Bitcoin Stud",
   "sha256": "87df697f5600d048e5850a896db3363347a99705c5a1f985ded1abfb4f476c03",
   "bytes": 4039
@@ -2995,6 +4005,12 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 2,
+  "series": [
+   0,
+   1,
+   2,
+   3
+  ],
   "name": "Cyborg",
   "sha256": "3994c38367fd18d9025e70f327e7f74968b7029297b9dbc1c5390c530093228e",
   "bytes": 3199
@@ -3007,6 +4023,12 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 1,
+  "series": [
+   0,
+   1,
+   2,
+   3
+  ],
   "name": "Narrow Bitcoin Stud",
   "sha256": "565931490604b576aff9a848ee32e2d580b3ffe97876a4599df0dfa3bfc8b0ae",
   "bytes": 3773
@@ -3019,6 +4041,12 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 2,
+  "series": [
+   0,
+   1,
+   2,
+   3
+  ],
   "name": "Broad Opensea Earrings",
   "sha256": "8fa82e85f7944008bc8a12d82bb27a89f4a24c5bf0bc9e7a4f2ddd533f8f61d5",
   "bytes": 4967
@@ -3031,6 +4059,9 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 1,
+  "series": [
+   4
+  ],
   "name": "Cyborg",
   "sha256": "ead91e09f202bbf17aaf70b787f5ae661de472b7ee143b3e50dc9f066d5fdbd4",
   "bytes": 3194
@@ -3043,6 +4074,9 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 2,
+  "series": [
+   4
+  ],
   "name": "Square Bitcoin Earrings",
   "sha256": "fcc862ef07c14d85bda26ba40a8cc85977b717ca3abc43541b55fee88a5e7b3b",
   "bytes": 4140
@@ -3055,6 +4089,9 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 1,
+  "series": [
+   4
+  ],
   "name": "Broad Opensea Stud",
   "sha256": "3182eb24e0a35b1a25cd50344aafb2ad953bb9b1c1b2d032f9ca631f2615be0e",
   "bytes": 4958
@@ -3067,6 +4104,9 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 2,
+  "series": [
+   4
+  ],
   "name": "Narrow Bitcoin Earrings",
   "sha256": "33fe2234be54287d1b1350d85f77c924b8f4a4481fee2dfe49ace5ece5d0bba9",
   "bytes": 3937
@@ -3079,6 +4119,13 @@
   "rarity": 4,
   "rarityName": "Legendary",
   "gender": 1,
+  "series": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
   "name": "Elf Ethereum Stud",
   "sha256": "57c6f2f942131cdb5740341c50329a2a63ae327a69e495ed275dfcb296e1ec50",
   "bytes": 3438
@@ -3091,6 +4138,13 @@
   "rarity": 4,
   "rarityName": "Legendary",
   "gender": 2,
+  "series": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
   "name": "Elf Ethereum Earrings",
   "sha256": "66995799d29295ae08ac0e80af27e4fe302a470957cd84460a35f257d15bd54e",
   "bytes": 4387
@@ -3103,6 +4157,13 @@
   "rarity": 4,
   "rarityName": "Legendary",
   "gender": 1,
+  "series": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
   "name": "Attached Bitcoin Earring",
   "sha256": "da4be0eae755504afa8b9351fa36d2aca1fa420bdc03de95264a62f10326d20d",
   "bytes": 4129
@@ -3115,6 +4176,13 @@
   "rarity": 4,
   "rarityName": "Legendary",
   "gender": 2,
+  "series": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
   "name": "Attached Bitcoin Earrings",
   "sha256": "6c92a65b88d1c0a7b2af655d739591190009c9b3c24a9adf21b19202525aebb2",
   "bytes": 4228
@@ -3127,6 +4195,11 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 1,
+  "series": [
+   0,
+   1,
+   2
+  ],
   "name": "Male Face 1",
   "sha256": "e1bbe27919576036cb4e68c64d8c027b402954089a58e6fd962052cbc2f23706",
   "bytes": 3085
@@ -3139,6 +4212,10 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 1,
+  "series": [
+   3,
+   4
+  ],
   "name": "Male Face 2",
   "sha256": "51b5447f181784506496f2e5444605db1131cd98822be7521179385b3f4644e5",
   "bytes": 3052
@@ -3151,6 +4228,11 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 2,
+  "series": [
+   0,
+   1,
+   2
+  ],
   "name": "Female Face 1",
   "sha256": "712210ee32572574e63f3882e46b643b97bde4f77b4bf861e78e957d99bb030f",
   "bytes": 3133
@@ -3163,6 +4245,10 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 2,
+  "series": [
+   3,
+   4
+  ],
   "name": "Female Face 2",
   "sha256": "139ec6faf49f06bf1f172e748c541c315e87632ba77600bb43c91988cb1894f5",
   "bytes": 2962
@@ -3175,6 +4261,11 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 1,
+  "series": [
+   0,
+   1,
+   2
+  ],
   "name": "Male Face 3",
   "sha256": "eec5732a61fb7cfcad97ecb4ac6403f08a0a878cd01cab8f6ba33557df7eb20e",
   "bytes": 2950
@@ -3187,6 +4278,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 1,
+  "series": [
+   3,
+   4
+  ],
   "name": "Male Face 4",
   "sha256": "4c9bf1464fbba10f7746fbcff82d34ca09b2bb7a66122d61b594a44c59cc84e0",
   "bytes": 3092
@@ -3199,6 +4294,11 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 2,
+  "series": [
+   0,
+   1,
+   2
+  ],
   "name": "Female Face 3",
   "sha256": "e1ed26b9a3d3aa2d31582557e60c86dabf31a930e3d8013f6eac518389e2d38e",
   "bytes": 2982
@@ -3211,6 +4311,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 2,
+  "series": [
+   3,
+   4
+  ],
   "name": "Female Face 4",
   "sha256": "1b8ae164ee0b124eaa6af16a291467c7c45afdd45b25366dcb0ec88575acfd86",
   "bytes": 3016
@@ -3223,6 +4327,11 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 1,
+  "series": [
+   0,
+   1,
+   2
+  ],
   "name": "Male Face 5",
   "sha256": "6f4e649a3122f39c438ef35646c6c3b1b74b233d5034599da796ecc3e9f1473e",
   "bytes": 3040
@@ -3235,6 +4344,10 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 1,
+  "series": [
+   3,
+   4
+  ],
   "name": "Male Face 6",
   "sha256": "a3d4458bc7736bfdcf8c28b0471794820e24a0e16d3c4c0f80332d1208b613c0",
   "bytes": 2960
@@ -3247,6 +4360,11 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 2,
+  "series": [
+   0,
+   1,
+   2
+  ],
   "name": "Female Face 5",
   "sha256": "ef7985e07b7a5dab9f740af42d588b635bfb68d5767b7f79e995e61eb3e33f10",
   "bytes": 3142
@@ -3259,6 +4377,10 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 2,
+  "series": [
+   3,
+   4
+  ],
   "name": "Female Face 6",
   "sha256": "38fc51ad9edf4e6e43b41ffd0bc6900362b744214375af323830f1d12b648927",
   "bytes": 2995
@@ -3271,6 +4393,11 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 1,
+  "series": [
+   0,
+   1,
+   2
+  ],
   "name": "Male Face 7",
   "sha256": "ca6dc93df7f500b6c6a3706bd658b9de32d0ccffc018cad09cb98164f77670de",
   "bytes": 2962
@@ -3283,6 +4410,10 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 1,
+  "series": [
+   3,
+   4
+  ],
   "name": "Male Face 8",
   "sha256": "731df8f714effcd9dbf81b5febdd74fea168422cad26b21684c9c612c3953f29",
   "bytes": 3028
@@ -3295,6 +4426,11 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 2,
+  "series": [
+   0,
+   1,
+   2
+  ],
   "name": "Female Face 7",
   "sha256": "ed6d3ee7c9f40e4784cab6a8951101d77eae83f65c7dac9f35cf616d265ca283",
   "bytes": 3132
@@ -3307,6 +4443,10 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 2,
+  "series": [
+   3,
+   4
+  ],
   "name": "Female Face 8",
   "sha256": "5941d991385a9651435ef9ab0f7e6ed06d5b3d192509b72e8e3952470ea3c068",
   "bytes": 3078
@@ -3319,6 +4459,11 @@
   "rarity": 4,
   "rarityName": "Legendary",
   "gender": 1,
+  "series": [
+   0,
+   1,
+   2
+  ],
   "name": "Male Face 9",
   "sha256": "c2172ec17bb1fb203cb77ba2e5bfe281b4d29b7f2ab10ae95ae46cde7a07f78a",
   "bytes": 3071
@@ -3331,6 +4476,10 @@
   "rarity": 4,
   "rarityName": "Legendary",
   "gender": 1,
+  "series": [
+   3,
+   4
+  ],
   "name": "Male Face 10",
   "sha256": "502fdf10892330fc08d5e91e107379e0a0046f8c359b048ba681ed566c08d6aa",
   "bytes": 3075
@@ -3343,6 +4492,11 @@
   "rarity": 4,
   "rarityName": "Legendary",
   "gender": 2,
+  "series": [
+   0,
+   1,
+   2
+  ],
   "name": "Female Face 9",
   "sha256": "969e7b7dd297fc29e1d6a48efb7c38c54a5b6ebdac81d3d48e1b0edc053264e8",
   "bytes": 3125
@@ -3355,6 +4509,10 @@
   "rarity": 4,
   "rarityName": "Legendary",
   "gender": 2,
+  "series": [
+   3,
+   4
+  ],
   "name": "Female Face 10",
   "sha256": "73d30c13916689c5c8a4a36b3f773eb83cab5469095a54bfde26044656800663",
   "bytes": 3137
@@ -3367,6 +4525,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 2,
+  "series": [
+   0
+  ],
   "name": "Straight",
   "sha256": "d599ae637c5203eb9881e4b63c6fb9fada23fde95c23d411bfd93c61f24146ce",
   "bytes": 4834
@@ -3379,6 +4540,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 1,
+  "series": [
+   0
+  ],
   "name": "Nixon",
   "sha256": "0e44d83a9fe2fb03341fbdb4937d4dfa85182d349848896bd967b7560fa6a2aa",
   "bytes": 4712
@@ -3391,6 +4555,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 2,
+  "series": [
+   0
+  ],
   "name": "Roman",
   "sha256": "963a6bea3ac77db535c3e112ccc5b3db597bcab9557efe8cfc6ead2f9472cf52",
   "bytes": 4841
@@ -3403,6 +4570,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 1,
+  "series": [
+   0
+  ],
   "name": "Greek",
   "sha256": "559ff475eb8151dd8b366ba68bdc05e8fe74614ca91e3d4fe8ef1b8f81561d25",
   "bytes": 4843
@@ -3415,6 +4585,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 2,
+  "series": [
+   1
+  ],
   "name": "Greek",
   "sha256": "3f3da9804cca393b91d27e60c0eb5c4a1f6fd483a290137d3d79f7846ed4685b",
   "bytes": 4775
@@ -3427,6 +4600,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 1,
+  "series": [
+   1
+  ],
   "name": "Fleshy",
   "sha256": "7ffb4d73d0e6fb92fc9849bd4ac25a33816bbd68c04447b0c9be662041bef939",
   "bytes": 4070
@@ -3439,6 +4615,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 2,
+  "series": [
+   1
+  ],
   "name": "Hawk",
   "sha256": "0b319f5a36bde966000a21be7a8b4e318af0d5d145ec6a26cb594a8b401704aa",
   "bytes": 4461
@@ -3451,6 +4630,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 1,
+  "series": [
+   1
+  ],
   "name": "Straight",
   "sha256": "27dac7c09b6ee808accad46682ba54828ef197e1d71ac26aa208bd8a8d76953b",
   "bytes": 5063
@@ -3463,6 +4645,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 2,
+  "series": [
+   2
+  ],
   "name": "Marmota x Milky",
   "sha256": "14bef94931bca32f01710e2a559de9fa0cb93cbce178f666029219979f3ba55d",
   "bytes": 4370
@@ -3475,6 +4660,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 1,
+  "series": [
+   2
+  ],
   "name": "Snub",
   "sha256": "ae242fc5ed7fdd097f83b095547672787b6b57c88747e5184a5420cd795714e2",
   "bytes": 4660
@@ -3487,6 +4675,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 2,
+  "series": [
+   2
+  ],
   "name": "Bumpy",
   "sha256": "532722fa2160b45b7e26a6a19c97e16787a588e55c678c09b4f84f4b153da2ac",
   "bytes": 4620
@@ -3499,6 +4690,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 1,
+  "series": [
+   2
+  ],
   "name": "Hawk",
   "sha256": "f69a6a2db45c8f8b31a50db7143e411dbd3555c7c8c32438a733c83583a921a4",
   "bytes": 4449
@@ -3511,6 +4705,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 2,
+  "series": [
+   3
+  ],
   "name": "Turned Up",
   "sha256": "86705549b830ef8c9936e0ed259680fdd8284a487fe38860a93ffda9d4d0cacc",
   "bytes": 3842
@@ -3523,6 +4720,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 1,
+  "series": [
+   3
+  ],
   "name": "Marmota x Milky",
   "sha256": "f4da475983c344afa8ec1cc55c3160779f52449a5c08a6343dd45ffc221b0eab",
   "bytes": 4566
@@ -3535,6 +4735,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 2,
+  "series": [
+   3
+  ],
   "name": "Snub",
   "sha256": "89d1c510a6f1ce689b142cd7955b422be95c7aab1716646603a6cb28c07eb9a4",
   "bytes": 4572
@@ -3547,6 +4750,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 1,
+  "series": [
+   3
+  ],
   "name": "Roman",
   "sha256": "470a732b33238c3d634f90081dec8e6dff899b6da6d6d6a41ff6997adba8ea79",
   "bytes": 4924
@@ -3559,6 +4765,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 2,
+  "series": [
+   4
+  ],
   "name": "Nixon",
   "sha256": "25f3ccdf5f5e1a73a31283da47e9a869c0211e31a6c3247b9997cc1c4102aa54",
   "bytes": 4673
@@ -3571,6 +4780,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 1,
+  "series": [
+   4
+  ],
   "name": "Bumpy",
   "sha256": "5c2c8707989857d2f6a8beb393c81fc5dae6811bd34bba3192b218eb2ea57532",
   "bytes": 4683
@@ -3583,6 +4795,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 2,
+  "series": [
+   4
+  ],
   "name": "Fleshy",
   "sha256": "8fa859b4bb0400806d183df662cd8c0d525f90499839ad4f4afcf0c485001f25",
   "bytes": 4005
@@ -3595,6 +4810,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 1,
+  "series": [
+   4
+  ],
   "name": "Turned Up",
   "sha256": "215ac6ba0b60e7f223d29f16f69c5a3d309b90d7fae8feaf01846f45d1f79762",
   "bytes": 3973
@@ -3607,6 +4825,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 2,
+  "series": [
+   0,
+   1
+  ],
   "name": "Greek Stud",
   "sha256": "6d6426d92b619a4847ee692cc5880cba706fc45659c67917f4af499856a87f80",
   "bytes": 4969
@@ -3619,6 +4841,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 1,
+  "series": [
+   0,
+   1
+  ],
   "name": "Bumpy Bull Ring",
   "sha256": "830b0f38e18945eb2c77707f33f461e4ba0ef005b3184cc72c60d72a50ae8cb0",
   "bytes": 5224
@@ -3631,6 +4857,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 2,
+  "series": [
+   0,
+   1
+  ],
   "name": "Cat Nose",
   "sha256": "d4e53527d0c2d1e7b80bc719b8e9fd6fc8079a5443ac48a86dfaffe1c9333f33",
   "bytes": 5146
@@ -3643,6 +4873,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 1,
+  "series": [
+   0,
+   1
+  ],
   "name": "Turned Up Nosering",
   "sha256": "ee7a2503f8f3078b9e89b8e9f728e4d053bab5d55dcdb9f196cc882e17ede9bb",
   "bytes": 4976
@@ -3655,6 +4889,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 2,
+  "series": [
+   2,
+   3
+  ],
   "name": "Nubian Nosering",
   "sha256": "8792f02547ffa9f569bfc9baa742f715fa0159e749af87c790f06a0d7bfda3d8",
   "bytes": 4938
@@ -3667,6 +4905,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 1,
+  "series": [
+   2,
+   3
+  ],
   "name": "Roman Nosering",
   "sha256": "0fa107a18183d1c08b9284419600979f8e280d91d5c8069e0450d12034d5c74d",
   "bytes": 5055
@@ -3679,6 +4921,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 2,
+  "series": [
+   2,
+   3
+  ],
   "name": "Bumpy Bull Ring",
   "sha256": "1c86e1aa31d302c524bd17b5b2e706ef8b194b5e17edf9bf3efa21e18c36188b",
   "bytes": 5205
@@ -3691,6 +4937,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 1,
+  "series": [
+   2,
+   3
+  ],
   "name": "Nubian Nosering",
   "sha256": "6a38df9efeaad13c9df6e4e7563d9d7444286eaf377b12b82a755ca59fa038b8",
   "bytes": 4992
@@ -3703,6 +4953,9 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 2,
+  "series": [
+   4
+  ],
   "name": "Roman Nosering",
   "sha256": "79f72efb2aa8a6513f9ed08e3a79571a3fbc77e52b8b0a83b538dddd51e2c806",
   "bytes": 5174
@@ -3715,6 +4968,9 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 1,
+  "series": [
+   4
+  ],
   "name": "Greek Stud",
   "sha256": "c36202ef609854e666dadaab9a33e6d3e0b7929879148e50a1c2855dd3e9235f",
   "bytes": 5299
@@ -3727,6 +4983,9 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 2,
+  "series": [
+   4
+  ],
   "name": "Turned Up Nosering",
   "sha256": "11a5732f8666bb273fb8bea721b8495d80aced571bb1495997a24485f086ac8d",
   "bytes": 4815
@@ -3739,6 +4998,9 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 1,
+  "series": [
+   4
+  ],
   "name": "Cat Nose",
   "sha256": "513046f39c0e6e483753f928209d5808623f37ac1902645851e3b3dbdfa7fa0b",
   "bytes": 4957
@@ -3751,6 +5013,11 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 2,
+  "series": [
+   0,
+   1,
+   2
+  ],
   "name": "Straight Bull Ring",
   "sha256": "1a872bc0e6ac6ab7b82ec18ad94251b64aaf61171149e5d204aba142daa1b7e9",
   "bytes": 5679
@@ -3763,6 +5030,11 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 1,
+  "series": [
+   0,
+   1,
+   2
+  ],
   "name": "Clown Nose",
   "sha256": "23bbb4925be98a4485f467aaac984e86e05b1ecd5ff18632626aa41cd2750dd8",
   "bytes": 7647
@@ -3775,6 +5047,11 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 2,
+  "series": [
+   0,
+   1,
+   2
+  ],
   "name": "Fleshy Nose Clip",
   "sha256": "23f3303aa3ef8465d933340d927a45a5485811823391cf0c453f118553afedf0",
   "bytes": 6063
@@ -3787,6 +5064,11 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 1,
+  "series": [
+   0,
+   1,
+   2
+  ],
   "name": "Fleshy Nose Clip",
   "sha256": "cdec4c7bb97729336b8af279d4d0eb854fdf92372a7fda7612f9e7a18c0d032b",
   "bytes": 6910
@@ -3799,6 +5081,10 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 2,
+  "series": [
+   3,
+   4
+  ],
   "name": "Broken Nose",
   "sha256": "adfb778e1c3121157edb1b6486dbfe177906eaf01302210b7daf93370e4aebc3",
   "bytes": 4771
@@ -3811,6 +5097,10 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 1,
+  "series": [
+   3,
+   4
+  ],
   "name": "Hawk Mole",
   "sha256": "342fcb0cfaa8d842ab7f7e45d53b3c5e9872609d5f367e1208b65663dd646bf3",
   "bytes": 4694
@@ -3823,6 +5113,10 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 2,
+  "series": [
+   3,
+   4
+  ],
   "name": "Clown Nose",
   "sha256": "a668031772f923ba33727e4e05d1d8474014ff940ca62c70cf93353e872ce8cb",
   "bytes": 7413
@@ -3835,6 +5129,10 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 1,
+  "series": [
+   3,
+   4
+  ],
   "name": "Straight Bull Ring",
   "sha256": "6dec83bb2df2b7765845cb080f5a0b05b7caebf25da4f05cd5fb975cbc89a7b8",
   "bytes": 5418
@@ -3847,6 +5145,11 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 2,
+  "series": [
+   0,
+   1,
+   2
+  ],
   "name": "Mona Lisa",
   "sha256": "fefff07f7088c6120c667ddc302e226644113eea04a1a7ff1da426148566bea9",
   "bytes": 4580
@@ -3859,6 +5162,11 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 1,
+  "series": [
+   0,
+   1,
+   2
+  ],
   "name": "Nubian",
   "sha256": "8dddd2fb7a4ab615d3ab10ad2aec831ae713e2e07f789db49b1f965bb7122b2a",
   "bytes": 4639
@@ -3871,6 +5179,11 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 2,
+  "series": [
+   0,
+   1,
+   2
+  ],
   "name": "Da Vinci",
   "sha256": "2f92ec6bf121cde84541aae39472864abd3b0d1cbc62e6ce1c1062f74611f537",
   "bytes": 5017
@@ -3883,6 +5196,11 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 1,
+  "series": [
+   0,
+   1,
+   2
+  ],
   "name": "Broken Nose",
   "sha256": "c8822beafc09bbce7ff27fab68d9143a9d004dec458cb76db0b173373dc2d833",
   "bytes": 4807
@@ -3895,6 +5213,10 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 2,
+  "series": [
+   3,
+   4
+  ],
   "name": "Hawk Mole",
   "sha256": "483402d3a936021c86c457b1d27d51968d729a2860fcaf3cdd4490312516f324",
   "bytes": 5369
@@ -3907,6 +5229,10 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 1,
+  "series": [
+   3,
+   4
+  ],
   "name": "Da Vinci",
   "sha256": "6368bb9871c4d11121e8c5e9431d5e3b7fcc95fe46babf13e739218b6adce563",
   "bytes": 5020
@@ -3919,6 +5245,10 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 2,
+  "series": [
+   3,
+   4
+  ],
   "name": "Nubian",
   "sha256": "c67e3c4c8c7c8359b5c66ab6b203de0facd884e07bb71152674f78551c5cd0d7",
   "bytes": 4493
@@ -3931,6 +5261,10 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 1,
+  "series": [
+   3,
+   4
+  ],
   "name": "Mona Lisa",
   "sha256": "98cdf44d0f45d9fb2adee57d2bf29a010df156701f5d4e56237e4b1f06838dea",
   "bytes": 4570
@@ -3943,6 +5277,13 @@
   "rarity": 4,
   "rarityName": "Legendary",
   "gender": 2,
+  "series": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
   "name": "Cyborg",
   "sha256": "3752385202bfe1da654c525e1f529d62ec6cf135081bea1913e51d9b5aa02e7b",
   "bytes": 7535
@@ -3955,6 +5296,13 @@
   "rarity": 4,
   "rarityName": "Legendary",
   "gender": 1,
+  "series": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
   "name": "Cyborg",
   "sha256": "535caa60ba05da1b23cb7ec1674e8ee18b8044f62f818ca865d399ed7919764b",
   "bytes": 8512
@@ -3967,6 +5315,13 @@
   "rarity": 4,
   "rarityName": "Legendary",
   "gender": 2,
+  "series": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
   "name": "Roman Stud",
   "sha256": "8d176eec21b871b18ce3847bff93d8badae22a28023d83cfb4e3d7ee86667d31",
   "bytes": 5127
@@ -3979,6 +5334,13 @@
   "rarity": 4,
   "rarityName": "Legendary",
   "gender": 1,
+  "series": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
   "name": "Roman Stud",
   "sha256": "4b757a1524f404d69935fdcd29c424f2b8682544db0b4486315d24ccc9c53643",
   "bytes": 5083
@@ -3991,6 +5353,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 1,
+  "series": [
+   0
+  ],
   "name": "Half Smile Right",
   "sha256": "d7f5d0c62d347621d467976502c96fa548596a067573d396723551a71f5aa17a",
   "bytes": 2191
@@ -4003,6 +5368,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 2,
+  "series": [
+   0
+  ],
   "name": "Simple Smile",
   "sha256": "d32c2e87c2eee9b2e8ad704cf0d52fbba0f7df050c2ca897fa6b9302fd2ce914",
   "bytes": 2343
@@ -4015,6 +5383,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 1,
+  "series": [
+   0
+  ],
   "name": "Gold Tooth Smile",
   "sha256": "527fa68745792124945bacb2b9c17fa57598f590df3be303400e77da566da581",
   "bytes": 4843
@@ -4027,6 +5398,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 2,
+  "series": [
+   0
+  ],
   "name": "Lip Ring",
   "sha256": "a64b3089658d98ebbf227bddebfabacb9f3765d2ac4e8654187131333c3c5363",
   "bytes": 2885
@@ -4039,6 +5413,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 1,
+  "series": [
+   0
+  ],
   "name": "Frown",
   "sha256": "8a280e7196ab7ee49541f400cfd3c07b3300c308e862ff014ad41b1ba79b8785",
   "bytes": 2194
@@ -4051,6 +5428,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 2,
+  "series": [
+   0
+  ],
   "name": "Angry",
   "sha256": "5547b3928183f5c6722a14d3f6827d8616d36ee1fd596b2b576b1e7d5f4ee2d0",
   "bytes": 3789
@@ -4063,6 +5443,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 1,
+  "series": [
+   1
+  ],
   "name": "Simple Smile",
   "sha256": "c749bd6f384c07db1e5c170639e515db87220f124f90fbfc82f86798a40133a4",
   "bytes": 2285
@@ -4075,6 +5458,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 2,
+  "series": [
+   1
+  ],
   "name": "Half Smile Right",
   "sha256": "9b03e98173ff6c53ab453875d0627f6a07d65a41f14ea601fe468ce837d21616",
   "bytes": 2492
@@ -4087,6 +5473,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 1,
+  "series": [
+   1
+  ],
   "name": "Buck Teeth",
   "sha256": "2b52aef0f28de0d9b5290ff126c1fd2e4fa358ee5bfefb015a7ead011e59aa49",
   "bytes": 2901
@@ -4099,6 +5488,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 2,
+  "series": [
+   1
+  ],
   "name": "Half Frown Right",
   "sha256": "85fb8ba86739d3d70f6a0d863cfa347160c8afbad1eef9e78f4847179e825950",
   "bytes": 2594
@@ -4111,6 +5503,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 1,
+  "series": [
+   1
+  ],
   "name": "Pursed Lips",
   "sha256": "adf70a1a2f214ca483f8cb33012265f957927ac9d2da3f6bdbe3e5d779b322d6",
   "bytes": 3194
@@ -4123,6 +5518,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 2,
+  "series": [
+   1
+  ],
   "name": "Toothpick",
   "sha256": "cb8fbbbe90473e0a0c014382ed31894c47f16253a778d7b39c618cef4fe1416c",
   "bytes": 2762
@@ -4135,6 +5533,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 1,
+  "series": [
+   2
+  ],
   "name": "Angry",
   "sha256": "3773c5db697c6b9882fdc4b358acb55276a4ecddb061d2ac2469baac5493423f",
   "bytes": 3555
@@ -4147,6 +5548,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 2,
+  "series": [
+   2
+  ],
   "name": "Frown",
   "sha256": "294eb57bf8e83a3b433daf4caddaecbae007e4e000c34bcf9b85d67dfcd1574c",
   "bytes": 2308
@@ -4159,6 +5563,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 1,
+  "series": [
+   2
+  ],
   "name": "Big Smile",
   "sha256": "e4a827f7393fc4cc335e8222fa2110f602096041d29f211d3c48304c30b99b34",
   "bytes": 4556
@@ -4171,6 +5578,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 2,
+  "series": [
+   2
+  ],
   "name": "Sly",
   "sha256": "77ded6c952f7c9e484f8aa303b5115d4b913e699548d17e31b9ad0952d8382cf",
   "bytes": 3483
@@ -4183,6 +5593,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 1,
+  "series": [
+   2
+  ],
   "name": "Biting Lower Lip",
   "sha256": "b2ca07fec3415f2a56791313e175d0d5002169ca3699ba525db7f8a351565c12",
   "bytes": 2997
@@ -4195,6 +5608,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 2,
+  "series": [
+   2
+  ],
   "name": "Fish Lips",
   "sha256": "8bb83c6fd4c4266db96236b4e4dead06acadb270a19f6977a182cdbfd3cf67ff",
   "bytes": 2837
@@ -4207,6 +5623,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 1,
+  "series": [
+   3
+  ],
   "name": "Half Smile Left",
   "sha256": "30b846c72d0a2586212faa70023c2bb5a2d3351f3871cb98f66629db6ab608b7",
   "bytes": 2181
@@ -4219,6 +5638,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 2,
+  "series": [
+   3
+  ],
   "name": "Big Smile",
   "sha256": "1651232dae0f718c0f072f453509a67fec9bcfe521bd1cf084cf6d91c4bcc21d",
   "bytes": 4466
@@ -4231,6 +5653,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 1,
+  "series": [
+   3
+  ],
   "name": "Half Frown Right",
   "sha256": "b342efed51bcfd4840b1b8a7f61de9a1458fe7c9eecb668e76db221b373fc733",
   "bytes": 2332
@@ -4243,6 +5668,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 2,
+  "series": [
+   3
+  ],
   "name": "Pursed Lips",
   "sha256": "3bcefbbef862dcd022860cfb496d093f502f32b8f8c57f02cf45c4a66e91f5aa",
   "bytes": 2965
@@ -4255,6 +5683,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 1,
+  "series": [
+   3
+  ],
   "name": "Toothpick",
   "sha256": "9137c920f41ddcbf47b43339e07f745d8540496a1870474d44a7fceff268ba30",
   "bytes": 2670
@@ -4267,6 +5698,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 2,
+  "series": [
+   3
+  ],
   "name": "Gold Tooth Smile",
   "sha256": "bfe6b144514f58893dd3fa33ef45ba40a73a4cb3e5bf5b9f567daec5d879fd31",
   "bytes": 4779
@@ -4279,6 +5713,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 1,
+  "series": [
+   4
+  ],
   "name": "Fish Lips",
   "sha256": "a60028ccd2528bd82503074a7d38d7afa1affc7ad787ea7c8efbcb51ad469836",
   "bytes": 2749
@@ -4291,6 +5728,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 2,
+  "series": [
+   4
+  ],
   "name": "Half Smile Left",
   "sha256": "92bcf3b176ae871a15787c0ae5d18faac18a72c5b2f57a69647d57d818166dcc",
   "bytes": 2471
@@ -4303,6 +5743,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 1,
+  "series": [
+   4
+  ],
   "name": "Sly",
   "sha256": "6591677008360aa772c3b56d5c0ec186a7efb135e54cff6691027b31e38e335f",
   "bytes": 4277
@@ -4315,6 +5758,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 2,
+  "series": [
+   4
+  ],
   "name": "Lip Stud",
   "sha256": "fee4875ba993bec90f15e85a9274d48135db3649008ef62eb94c5e5fa59a4fad",
   "bytes": 2483
@@ -4327,6 +5773,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 1,
+  "series": [
+   4
+  ],
   "name": "Soul Patch",
   "sha256": "b5e63df1b22d5334d04567c9ce8e3b989f9905b162f82fefb1bf49e3efd4eb12",
   "bytes": 2931
@@ -4339,6 +5788,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 2,
+  "series": [
+   4
+  ],
   "name": "Buck Teeth",
   "sha256": "8e242e730887e7a17c0e9c98fbe508bee68ed069f72b831630f3abea9307c00e",
   "bytes": 3357
@@ -4351,6 +5803,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 1,
+  "series": [
+   0,
+   1
+  ],
   "name": "Referee Whistle",
   "sha256": "9015a9a1219d125e178d7f071feef66117eb0f94c3f90ed70497cf167f809df3",
   "bytes": 7002
@@ -4363,6 +5819,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 2,
+  "series": [
+   0,
+   1
+  ],
   "name": "Elvis",
   "sha256": "acd92b4f5d1614848f32f18d62d49e4d57fa0126e742a88434637c82111144e2",
   "bytes": 2845
@@ -4375,6 +5835,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 1,
+  "series": [
+   0,
+   1
+  ],
   "name": "Half Frown Left",
   "sha256": "31fe07233ae5e3048e46d7dc1757daf3ce3ed7b8c8d0f5597701e1bdfefed829",
   "bytes": 2380
@@ -4387,6 +5851,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 2,
+  "series": [
+   0,
+   1
+  ],
   "name": "Stiched Shut",
   "sha256": "59001ef90618887e3294ed9bc8b1b6c77fff54b63c17bd056f14653e6b2e1952",
   "bytes": 4460
@@ -4399,6 +5867,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 1,
+  "series": [
+   0,
+   1
+  ],
   "name": "Braces Smile",
   "sha256": "8e5055d4c6df353673df04de251240707b5ee2ea852cc32128df88c1b29c4e5e",
   "bytes": 9154
@@ -4411,6 +5883,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 2,
+  "series": [
+   0,
+   1
+  ],
   "name": "Bright Smile",
   "sha256": "123a93125b00dbfac3e0913ccceba9bcf9f2acb4d90865452b0dc3c41928cafc",
   "bytes": 3869
@@ -4423,6 +5899,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 1,
+  "series": [
+   2,
+   3
+  ],
   "name": "Marmota x Milky",
   "sha256": "0a6fe75f8c8041ee90e9d39a4920a8b5a4b7ae0a20960ffa07bdbc83efc07ab4",
   "bytes": 2480
@@ -4435,6 +5915,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 2,
+  "series": [
+   2,
+   3
+  ],
   "name": "Referee Whistle",
   "sha256": "58e7d7c61dd8c813fec248699aa9a29ddf1509026d321dc2117756033d12d2eb",
   "bytes": 5891
@@ -4447,6 +5931,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 1,
+  "series": [
+   2,
+   3
+  ],
   "name": "Elvis",
   "sha256": "33342455079e5f7891184daecbfad7ea474ec164fc9e9e6a67ade29c386ef520",
   "bytes": 2864
@@ -4459,6 +5947,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 2,
+  "series": [
+   2,
+   3
+  ],
   "name": "Angry Lipring",
   "sha256": "0405a4ddf2be8fd6781b2f8e670d076b2325a8bea783accf6e2d9dac0d3b9ef3",
   "bytes": 4068
@@ -4471,6 +5963,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 1,
+  "series": [
+   2,
+   3
+  ],
   "name": "Missing Tooth Smile",
   "sha256": "118638a7e22c426206d6c73c25c68052fc2ee2013b866d21df368d0ed280bd25",
   "bytes": 3482
@@ -4483,6 +5979,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 2,
+  "series": [
+   2,
+   3
+  ],
   "name": "Half Frown Left",
   "sha256": "f13e69dc7e4838534354a2eafc85252fd10b00c55b9d83ab492abd322d883c2e",
   "bytes": 2504
@@ -4495,6 +5995,9 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 1,
+  "series": [
+   4
+  ],
   "name": "Busted Lip",
   "sha256": "2604e832fbcc878ea23f74bf39fba8222731d70f67e006b0cc1438806867dcf8",
   "bytes": 3314
@@ -4507,6 +6010,9 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 2,
+  "series": [
+   4
+  ],
   "name": "Kiss Kiss",
   "sha256": "22b591238ab1bc459ff96c734beade9a330d33493e8d56c654946c1c462dd354",
   "bytes": 2828
@@ -4519,6 +6025,9 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 1,
+  "series": [
+   4
+  ],
   "name": "Bright Smile",
   "sha256": "59186bf3791805ff0cd1426b8f4cdb9364ea3052b7af5d8daf304191489e11af",
   "bytes": 3504
@@ -4531,6 +6040,9 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 2,
+  "series": [
+   4
+  ],
   "name": "Braces Smile",
   "sha256": "1eef997318fda1537886c5c28c4caba3639624e8e124e9e7fb4647280d07662a",
   "bytes": 8902
@@ -4543,6 +6055,9 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 1,
+  "series": [
+   4
+  ],
   "name": "Angry Lipring",
   "sha256": "243889c999f77f5dc9760fa23578515e2d3725ec8a2a95f765f0d5baaccf8cec",
   "bytes": 4042
@@ -4555,6 +6070,9 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 2,
+  "series": [
+   4
+  ],
   "name": "Biting Lower Lip",
   "sha256": "2d2fef9f4b0d6bb98ef3c9004a1dbeab83bc7f5b8ff74370606244642f86befa",
   "bytes": 3065
@@ -4567,6 +6085,11 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 1,
+  "series": [
+   0,
+   1,
+   2
+  ],
   "name": "Mustache",
   "sha256": "8c6c3e28e2df8f43c337f75d27dbc2629013e0ccf7a54a7ade2390c642f5ae99",
   "bytes": 1256
@@ -4579,6 +6102,11 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 2,
+  "series": [
+   0,
+   1,
+   2
+  ],
   "name": "Zippered",
   "sha256": "2782e01ff2b1eea8b54ee05151066a9afff9d0c4c695f4c0071c322e0b40e7b2",
   "bytes": 6141
@@ -4591,6 +6119,11 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 1,
+  "series": [
+   0,
+   1,
+   2
+  ],
   "name": "Thick Mustache",
   "sha256": "3c06143f1fe3f5fe8ea885abe4d43bdbd220883793ba11e0c161511562f02661",
   "bytes": 3853
@@ -4603,6 +6136,11 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 2,
+  "series": [
+   0,
+   1,
+   2
+  ],
   "name": "Surprised",
   "sha256": "cccef028637b060bcfca0a54538749872afe7f41002a7985657e7093c7202d91",
   "bytes": 3077
@@ -4615,6 +6153,11 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 1,
+  "series": [
+   0,
+   1,
+   2
+  ],
   "name": "Clown",
   "sha256": "922721ac667c8a88974dcd68e90c9ce998750b450aa9ca02489e429801d74906",
   "bytes": 11334
@@ -4627,6 +6170,11 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 2,
+  "series": [
+   0,
+   1,
+   2
+  ],
   "name": "Silver Grill",
   "sha256": "2de8ab1652832a4cd86321bf1dea6be803d808f15ad3dfe9bb496491e5496abf",
   "bytes": 5535
@@ -4639,6 +6187,10 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 1,
+  "series": [
+   3,
+   4
+  ],
   "name": "Silver Grill",
   "sha256": "5e54a0d3c7de0e644f4c3aed73c79ea95be363bd2fde4d4769e84784293e62a0",
   "bytes": 7080
@@ -4651,6 +6203,10 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 2,
+  "series": [
+   3,
+   4
+  ],
   "name": "Clown",
   "sha256": "37bc0149e7a646e7cbb7cb8047a6cca063ab385ba8f76b0714e145dcb3472604",
   "bytes": 10601
@@ -4663,6 +6219,10 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 1,
+  "series": [
+   3,
+   4
+  ],
   "name": "Cyborg",
   "sha256": "98955f1d21a33a55be8b72aea93052615fa1cc3b3ac0e1022a912f02d6c8b76f",
   "bytes": 6157
@@ -4675,6 +6235,10 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 2,
+  "series": [
+   3,
+   4
+  ],
   "name": "Missing Tooth Smile",
   "sha256": "5c9c5e6f213dbce3502302b8cb6665657b701d7b5af6f227fe1bdb4e5f6a44a7",
   "bytes": 3926
@@ -4687,6 +6251,10 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 1,
+  "series": [
+   3,
+   4
+  ],
   "name": "Stiched Shut",
   "sha256": "061c5d5981036a002f3f3be188ab895a179fd2a0ea9dba405187b9e2b84f469d",
   "bytes": 6048
@@ -4699,6 +6267,10 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 2,
+  "series": [
+   3,
+   4
+  ],
   "name": "Tongue Out",
   "sha256": "de2c270754895d6c7f42e6552c24f0f600c6c6801858cd2f96ffa33e3a221882",
   "bytes": 5849
@@ -4711,6 +6283,12 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 1,
+  "series": [
+   0,
+   1,
+   2,
+   3
+  ],
   "name": "Hipster Mustache",
   "sha256": "430be335cff5a17842ae5a47bdea9f920570a88f022e4f14027e37e03a2d44af",
   "bytes": 3809
@@ -4723,6 +6301,12 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 2,
+  "series": [
+   0,
+   1,
+   2,
+   3
+  ],
   "name": "Cyborg",
   "sha256": "8e228512c134e2f3ff5108c5e97db0ac8d0fe5879aee8ec2775f2939cb1bd5ab",
   "bytes": 5989
@@ -4735,6 +6319,12 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 1,
+  "series": [
+   0,
+   1,
+   2,
+   3
+  ],
   "name": "Fu Man Chu",
   "sha256": "2720b2e9bd0b7a3a9328dc86ebb0c38f5edf90c91dbc91ef66d8bbe1b65549f2",
   "bytes": 6533
@@ -4747,6 +6337,12 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 2,
+  "series": [
+   0,
+   1,
+   2,
+   3
+  ],
   "name": "Marmota x Milky",
   "sha256": "244bf69ca8125780cd378f2d6810711892833ee5fc5572df7ffc7bf949ecc092",
   "bytes": 2222
@@ -4759,6 +6355,12 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 1,
+  "series": [
+   0,
+   1,
+   2,
+   3
+  ],
   "name": "Spliff",
   "sha256": "002543057db370cec0361c44ad3786166064f4d9946d0f6335f8c4178d4ef1b7",
   "bytes": 5730
@@ -4771,6 +6373,12 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 2,
+  "series": [
+   0,
+   1,
+   2,
+   3
+  ],
   "name": "Bubblegum",
   "sha256": "0845300718d53af41fa5b33dfe25a2ad0f6be52ea1cfdf34ab8b9b92df3ed8d3",
   "bytes": 2619
@@ -4783,6 +6391,9 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 1,
+  "series": [
+   4
+  ],
   "name": "Gimp Ball",
   "sha256": "74005018bd8387ce18e2d52a343c4d423e410ff0c9a488d2c33603c6d18681c8",
   "bytes": 9850
@@ -4795,6 +6406,9 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 2,
+  "series": [
+   4
+  ],
   "name": "Party Blower",
   "sha256": "0ad4713bfe10861439a6517983e01ecaad31fd75f3f9faf4f994fb95b99bd0e1",
   "bytes": 4885
@@ -4807,6 +6421,9 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 1,
+  "series": [
+   4
+  ],
   "name": "Zippered",
   "sha256": "ac802002ef6a827fafef906e56a0a4954b128d8e12d7215c895897466d0ef170",
   "bytes": 6313
@@ -4819,6 +6436,9 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 2,
+  "series": [
+   4
+  ],
   "name": "Spliff",
   "sha256": "96dd9f8e955953ca57f74727bde60a3562ba23c26d436011d4b605cfc95a0c19",
   "bytes": 5362
@@ -4831,6 +6451,9 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 1,
+  "series": [
+   4
+  ],
   "name": "Tongue Out",
   "sha256": "0896ac2be3dd38581acffcd56ee237fba4e4649da14f42908b8097a01355a8d8",
   "bytes": 4816
@@ -4843,6 +6466,9 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 2,
+  "series": [
+   4
+  ],
   "name": "Gimp Ball",
   "sha256": "c432f8ea923e9357494fee3750411aadd2e37446e5cb8e56ece62c09fc6709f9",
   "bytes": 9969
@@ -4855,6 +6481,13 @@
   "rarity": 4,
   "rarityName": "Legendary",
   "gender": 1,
+  "series": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
   "name": "Gold Grill",
   "sha256": "c178dc76c7d858e9e437521fbcf12a9498ce55c687405244b053fe5302b52800",
   "bytes": 5334
@@ -4867,6 +6500,13 @@
   "rarity": 4,
   "rarityName": "Legendary",
   "gender": 2,
+  "series": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
   "name": "Gold Grill",
   "sha256": "f61285793c196196e7c0db268ea45e3ba1e0109b896e553bb554893a860b531c",
   "bytes": 4676
@@ -4879,6 +6519,13 @@
   "rarity": 4,
   "rarityName": "Legendary",
   "gender": 1,
+  "series": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
   "name": "Vampire",
   "sha256": "e7e7e9f703c60bf2e75611d113c72d38e73fe997b75ff6c3857da28e27f34929",
   "bytes": 3451
@@ -4891,6 +6538,13 @@
   "rarity": 4,
   "rarityName": "Legendary",
   "gender": 2,
+  "series": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
   "name": "Vampire",
   "sha256": "9f77cfae79bc751e2bee933057615a8ad586d6c30dd92069bebb8da857d708b9",
   "bytes": 3112
@@ -4903,6 +6557,13 @@
   "rarity": 4,
   "rarityName": "Legendary",
   "gender": 1,
+  "series": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
   "name": "Taped Shut",
   "sha256": "39feab9252d7fd214b562ba166c101cfa8e611cfb4f9c5c1442e912a19098621",
   "bytes": 2603
@@ -4915,6 +6576,13 @@
   "rarity": 4,
   "rarityName": "Legendary",
   "gender": 2,
+  "series": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
   "name": "Taped Shut",
   "sha256": "0e7e543b33fa531d153b27ac7f75102783f79dbc3d141a62cc811eeb725c836b",
   "bytes": 2857
@@ -4927,6 +6595,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   0
+  ],
   "name": "None",
   "sha256": "3600b91191d853f32ccb218b913930f36c46fc9277387588054df7f005eab5e4",
   "bytes": 19
@@ -4939,6 +6610,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 1,
+  "series": [
+   0
+  ],
   "name": "Thin Sideburns",
   "sha256": "e06a9fc628df69a4f7d0e0c513a1e826a4b83c0402c80203ee080f8a339a3d40",
   "bytes": 916
@@ -4951,6 +6625,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 2,
+  "series": [
+   0
+  ],
   "name": "Henna",
   "sha256": "0fcc6daebbb918b91f1ee24c2ba40d08b4478f466faaa424370d9782a0cc9dfa",
   "bytes": 4455
@@ -4963,6 +6640,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   1
+  ],
   "name": "None v2",
   "sha256": "3600b91191d853f32ccb218b913930f36c46fc9277387588054df7f005eab5e4",
   "bytes": 19
@@ -4975,6 +6655,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   1
+  ],
   "name": "Small Scar",
   "sha256": "128cd624e1fe47701902df4086de2944a94e313c433152b204442bcb26304201",
   "bytes": 153
@@ -4987,6 +6670,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   2
+  ],
   "name": "None v3",
   "sha256": "3600b91191d853f32ccb218b913930f36c46fc9277387588054df7f005eab5e4",
   "bytes": 19
@@ -4999,6 +6685,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 1,
+  "series": [
+   2
+  ],
   "name": "Beard",
   "sha256": "1a7a5c19272ea5936a2f7e1ea5624585a57307645329d7f2c8d4e7a8585e4302",
   "bytes": 4228
@@ -5011,6 +6700,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 2,
+  "series": [
+   2
+  ],
   "name": "Blush",
   "sha256": "3fb4f8627ea7db74523e45d59fe08972cffe2591b30445f6f2b326e6b432e261",
   "bytes": 6014
@@ -5023,6 +6715,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   3
+  ],
   "name": "None v4",
   "sha256": "3600b91191d853f32ccb218b913930f36c46fc9277387588054df7f005eab5e4",
   "bytes": 19
@@ -5035,6 +6730,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 1,
+  "series": [
+   3
+  ],
   "name": "Kissed",
   "sha256": "04c38e9868684c31e6d0b3a9f06237714c86831169120afd59e061e77c79712d",
   "bytes": 2637
@@ -5047,6 +6745,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 2,
+  "series": [
+   3
+  ],
   "name": "Blush v2",
   "sha256": "4853022ac9a9258509309ae711e3ef0b2f2b31a685a20cc38b825c4343561203",
   "bytes": 3741
@@ -5059,6 +6760,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 0,
+  "series": [
+   4
+  ],
   "name": "None v5",
   "sha256": "3600b91191d853f32ccb218b913930f36c46fc9277387588054df7f005eab5e4",
   "bytes": 19
@@ -5071,6 +6775,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 1,
+  "series": [
+   4
+  ],
   "name": "Bitcoin Tattoo",
   "sha256": "b447597bbd818ab28445307e237e4fd4bd9c3e8b9286a99ca6c689abe1728749",
   "bytes": 1242
@@ -5083,6 +6790,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 2,
+  "series": [
+   4
+  ],
   "name": "Glitter v3",
   "sha256": "5cbd643eae0cc10310b56300aadd055fdc5fc1851e2ded3356e4f7e86f216d8e",
   "bytes": 4572
@@ -5095,6 +6805,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 2,
+  "series": [
+   0,
+   1
+  ],
   "name": "Bitcoin Tattoo",
   "sha256": "bcb77078a90d39cd1376699f40fc91a50524405b96769b4deeb1c29b396e2021",
   "bytes": 451
@@ -5107,6 +6821,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 2,
+  "series": [
+   0,
+   1
+  ],
   "name": "Flower Tattoo",
   "sha256": "d93a6cf9a4adb24589776cbb3940e4f42b57388728b7931a9345bb893387c916",
   "bytes": 927
@@ -5119,6 +6837,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 1,
+  "series": [
+   0,
+   1
+  ],
   "name": "Ethereum Tattoo",
   "sha256": "5bcd63b6d967f479b6141c4d40b321f2b95843f5476e08265d33f6757a4d4b0f",
   "bytes": 355
@@ -5131,6 +6853,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 1,
+  "series": [
+   0,
+   1
+  ],
   "name": "Black Stripes",
   "sha256": "85cf5e4348c644efcd4de0b63dbf08db841cac97b1c50daa1e0a80fb54ca3ad0",
   "bytes": 622
@@ -5143,6 +6869,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 1,
+  "series": [
+   2,
+   3
+  ],
   "name": "Tribal",
   "sha256": "c62455f2347f9eb3a9fbee6c70b12af289c5c3191dbe63cc40128501717905bb",
   "bytes": 925
@@ -5155,6 +6885,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 1,
+  "series": [
+   2,
+   3
+  ],
   "name": "Mutton Chops",
   "sha256": "313c2601e62b84338471d872386e9e3ab546d74a5de359726c953193b62396c3",
   "bytes": 8088
@@ -5167,6 +6901,9 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 2,
+  "series": [
+   4
+  ],
   "name": "Glitter v2",
   "sha256": "1856f618db3f86ded963409e5de3319bd9d372ed4e76e80602e00cabb7d11f25",
   "bytes": 5597
@@ -5179,6 +6916,9 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 2,
+  "series": [
+   4
+  ],
   "name": "Henna v2",
   "sha256": "d6c8598e036a19793e998960d58a69e9410e723e0d451cfc16714b1b1c570714",
   "bytes": 3015
@@ -5191,6 +6931,9 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 1,
+  "series": [
+   4
+  ],
   "name": "Sideburns",
   "sha256": "cb3e83109d1d7e12ebe206211a4d5f2f7d3d0316a5678b361f1c2e46fa2283e7",
   "bytes": 2684
@@ -5203,6 +6946,9 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 1,
+  "series": [
+   4
+  ],
   "name": "Band Aid",
   "sha256": "b38652ad85b469cdd6aceb57dffa2bec11013c31e53e57dad2e106017ff48a80",
   "bytes": 2036
@@ -5215,6 +6961,11 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 1,
+  "series": [
+   0,
+   1,
+   2
+  ],
   "name": "Mountain Man",
   "sha256": "ec1fa50fbaca9a2704b289248fd68391240e5a5ea96bc7557d2eadb76f5ad922",
   "bytes": 8601
@@ -5227,6 +6978,11 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 1,
+  "series": [
+   0,
+   1,
+   2
+  ],
   "name": "Merlin's Beard",
   "sha256": "c191bc3e6732855c7289ef5bce50aaa54094df7d8b5f597a55692ed3f6e61015",
   "bytes": 7548
@@ -5239,6 +6995,11 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 2,
+  "series": [
+   0,
+   1,
+   2
+  ],
   "name": "Rainbow Tattoo",
   "sha256": "f8f0f89fcb2b4aa34a703df810cb2cff8bd7b83cc5979415e502a6dc60a21aec",
   "bytes": 805
@@ -5251,6 +7012,11 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 2,
+  "series": [
+   0,
+   1,
+   2
+  ],
   "name": "Circuit Board Makeup",
   "sha256": "1f7443bc67b548e0505d363f894e1ce6fb9c049ce3e912e32a1a90025c562a5c",
   "bytes": 2269
@@ -5263,6 +7029,10 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 1,
+  "series": [
+   3,
+   4
+  ],
   "name": "Goatee",
   "sha256": "b280691f623d0e1b784b3fec4568708007b7ebe4e74132637b02594bbccf61e1",
   "bytes": 944
@@ -5275,6 +7045,10 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 1,
+  "series": [
+   3,
+   4
+  ],
   "name": "Hipster Beard",
   "sha256": "fa22eb5f948b2433a885306391f1bee728458c0920ed463664f58534414af533",
   "bytes": 8185
@@ -5287,6 +7061,10 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 2,
+  "series": [
+   3,
+   4
+  ],
   "name": "Henna v3",
   "sha256": "618f83e54d8111b53faac16181a227af5d522b6951187fca66897998738a5b10",
   "bytes": 3098
@@ -5299,6 +7077,10 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 2,
+  "series": [
+   3,
+   4
+  ],
   "name": "Glitter",
   "sha256": "10341e0325dee7af8da8f826472edb4ecddd4d1f6f4d234eb82631694ec0ff5b",
   "bytes": 14583
@@ -5311,6 +7093,12 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 1,
+  "series": [
+   0,
+   1,
+   2,
+   3
+  ],
   "name": "Freckles",
   "sha256": "a91c0acb90367f3d27e26446c6e0453c087534308a8fdb072ede44ae42223f12",
   "bytes": 8032
@@ -5323,6 +7111,12 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 2,
+  "series": [
+   0,
+   1,
+   2,
+   3
+  ],
   "name": "Carnivale",
   "sha256": "645640aeaa168bea2ddb5cbac00869d707b989c493bfe926fa513e59d753f8e9",
   "bytes": 2936
@@ -5335,6 +7129,12 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 1,
+  "series": [
+   0,
+   1,
+   2,
+   3
+  ],
   "name": "Santa",
   "sha256": "904509fb3fa194b107866ceaec5a2c35150e57b237d137a2107aa82073e2d8c9",
   "bytes": 8031
@@ -5347,6 +7147,12 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 2,
+  "series": [
+   0,
+   1,
+   2,
+   3
+  ],
   "name": "Ethereum Tattoo",
   "sha256": "7335f3dd34c7181a024f6a472a8af31ce28ab721bdcc7559d307a77cae02c7ad",
   "bytes": 463
@@ -5359,6 +7165,9 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 1,
+  "series": [
+   4
+  ],
   "name": "Neckbeard",
   "sha256": "038355f15b6273f48bf1d3422f4ad5d94a664a994e86f56bb344a4f99f734f0c",
   "bytes": 5753
@@ -5371,6 +7180,9 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 2,
+  "series": [
+   4
+  ],
   "name": "Butterfly Tattoo",
   "sha256": "0a0b8e8ae6f59473d8e7abc1fe12c3cddc6911c1cd4e9158d9952632e8d51422",
   "bytes": 2054
@@ -5383,6 +7195,9 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 1,
+  "series": [
+   4
+  ],
   "name": "Carnivale",
   "sha256": "05390365005f3580ad06f081231838e3550768bfd431d81fa7fb497e8f04a2e2",
   "bytes": 427
@@ -5395,6 +7210,9 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 2,
+  "series": [
+   4
+  ],
   "name": "Fantasy Makeup",
   "sha256": "b2516d5b0dec6281565d8151886779571b087723dd6b2bb6c380f61d526f75e7",
   "bytes": 1390
@@ -5407,6 +7225,13 @@
   "rarity": 4,
   "rarityName": "Legendary",
   "gender": 1,
+  "series": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
   "name": "Zeus's Beard",
   "sha256": "128b2a6bcdde20fab7c54c9e69ef5401de80c19f53e08f19e19b522b930ac409",
   "bytes": 16666
@@ -5419,6 +7244,13 @@
   "rarity": 4,
   "rarityName": "Legendary",
   "gender": 2,
+  "series": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
   "name": "Cyborg",
   "sha256": "584b803f9cfbaa88c8384b5c8117c77dc21460adaf5877cc2073a889062c1eda",
   "bytes": 3427
@@ -5431,6 +7263,13 @@
   "rarity": 4,
   "rarityName": "Legendary",
   "gender": 2,
+  "series": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
   "name": "Cat Whiskers",
   "sha256": "e84b7fb76cb7708b998c8c98667624f20342b1da6e4cba9d44768728044888b4",
   "bytes": 575
@@ -5443,6 +7282,13 @@
   "rarity": 4,
   "rarityName": "Legendary",
   "gender": 1,
+  "series": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
   "name": "Cyborg",
   "sha256": "2d37031df764b21dcae7b7f3bd5c9b2226883efc23b04431736110ece1bef41c",
   "bytes": 5914
@@ -5455,6 +7301,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 1,
+  "series": [
+   0
+  ],
   "name": "Normal",
   "sha256": "d4371c7428b791db3718dc7417222888129c3f455f5b0133f82ea591bb6a4b6f",
   "bytes": 3770
@@ -5467,6 +7316,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 2,
+  "series": [
+   0
+  ],
   "name": "Left Wink",
   "sha256": "ac5d84dfc3c51fa2487668e9a74e4dd9d17e01172d3e43dfbffbdd3ba6d7ad92",
   "bytes": 3823
@@ -5479,6 +7331,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 1,
+  "series": [
+   0
+  ],
   "name": "Confused",
   "sha256": "3d55cff7aba119831cefb99283905a44a4d95a36b5652c1eb50653e2b8e77438",
   "bytes": 4238
@@ -5491,6 +7346,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 2,
+  "series": [
+   0
+  ],
   "name": "Sad",
   "sha256": "30879b3cc675ab32f15ddfce18e57b6e8a2e0a05c3e75692c882f0faf3f85c94",
   "bytes": 5240
@@ -5503,6 +7361,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 1,
+  "series": [
+   0
+  ],
   "name": "Sideways Glance Right",
   "sha256": "9fb487d6c8f74fce5794f997866021f7e946640752022af49703f5b9e6b04e21",
   "bytes": 4350
@@ -5515,6 +7376,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 2,
+  "series": [
+   0
+  ],
   "name": "Mascara",
   "sha256": "e0879bfaf7ddc4a7cb0a8847fa745421f58ef02cfe08e8a47ebe229a8119049e",
   "bytes": 5537
@@ -5527,6 +7391,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 1,
+  "series": [
+   1
+  ],
   "name": "Sparking Eyes",
   "sha256": "51234c8e89334fb712c90fc29612bec8d1d7ffcd3b33477042bfc6db2058a8de",
   "bytes": 4538
@@ -5539,6 +7406,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 2,
+  "series": [
+   1
+  ],
   "name": "Surprised",
   "sha256": "3ce5b9d1142e5a3154abbdc45909cb392aacfffb39a984a9feb951c094726799",
   "bytes": 3995
@@ -5551,6 +7421,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 1,
+  "series": [
+   1
+  ],
   "name": "Left Wink",
   "sha256": "6fcdab3579723e30e42e0c61a643b906a74ff3fe2656801a7a5c6924f19629f1",
   "bytes": 3893
@@ -5563,6 +7436,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 2,
+  "series": [
+   1
+  ],
   "name": "Furrowed Brows",
   "sha256": "4ad469ba2ec46c0f58f1fedc05127c92ecc15c48b04dc45df4cf1d85c7e9285c",
   "bytes": 4959
@@ -5575,6 +7451,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 1,
+  "series": [
+   1
+  ],
   "name": "Sad",
   "sha256": "07aabceacc6d760b1870ac70cbbd0b604d390e26513d95e16c0ce84c1589b147",
   "bytes": 5249
@@ -5587,6 +7466,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 2,
+  "series": [
+   1
+  ],
   "name": "Right Wink",
   "sha256": "d34036b6f49edfc454db122b3c0b701cc785c44ed4a7887eaf7100d3125802e1",
   "bytes": 3726
@@ -5599,6 +7481,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 1,
+  "series": [
+   2
+  ],
   "name": "Single Tear",
   "sha256": "13fcf3500e3d4d241dc63209e0dae2755a45b6491ed61c3bcb8642266ff32f2c",
   "bytes": 4990
@@ -5611,6 +7496,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 2,
+  "series": [
+   2
+  ],
   "name": "Angry",
   "sha256": "66ddf5db3fc3950f43ecbe30cd303bfca6b4a1fd9b763db3c8f944219bb6e2bb",
   "bytes": 4592
@@ -5623,6 +7511,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 1,
+  "series": [
+   2
+  ],
   "name": "Slanted Eyes",
   "sha256": "59f2483780f0f2e070cc09f0579ba05f7f53d87965aed95c1bd6486609ce3fef",
   "bytes": 4982
@@ -5635,6 +7526,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 2,
+  "series": [
+   2
+  ],
   "name": "Bloodshot",
   "sha256": "c16514e927fae83410c0b2a4e20ccf5de5cf3c0c357d01c2e8c1a841b12adabd",
   "bytes": 6808
@@ -5647,6 +7541,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 1,
+  "series": [
+   2
+  ],
   "name": "Flirty",
   "sha256": "5796b393976031c8e7baa5958b843617fde2c8a7f41ddf0060b72b7cb050a325",
   "bytes": 5067
@@ -5659,6 +7556,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 2,
+  "series": [
+   2
+  ],
   "name": "Sideways Glance Right",
   "sha256": "ab80cd7cb2a92cc0a0ef8e4f19b86ed6b41bb575c5b1000a83689c404fb65dd0",
   "bytes": 4223
@@ -5671,6 +7571,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 1,
+  "series": [
+   3
+  ],
   "name": "Furrowed Brows",
   "sha256": "1dfdcffd9daedc06cf7aac4cd4457d202560644a42254388662a79a623c2fcf0",
   "bytes": 4887
@@ -5683,6 +7586,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 2,
+  "series": [
+   3
+  ],
   "name": "Normal",
   "sha256": "e80c1c68b42f72e87ff0732f7d115cd733962b2ddb3f162c695331446fedf81b",
   "bytes": 4095
@@ -5695,6 +7601,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 1,
+  "series": [
+   3
+  ],
   "name": "Bloodshot",
   "sha256": "eedc7c923844741809961ded4df6d7fb4ee837e7d569a81d896a766c1c47e49e",
   "bytes": 6991
@@ -5707,6 +7616,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 2,
+  "series": [
+   3
+  ],
   "name": "Slanted Eyes",
   "sha256": "fdc957da1a033349fe883877061bdaf0a19f8588aa72444ae55a294d9b2c8973",
   "bytes": 4523
@@ -5719,6 +7631,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 1,
+  "series": [
+   3
+  ],
   "name": "Angry",
   "sha256": "b6f4e44ed6469fcc41e77c3d73601c1b3744037c6e712edec644b140ba986bc9",
   "bytes": 5053
@@ -5731,6 +7646,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 2,
+  "series": [
+   3
+  ],
   "name": "Single Tear",
   "sha256": "519311d2d85fb2c5f7ba073786fb565aca45775f7042e68db414a2488949a7df",
   "bytes": 4818
@@ -5743,6 +7661,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 1,
+  "series": [
+   4
+  ],
   "name": "Mascara",
   "sha256": "386a2e4e28f9a56aff5315862d3719986a6d776a358087c33dcd28d726deac78",
   "bytes": 4349
@@ -5755,6 +7676,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 2,
+  "series": [
+   4
+  ],
   "name": "Crying",
   "sha256": "add5f6937d5225ba6302bc178378f1542efe9930f7a173f9f48d9495c1dd53f9",
   "bytes": 6447
@@ -5767,6 +7691,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 1,
+  "series": [
+   4
+  ],
   "name": "Right Wink",
   "sha256": "6a7021307f63c97329f2f6981fa49de1594ec3df3dc7ccec3940e13649f65493",
   "bytes": 3903
@@ -5779,6 +7706,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 2,
+  "series": [
+   4
+  ],
   "name": "Sparking Eyes",
   "sha256": "3ae9f7bd73e01201abaf79c4d33927bdbc575d2e62f860d945275d0d9fde2921",
   "bytes": 4315
@@ -5791,6 +7721,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 1,
+  "series": [
+   4
+  ],
   "name": "Surprised",
   "sha256": "6308bcfcd38d11a5d3870bd7fead4fd426cd2ad4076ac65bd7191e1c4b176c9c",
   "bytes": 3992
@@ -5803,6 +7736,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 2,
+  "series": [
+   4
+  ],
   "name": "Confused",
   "sha256": "304e7e807a6d86d2c6d82b0476452bdc40f7a9015d2272979edb6d170085d974",
   "bytes": 4021
@@ -5815,6 +7751,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 1,
+  "series": [
+   0,
+   1
+  ],
   "name": "Crying",
   "sha256": "934ef5acc68ea22f6738b1d51488ef57dcf76a5226666e6cb3bdd1dbe0848d80",
   "bytes": 6548
@@ -5827,6 +7767,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 2,
+  "series": [
+   0,
+   1
+  ],
   "name": "Slim Sunnies",
   "sha256": "45645bc8d1371fedff5bc9c186d3c4aa4e3a3a9f80a7410e5f87febfa00e52a9",
   "bytes": 7639
@@ -5839,6 +7783,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 1,
+  "series": [
+   0,
+   1
+  ],
   "name": "Stoned",
   "sha256": "f70507edccd1061ff6beed8a1d05deb00ad584e59e4fa5448890a68c892758ea",
   "bytes": 4504
@@ -5851,6 +7799,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 2,
+  "series": [
+   0,
+   1
+  ],
   "name": "Ski Goggles",
   "sha256": "5fd080605bc364abbc30fe89ec9b5212c7a799a39750655c32da29c07f262c4d",
   "bytes": 4015
@@ -5863,6 +7815,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 1,
+  "series": [
+   0,
+   1
+  ],
   "name": "Trippy",
   "sha256": "047aed0cc19bc2f527efa4eab541d6d97158e55c835df36ef001e4c381a76018",
   "bytes": 5754
@@ -5875,6 +7831,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 2,
+  "series": [
+   0,
+   1
+  ],
   "name": "Wireframe",
   "sha256": "2c3f83378d378830cee398ff82b03b80b503aacceec0e992ec0e505acb5d9c5f",
   "bytes": 7016
@@ -5887,6 +7847,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 1,
+  "series": [
+   2,
+   3
+  ],
   "name": "Closed Eyes",
   "sha256": "0b323fd7e5a437dfe97eeb51ad9e3a89c9f26603a49257a28a59fddd090ebf38",
   "bytes": 3697
@@ -5899,6 +7863,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 2,
+  "series": [
+   2,
+   3
+  ],
   "name": "Stoned",
   "sha256": "1436f253dc68eeefe77ce33f3503e3ef7c7601c46405dc45d49c5a9f442735cc",
   "bytes": 4291
@@ -5911,6 +7879,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 1,
+  "series": [
+   2,
+   3
+  ],
   "name": "Cross Eyed",
   "sha256": "afa88f6f070ce61b5edd0fca6670d30bf808781b45ef6e86ab18b5098deb6f1e",
   "bytes": 3962
@@ -5923,6 +7895,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 2,
+  "series": [
+   2,
+   3
+  ],
   "name": "Flirty",
   "sha256": "6e2beb87c544c4882c92256546f1a841f653e9e1bf840184603a5980dfcbe8ad",
   "bytes": 4897
@@ -5935,6 +7911,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 1,
+  "series": [
+   2,
+   3
+  ],
   "name": "Black Eye",
   "sha256": "b4480ce811524cd11c6f1452eca13413909a724ad17ef46abfa4021166c63a65",
   "bytes": 8247
@@ -5947,6 +7927,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 2,
+  "series": [
+   2,
+   3
+  ],
   "name": "Jeweled Bindi",
   "sha256": "8ea7abf238ff78d2bb35d657b5c8e71ac305490259823d6a4cdfcc3ebfe05ed7",
   "bytes": 7896
@@ -5959,6 +7943,9 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 1,
+  "series": [
+   4
+  ],
   "name": "Alice Cooper",
   "sha256": "404cc5ec08460c0323ba93266fcb576f4fee576a891573b71f70025220aa8994",
   "bytes": 5657
@@ -5971,6 +7958,9 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 2,
+  "series": [
+   4
+  ],
   "name": "Cross Eyed",
   "sha256": "54875819ff7641560e432aa6d87e8a20bcb7962d6909ca4a81e666d8fb0cbdec",
   "bytes": 3860
@@ -5983,6 +7973,9 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 1,
+  "series": [
+   4
+  ],
   "name": "Ski Goggles",
   "sha256": "9c2691b359c91bc9c35f3215646221a86c1d3081e5d9f44e19e35d48bbcae5f9",
   "bytes": 3975
@@ -5995,6 +7988,9 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 2,
+  "series": [
+   4
+  ],
   "name": "Closed Eyes",
   "sha256": "176bc76789d9e3abdc09c7dec60d08137c2e40ea1b515f43b1901c8af7835345",
   "bytes": 3360
@@ -6007,6 +8003,9 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 1,
+  "series": [
+   4
+  ],
   "name": "Wireframe",
   "sha256": "38b6bf28e0de49409ef90d9379d73f6e6b3286838654d4af1e481c42fc6a5e32",
   "bytes": 9908
@@ -6019,6 +8018,9 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 2,
+  "series": [
+   4
+  ],
   "name": "Trippy",
   "sha256": "ce8dc5d6d23c17ebee19867ce075741ee1ee6b73f1ccaa13fb7521c5a0a2c133",
   "bytes": 5233
@@ -6031,6 +8033,11 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 1,
+  "series": [
+   0,
+   1,
+   2
+  ],
   "name": "Bombers",
   "sha256": "6c10afef62a49f6437d636d62431daf292d06ee436b5286e33b8e35fcca47cfb",
   "bytes": 9196
@@ -6043,6 +8050,11 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 2,
+  "series": [
+   0,
+   1,
+   2
+  ],
   "name": "Marmota x Milky",
   "sha256": "35c21dd781f232795f2bfa196f1738a9b804f2c61605d22bcd42a762f2cdd11b",
   "bytes": 7634
@@ -6055,6 +8067,11 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 1,
+  "series": [
+   0,
+   1,
+   2
+  ],
   "name": "VR Googles",
   "sha256": "aad11809d847f83f4c101afcbb42c1fa849bfafe83090ebe76d6fd3fd8f45ecb",
   "bytes": 5499
@@ -6067,6 +8084,11 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 2,
+  "series": [
+   0,
+   1,
+   2
+  ],
   "name": "Monocle",
   "sha256": "0e721b61482cff0a2e70683d480d1a2fc7d700f7b0d1e07837e54e5711bebc4f",
   "bytes": 9150
@@ -6079,6 +8101,11 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 1,
+  "series": [
+   0,
+   1,
+   2
+  ],
   "name": "Taped Nerdy",
   "sha256": "75a913b2c7e58dcd30ad10d80e0db52c06b3aa27f5893d97a4ae11ed3d19a867",
   "bytes": 8417
@@ -6091,6 +8118,11 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 2,
+  "series": [
+   0,
+   1,
+   2
+  ],
   "name": "Black Frame",
   "sha256": "f5f142d47a8fd12cb649d1360a04dd53b710f48939c05f5818980298eaa7aa63",
   "bytes": 5020
@@ -6103,6 +8135,10 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 1,
+  "series": [
+   3,
+   4
+  ],
   "name": "Marmota x Milky",
   "sha256": "b51223400d43bb0ecc5fef3c54c98956aaedaaa8b5526ac3c8f2fa945bb42fd3",
   "bytes": 4924
@@ -6115,6 +8151,10 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 2,
+  "series": [
+   3,
+   4
+  ],
   "name": "Pirate Patch",
   "sha256": "2047e43899c033843bcedbd9b13ac307a713b64f87538c4d3a6ae151447e477d",
   "bytes": 5763
@@ -6127,6 +8167,10 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 1,
+  "series": [
+   3,
+   4
+  ],
   "name": "Monocle",
   "sha256": "bd41ae1053ae3a9558bb6fce949711b25446b5327a7690572b24957ae028dec1",
   "bytes": 7450
@@ -6139,6 +8183,10 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 2,
+  "series": [
+   3,
+   4
+  ],
   "name": "VR Googles",
   "sha256": "4ca454be139efb8db03f1f3b598091f4000631f334d5792ba22d455ec06d2143",
   "bytes": 3965
@@ -6151,6 +8199,10 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 1,
+  "series": [
+   3,
+   4
+  ],
   "name": "Black Frame",
   "sha256": "a3291fc16392b9bef06a381f0a1112fd6d0621b6f924f581f19a2ec5bd0d5c0c",
   "bytes": 5553
@@ -6163,6 +8215,10 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 2,
+  "series": [
+   3,
+   4
+  ],
   "name": "Taped Nerdy",
   "sha256": "65371ce46cc184739f414964bfda2e5f2b0f3bd8a2235ef83f1eddaa969a733c",
   "bytes": 8216
@@ -6175,6 +8231,12 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 1,
+  "series": [
+   0,
+   1,
+   2,
+   3
+  ],
   "name": "Cat Eyes",
   "sha256": "7310116ec21d33d144c6e6a9e162f1c0d4594f3e411b0630577cda408e6e6d5b",
   "bytes": 4822
@@ -6187,6 +8249,12 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 2,
+  "series": [
+   0,
+   1,
+   2,
+   3
+  ],
   "name": "Heart Glasses",
   "sha256": "d09ce498ec56f8ac8c4b3bcbaecf0500b03b02b2cca8174218eec94914417eac",
   "bytes": 10902
@@ -6199,6 +8267,12 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 1,
+  "series": [
+   0,
+   1,
+   2,
+   3
+  ],
   "name": "Heart Glasses",
   "sha256": "d04a4d5a0ffe61d4be69965f3876e3535b290701b2504609a6dc5058e1f39e43",
   "bytes": 8626
@@ -6211,6 +8285,12 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 2,
+  "series": [
+   0,
+   1,
+   2,
+   3
+  ],
   "name": "Glam Rock",
   "sha256": "f241765f2299905fd5f54aa35c8bf8a4bbe6c6a8d81757bfc81a6405e66ea7cc",
   "bytes": 6848
@@ -6223,6 +8303,9 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 1,
+  "series": [
+   4
+  ],
   "name": "Cyclist Sun Glasses",
   "sha256": "0a00185e0f34b2569bd42b61a802b7ef26a3711a583bb51abb0c9d7c2763b98a",
   "bytes": 11337
@@ -6235,6 +8318,9 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 2,
+  "series": [
+   4
+  ],
   "name": "Bombers",
   "sha256": "62deffefef403648a0ef6db784915b4043f0ee378dcf23d258fccae0c9733d55",
   "bytes": 11175
@@ -6247,6 +8333,9 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 1,
+  "series": [
+   4
+  ],
   "name": "John Lennon",
   "sha256": "e4a49deed094e65df4578a8ea27485b8731a0c6f4f59f240b90bba83640c011f",
   "bytes": 7961
@@ -6259,6 +8348,9 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 2,
+  "series": [
+   4
+  ],
   "name": "Cat Eyes",
   "sha256": "4c0e59e7f18599069e7532cae3daaeff8a028caf460086f17b3993a3591b4ef9",
   "bytes": 4215
@@ -6271,6 +8363,9 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 1,
+  "series": [
+   4
+  ],
   "name": "Slim Sunnies",
   "sha256": "148b29a449624559b09e37ab77807ead271d152bc1a45778604b9851f1967366",
   "bytes": 7974
@@ -6283,6 +8378,9 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 2,
+  "series": [
+   4
+  ],
   "name": "John Lennon",
   "sha256": "67092b8d5b7504a5d8f5c95ab244447ee2dac1e9c3ee567f063d34a4d84bfc85",
   "bytes": 8038
@@ -6295,6 +8393,13 @@
   "rarity": 4,
   "rarityName": "Legendary",
   "gender": 1,
+  "series": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
   "name": "Hero Mask",
   "sha256": "90fad1d280e8d16760b8b1575f927d5a8770f39982f08209677e95be81f179c9",
   "bytes": 5721
@@ -6307,6 +8412,13 @@
   "rarity": 4,
   "rarityName": "Legendary",
   "gender": 2,
+  "series": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
   "name": "Hero Mask",
   "sha256": "bf69808610df50693178b9f5216cefc8e2177c083bf97f559df0261f44af6e2c",
   "bytes": 7138
@@ -6319,6 +8431,13 @@
   "rarity": 4,
   "rarityName": "Legendary",
   "gender": 1,
+  "series": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
   "name": "Cyborg",
   "sha256": "13ee5c0ad22d9fce2333330b94d2dacc57c554af49942940dc3080dfed5d456f",
   "bytes": 5714
@@ -6331,6 +8450,13 @@
   "rarity": 4,
   "rarityName": "Legendary",
   "gender": 2,
+  "series": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
   "name": "Cyborg",
   "sha256": "ab5c810773e04941591412508bc2eb93732f41076daffd9dca1d67344c592097",
   "bytes": 7474
@@ -6343,6 +8469,13 @@
   "rarity": 4,
   "rarityName": "Legendary",
   "gender": 1,
+  "series": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
   "name": "Steampunk",
   "sha256": "81feeb3f89f3308e1997e3b26500ea8d203ed0b1be3727453b22f9695eb874f0",
   "bytes": 8723
@@ -6355,6 +8488,13 @@
   "rarity": 4,
   "rarityName": "Legendary",
   "gender": 2,
+  "series": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
   "name": "Steampunk",
   "sha256": "78529f6f29edfaa7cc819809ea93311c74186cbc2e64943d9ad93960e5ffc461",
   "bytes": 8334
@@ -6367,6 +8507,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 2,
+  "series": [
+   0
+  ],
   "name": "Marmota x Milky",
   "sha256": "f44f9fb4756e69c8c2d9ce2dcf45187aead4eccba61a1be2f25cb8b81afa7a58",
   "bytes": 7892
@@ -6379,6 +8522,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 2,
+  "series": [
+   0
+  ],
   "name": "Messy",
   "sha256": "84126d43813f3ab0888d5f3d51e589a2ebc66ffc887d5c6c12047757a421b0a8",
   "bytes": 11559
@@ -6391,6 +8537,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 2,
+  "series": [
+   0
+  ],
   "name": "Big Mohawk",
   "sha256": "79a4f86794bb0e7583a363db99f158fe7faaa0e64900929351540ae7483f313c",
   "bytes": 7728
@@ -6403,6 +8552,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 1,
+  "series": [
+   0
+  ],
   "name": "Cornrows",
   "sha256": "086e54103eb03dfef88b9eae5883897707b45e8b23dc92acd4461d0adb4f0181",
   "bytes": 9181
@@ -6415,6 +8567,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 1,
+  "series": [
+   0
+  ],
   "name": "Slicked Back",
   "sha256": "ed5c0cfcb6451aaabe7bee2a51d2e83ff4d6141dae96ffef9a60b5e0be36307f",
   "bytes": 8428
@@ -6427,6 +8582,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 1,
+  "series": [
+   0
+  ],
   "name": "Manbun",
   "sha256": "a7b80bcec13ebd29c6578cadafdea36b5e7e53188479ced58cf02fef5bef993b",
   "bytes": 6099
@@ -6439,6 +8597,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 2,
+  "series": [
+   1
+  ],
   "name": "Afro",
   "sha256": "1e1764118c1d848f2ab00094a14a5ef9f46b6c8f6c5ea7aa67e8871c2ce45c67",
   "bytes": 15963
@@ -6451,6 +8612,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 2,
+  "series": [
+   1
+  ],
   "name": "Geisha",
   "sha256": "ab5011d0558b87707f183ae5a50f8a79e1a41b62388b694dfbcc730ba5781720",
   "bytes": 18000
@@ -6463,6 +8627,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 2,
+  "series": [
+   1
+  ],
   "name": "Flowing",
   "sha256": "626750d23aa08e50c9cc8dadf0252986dc14cc09b05d6c5733254a17a5424d37",
   "bytes": 12473
@@ -6475,6 +8642,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 1,
+  "series": [
+   1
+  ],
   "name": "Short Mohawk",
   "sha256": "d3d679e9cd185379e47eb1d0b5c7fde4493b7a1ac4f5ed11cbe2388d2d43b7f6",
   "bytes": 7596
@@ -6487,6 +8657,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 1,
+  "series": [
+   1
+  ],
   "name": "Bald",
   "sha256": "3600b91191d853f32ccb218b913930f36c46fc9277387588054df7f005eab5e4",
   "bytes": 19
@@ -6499,6 +8672,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 1,
+  "series": [
+   1
+  ],
   "name": "Neat Afro",
   "sha256": "0a8837d9e1cfd1e6024e25ee4592594a8c23958043f986a88804541ee7eb5c94",
   "bytes": 11103
@@ -6511,6 +8687,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 2,
+  "series": [
+   2
+  ],
   "name": "Nightclub",
   "sha256": "27cea277fccfdaf5de12fdab6d27c086d658e641e40636e90a7d02b2cec181dc",
   "bytes": 7698
@@ -6523,6 +8702,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 2,
+  "series": [
+   2
+  ],
   "name": "Cornrows",
   "sha256": "c1e39faec104314b6bafbc24f41aff8c52b55fb7df6cea88a5250968e6f5c0c1",
   "bytes": 23610
@@ -6535,6 +8717,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 2,
+  "series": [
+   2
+  ],
   "name": "Birthday Hat",
   "sha256": "c68da9bf633a701f9169a3e8562346ed9c4a33c6013f37194710e62abdcf8d47",
   "bytes": 9726
@@ -6547,6 +8732,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 1,
+  "series": [
+   2
+  ],
   "name": "Afro",
   "sha256": "2ab21a51ffaacc3d0c165b66ac93099fd7913469775317444fd8ea057073c9fb",
   "bytes": 6748
@@ -6559,6 +8747,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 1,
+  "series": [
+   2
+  ],
   "name": "Vampire",
   "sha256": "7b4f9d5e9a12b166e6c51621a17c67f7ee620a812f53c42ec21d1dad1e8f881e",
   "bytes": 5582
@@ -6571,6 +8762,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 1,
+  "series": [
+   2
+  ],
   "name": "Balding",
   "sha256": "ea985d1b6294fee479e8f5e107c993171538315092c0fe2a8aed0ec38f526091",
   "bytes": 2971
@@ -6583,6 +8777,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 2,
+  "series": [
+   3
+  ],
   "name": "Bald",
   "sha256": "3600b91191d853f32ccb218b913930f36c46fc9277387588054df7f005eab5e4",
   "bytes": 19
@@ -6595,6 +8792,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 2,
+  "series": [
+   3
+  ],
   "name": "Buzzed",
   "sha256": "ef3206bad0b96f891cb6f4fa5854cddfd0b3faaf1bf5081b09f29bc3c7b867d3",
   "bytes": 2234
@@ -6607,6 +8807,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 2,
+  "series": [
+   3
+  ],
   "name": "Vampire",
   "sha256": "dd0a66aaec79eac96b066d02fdf575ab605baa725e427c40e9aebbdef3530ac5",
   "bytes": 7770
@@ -6619,6 +8822,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 1,
+  "series": [
+   3
+  ],
   "name": "Messy",
   "sha256": "631235de39c352b1d445e33f56ac4fca59fa4251e054dc11cce8d7ba3ea07b31",
   "bytes": 11740
@@ -6631,6 +8837,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 1,
+  "series": [
+   3
+  ],
   "name": "Samurai",
   "sha256": "832beda5d3553b2898cb5f69207ccb6340a04bd61ad53868ab8dc32da89ae97c",
   "bytes": 10006
@@ -6643,6 +8852,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 1,
+  "series": [
+   3
+  ],
   "name": "Big Mohawk",
   "sha256": "61cead62864081f902bcc4bf191f80279e6ae097a15a9a0795db8c99f9e07058",
   "bytes": 7622
@@ -6655,6 +8867,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 2,
+  "series": [
+   4
+  ],
   "name": "Tight Curls",
   "sha256": "5e7e1e4a1ad18e7155013756547b0fc67c96abf98a745cfde5498340994df61e",
   "bytes": 23728
@@ -6667,6 +8882,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 2,
+  "series": [
+   4
+  ],
   "name": "Ponytail",
   "sha256": "f9e552886bd4449fd8800c7e70fa3d14662ce32077d9f663d4e54a9849dc692a",
   "bytes": 10272
@@ -6679,6 +8897,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 2,
+  "series": [
+   4
+  ],
   "name": "Short Mohawk",
   "sha256": "568f526826142c645c10319edb50247ab730c3cf74f30a9102da0857ef78a7b4",
   "bytes": 6378
@@ -6691,6 +8912,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 1,
+  "series": [
+   4
+  ],
   "name": "Marmota x Milky",
   "sha256": "c694c7219964a80e3420e64e306499f6e02225d21b8cc4de79a3bda5d7344a8c",
   "bytes": 4176
@@ -6703,6 +8927,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 1,
+  "series": [
+   4
+  ],
   "name": "Buzzed",
   "sha256": "87fe8f9e3de094b85546b77b7a0509b9c772910ea723b36fdb5fc6bfcaf888ce",
   "bytes": 2193
@@ -6715,6 +8942,9 @@
   "rarity": 0,
   "rarityName": "Common",
   "gender": 1,
+  "series": [
+   4
+  ],
   "name": "Long Messy",
   "sha256": "2f4e3255e0956401399b66fa403edc458325723e93ada87e2cae2ffe272c8c28",
   "bytes": 10293
@@ -6727,6 +8957,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 1,
+  "series": [
+   0,
+   1
+  ],
   "name": "80's Headband",
   "sha256": "bbd403feab44f3f00c4f6440307ae9212d9473560e006c6075de6a780481f6ec",
   "bytes": 8339
@@ -6739,6 +8973,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 2,
+  "series": [
+   0,
+   1
+  ],
   "name": "Pigtails",
   "sha256": "b358427225bad6d5a565125e092c13403f16904d10fa744376e46e0eb7df6618",
   "bytes": 12595
@@ -6751,6 +8989,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 1,
+  "series": [
+   0,
+   1
+  ],
   "name": "Messy Braids",
   "sha256": "3681be59a0212db0e4be8a704a16899e924e70a36d270b5ed8368b3763e0a3f8",
   "bytes": 14202
@@ -6763,6 +9005,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 2,
+  "series": [
+   0,
+   1
+  ],
   "name": "Cowgirl",
   "sha256": "d4df5ef77b71bed3072c672525894fdfb5ebe8a35c95ff665bfd5b61b63e3ca7",
   "bytes": 9406
@@ -6775,6 +9021,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 1,
+  "series": [
+   0,
+   1
+  ],
   "name": "Pirate",
   "sha256": "7048f932a17cb39b1610c955d4780d0b5198ed30956bf28854bb99a311a39a1f",
   "bytes": 17974
@@ -6787,6 +9037,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 2,
+  "series": [
+   0,
+   1
+  ],
   "name": "Construction Helmet",
   "sha256": "3a9075515ec1f24109e75697e97994f1dcc268ce39d2c13cc0f603f0fe982e23",
   "bytes": 10521
@@ -6799,6 +9053,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 1,
+  "series": [
+   2,
+   3
+  ],
   "name": "Castro",
   "sha256": "8dd66eaa7583f7608a91b785b812a7112b1c4bf871a3cea7ebaeca7b9c4c2025",
   "bytes": 7970
@@ -6811,6 +9069,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 2,
+  "series": [
+   2,
+   3
+  ],
   "name": "80's Headband",
   "sha256": "83ada6819442f87e44ac9e05a03d3d6ddbafa825fd8d97db3719224c4a92d73e",
   "bytes": 8911
@@ -6823,6 +9085,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 1,
+  "series": [
+   2,
+   3
+  ],
   "name": "Turban",
   "sha256": "a434c9f90c33d5906c2edcfd96cc9aad9cd7a901f5d49df460523fafd22efe66",
   "bytes": 5941
@@ -6835,6 +9101,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 2,
+  "series": [
+   2,
+   3
+  ],
   "name": "Pirate",
   "sha256": "4ad470f490a7065d98e866b36c6c2603aa8ff8f0036ecca9a0dad5daa244cb0e",
   "bytes": 13906
@@ -6847,6 +9117,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 1,
+  "series": [
+   2,
+   3
+  ],
   "name": "DJ Headphones",
   "sha256": "49ad4c875a3fb700a53352fa08a685ab5cda6f621400130cb417c84f0b3f7f77",
   "bytes": 12452
@@ -6859,6 +9133,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 2,
+  "series": [
+   2,
+   3
+  ],
   "name": "Beanie",
   "sha256": "3db3d5db529e63df4b369e435fc26263600bfcbf7a1ebdefae51ffc3c53b85c3",
   "bytes": 20538
@@ -6871,6 +9149,9 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 1,
+  "series": [
+   4
+  ],
   "name": "Punk Rocker",
   "sha256": "f672bba11a536a4b4e75c79065ef8b7aa9f5f8da792332d5b54c71ee721ad0c6",
   "bytes": 13684
@@ -6883,6 +9164,9 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 2,
+  "series": [
+   4
+  ],
   "name": "Castro",
   "sha256": "018d1b2d8eeb7b59a69bfeed2808b8cac68c8749786402b68b6362c97a35779c",
   "bytes": 10254
@@ -6895,6 +9179,9 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 1,
+  "series": [
+   4
+  ],
   "name": "Dreadlocks",
   "sha256": "99b68e311916458561aedfbe22fd3d3a2da80a18d1cc8f295301cac7fcb97d02",
   "bytes": 10873
@@ -6907,6 +9194,9 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 2,
+  "series": [
+   4
+  ],
   "name": "Firewoman",
   "sha256": "bb313143079b69098bacd298fe36b90f03fe92926cf8b11cb694a96d99f78de9",
   "bytes": 16410
@@ -6919,6 +9209,9 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 1,
+  "series": [
+   4
+  ],
   "name": "Beanie",
   "sha256": "673de11890f345f896bab9cd4bc829c77d47a0f903be9a3d554a4a40ffc8f131",
   "bytes": 15527
@@ -6931,6 +9224,9 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 2,
+  "series": [
+   4
+  ],
   "name": "DJ Headphones",
   "sha256": "eccce36aa69747972be4e272c6874723bfe3f3fa3c6f601c5eb3d6942c2ef303",
   "bytes": 11223
@@ -6943,6 +9239,11 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 1,
+  "series": [
+   0,
+   1,
+   2
+  ],
   "name": "Police Hat",
   "sha256": "89fe65fe2f9cfc401c46b7df78a89a078d6689629050eaa56fb7f4cc8592f2aa",
   "bytes": 6784
@@ -6955,6 +9256,11 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 2,
+  "series": [
+   0,
+   1,
+   2
+  ],
   "name": "Bunny Ears",
   "sha256": "e96511b94bebe1f5e86e94b553d462ac1a2974663d88ad144922a9278b7c6822",
   "bytes": 8633
@@ -6967,6 +9273,10 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 1,
+  "series": [
+   3,
+   4
+  ],
   "name": "Aussie",
   "sha256": "9f5fc0e6feaabbd6c33c7bd03dfcff4a84d506369d0da9de9a060c7d92e4656b",
   "bytes": 7348
@@ -6979,6 +9289,10 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 2,
+  "series": [
+   3,
+   4
+  ],
   "name": "Soldier",
   "sha256": "ca3564243227b80843e746078e6752823670010ff6c3a55fe6c75af406f00dd2",
   "bytes": 5589
@@ -6991,6 +9305,10 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 1,
+  "series": [
+   3,
+   4
+  ],
   "name": "Cowboy",
   "sha256": "c291d52f320cde0ee456c5707a2ab9c1e444c3925db1ef75e6f8cdf7b3fc44bd",
   "bytes": 6037
@@ -7003,6 +9321,10 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 2,
+  "series": [
+   3,
+   4
+  ],
   "name": "Police Hat",
   "sha256": "f9e5533b0484f8f998303017acefeda7af553afd1dffffae15b63817f28ac480",
   "bytes": 8745
@@ -7015,6 +9337,10 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 1,
+  "series": [
+   3,
+   4
+  ],
   "name": "Construction Helmet",
   "sha256": "7310eb18fc0961d0a7e4b7a6eea160a03918141331a412017cae1e3839ff99fe",
   "bytes": 8368
@@ -7027,6 +9353,10 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 2,
+  "series": [
+   3,
+   4
+  ],
   "name": "OpenSea Trucker",
   "sha256": "b0ee4d99d1a3f9e3134a92f834b69760560b3a0442eba8e5a0586b0d868857f6",
   "bytes": 9346
@@ -7039,6 +9369,12 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 1,
+  "series": [
+   0,
+   1,
+   2,
+   3
+  ],
   "name": "Fresh",
   "sha256": "db04828fea96bd846cc6579273f1e5e97d2a4a25c2d6889eafa53ef19b5d95ee",
   "bytes": 6744
@@ -7051,6 +9387,12 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 2,
+  "series": [
+   0,
+   1,
+   2,
+   3
+  ],
   "name": "Indian Chieftess",
   "sha256": "647467a38f554f4ba6ef2b982abec830df5f73953de96250e6e3453e1cb9f8e0",
   "bytes": 9920
@@ -7063,6 +9405,12 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 1,
+  "series": [
+   0,
+   1,
+   2,
+   3
+  ],
   "name": "Motorcycle Cop",
   "sha256": "92f5e9464864531ba1f0be739be331f3bb1bb3c173340eb1f0ea671f5b74c0b7",
   "bytes": 5877
@@ -7075,6 +9423,12 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 2,
+  "series": [
+   0,
+   1,
+   2,
+   3
+  ],
   "name": "Wizard Hat",
   "sha256": "9809c255ee146646c308ee76e9684dd9d23668f2337d66e1bf8b31563efff135",
   "bytes": 13646
@@ -7087,6 +9441,12 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 1,
+  "series": [
+   0,
+   1,
+   2,
+   3
+  ],
   "name": "Admiral's Hat",
   "sha256": "e58129e54c6377913d9485683d3f7e219f50cafdd65a9445c579e3cd3a68b20f",
   "bytes": 7860
@@ -7099,6 +9459,12 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 2,
+  "series": [
+   0,
+   1,
+   2,
+   3
+  ],
   "name": "Cute",
   "sha256": "d6a11c5a63a1b3214a4ecd1f85400ceb7cf2ac0c081cedb302e8cc08ccee7dbe",
   "bytes": 7740
@@ -7111,6 +9477,9 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 1,
+  "series": [
+   4
+  ],
   "name": "Wizard Hat",
   "sha256": "d66076e6d8773a37687cf702109551d03751fd71361208ddf44e6364c8b61383",
   "bytes": 9460
@@ -7123,6 +9492,9 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 2,
+  "series": [
+   4
+  ],
   "name": "Motorcycle Cop",
   "sha256": "9616578e1fe7aa45df1fde8eeeb96af7af7bb6b1307f1545a559fc2369d0ed18",
   "bytes": 6044
@@ -7135,6 +9507,9 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 1,
+  "series": [
+   4
+  ],
   "name": "Fireman",
   "sha256": "0268369ad02e0bed77fbfc76f0f17b7b353cdbe5a972554b1ebba3f535cff0df",
   "bytes": 11433
@@ -7147,6 +9522,9 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 2,
+  "series": [
+   4
+  ],
   "name": "Admiral's Hat",
   "sha256": "2607f01cae96f16e61f4af40a3f9de071022e82cb7c8bf45501f0016e83094ab",
   "bytes": 11395
@@ -7159,6 +9537,9 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 1,
+  "series": [
+   4
+  ],
   "name": "Indian Chief",
   "sha256": "e8f32cdbd447be9c5f4052fb6d952c2e8c5b0112d38d0380ca19e98f23135df2",
   "bytes": 14726
@@ -7171,6 +9552,9 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 2,
+  "series": [
+   4
+  ],
   "name": "Turban",
   "sha256": "5d1d35e595a0ca2c68729960fa1bf01b44616d793a0129d0211bff4fdeca4a2c",
   "bytes": 4816
@@ -7183,6 +9567,13 @@
   "rarity": 4,
   "rarityName": "Legendary",
   "gender": 1,
+  "series": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
   "name": "Top Hat",
   "sha256": "95bd2051529dda3130fe24b6b117c2599963cce7972453c9bc77c98efb48a02a",
   "bytes": 3959
@@ -7195,6 +9586,13 @@
   "rarity": 4,
   "rarityName": "Legendary",
   "gender": 2,
+  "series": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
   "name": "Top Hat",
   "sha256": "86f0e35fa30b42889d7de3c47a66d8660bfbd8ead24307b305050b7125108a7e",
   "bytes": 7604
@@ -7207,6 +9605,13 @@
   "rarity": 4,
   "rarityName": "Legendary",
   "gender": 1,
+  "series": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
   "name": "Space Helmet",
   "sha256": "66989ddc6ac9989c431d24e27119b0a22e7722659f485fc9faf80b9f82484d38",
   "bytes": 11871
@@ -7219,6 +9624,13 @@
   "rarity": 4,
   "rarityName": "Legendary",
   "gender": 2,
+  "series": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
   "name": "Space Helmet",
   "sha256": "260904518b5b037d922261d0da980ff1bcb7d785431d291517c977599b67979f",
   "bytes": 11246
@@ -7231,6 +9643,13 @@
   "rarity": 4,
   "rarityName": "Legendary",
   "gender": 1,
+  "series": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
   "name": "King's Crown",
   "sha256": "ff22f39a7530c1942423d77b8744509840c518eb7a572ce7141e770b2a32134a",
   "bytes": 9183
@@ -7243,6 +9662,13 @@
   "rarity": 4,
   "rarityName": "Legendary",
   "gender": 2,
+  "series": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
   "name": "Queen's Crown",
   "sha256": "2729f96e666bd46d12b245a339498b14cc217447f1fea37354c5cc1c952ef880",
   "bytes": 12373
@@ -7255,6 +9681,9 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 0,
+  "series": [
+   4
+  ],
   "name": "Backdrop 45",
   "sha256": "8306bb2eb8ab5185c19c4a4418fc770828362697785385e05a8ffe47e3748de2",
   "bytes": 4628
@@ -7267,6 +9696,9 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 0,
+  "series": [
+   4
+  ],
   "name": "Backdrop 46",
   "sha256": "42f711b3d82dee0c144e688418da7ef2fc28f1a1bf4b5307e0d3583551095641",
   "bytes": 16222
@@ -7279,6 +9711,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 2,
+  "series": [
+   2,
+   3
+  ],
   "name": "Fashion Show",
   "sha256": "b593fde84f28b122968789630c914de693ddd300dbe1dbbe110b7a7d6ff5cf8a",
   "bytes": 891
@@ -7291,6 +9727,10 @@
   "rarity": 1,
   "rarityName": "Uncommon",
   "gender": 2,
+  "series": [
+   2,
+   3
+  ],
   "name": "Snowflake Tattoo",
   "sha256": "21beb1b134c4c3b717a6b5a506561295d7839ec2e258161ff5a694d1e5fa5b31",
   "bytes": 10992
@@ -7303,6 +9743,12 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 1,
+  "series": [
+   0,
+   1,
+   2,
+   3
+  ],
   "name": "Pirate Patch",
   "sha256": "d05b38e8e6714e88a78a8e41b6c44600de6d9a7035ff55c9eee2bdf1561c7e99",
   "bytes": 6012
@@ -7315,6 +9761,12 @@
   "rarity": 3,
   "rarityName": "Epic",
   "gender": 2,
+  "series": [
+   0,
+   1,
+   2,
+   3
+  ],
   "name": "Cyclist Sun Glasses",
   "sha256": "72bb18a7cdf1aea92af50664783e3fe3370c97da4a61accc37d885b9426f614a",
   "bytes": 11626
@@ -7327,6 +9779,11 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 1,
+  "series": [
+   0,
+   1,
+   2
+  ],
   "name": "Soldier",
   "sha256": "e276b29ad437d0c05b78f1e93753c1d09d1429188cd4ad6ea9d824d58896cf3f",
   "bytes": 4961
@@ -7339,6 +9796,11 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 2,
+  "series": [
+   0,
+   1,
+   2
+  ],
   "name": "Dreadlocks",
   "sha256": "fab130dc7a939bf8bdf53e229b28ec81d4f6aa891b09e4c07be9d6514f340bd8",
   "bytes": 11197
@@ -7351,6 +9813,11 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 1,
+  "series": [
+   0,
+   1,
+   2
+  ],
   "name": "OpenSea Trucker",
   "sha256": "4a0a0d6623e07ccd8a0ff2bca18e589bce7372990ff82fa5900edcf0b32bbbfd",
   "bytes": 7026
@@ -7363,6 +9830,11 @@
   "rarity": 2,
   "rarityName": "Rare",
   "gender": 2,
+  "series": [
+   0,
+   1,
+   2
+  ],
   "name": "Giant Bow",
   "sha256": "e1517be338897375d15adb185cadf66b46820b66f99c7eb2f37960a296f1e765",
   "bytes": 9350

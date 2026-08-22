@@ -115,6 +115,9 @@ export default class TraitComposer {
 		const picks = await this.picksFor(tokenId);
 		const composed = await this.composePicks(picks, displaySize);
 		composed.tokenId = String(tokenId);
+		// Token gender (0 any / 1 male / 2 female): the trait edit
+		// modal filters gendered art by it
+		composed.gender = this.hashes[tokenId].gender;
 		return composed;
 	}
 
@@ -171,6 +174,11 @@ export default class TraitComposer {
 			// 4 the backdrop
 			traits: picks,
 			geneColors,
+			gender: null,
+			// The joined color style blocks - the trait edit modal
+			// styles its option thumbnails with these so previews
+			// match the current face's colors
+			styles,
 			backgroundColor: bgMatch ? bgMatch[1] : "#FFFFFF",
 			// Byte-exact reconstruction of renderAvastar output
 			fullSVG: this.manifest.header + fragments.join("") + this.manifest.footer,

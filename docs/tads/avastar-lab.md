@@ -1,6 +1,6 @@
 # TAD: Load-Avastar section + trait swap preview ("the lab")
 
-- **Status:** DRAFT (2026-08-22) — under panel review (PR #8)
+- **Status:** IMPLEMENTED (2026-08-22, PRs #8-#9)
 - **Driver:** Operator: "We need to be able to load an arbitrary
   avastar... a top section load avastar button and text input for
   token id... available in the logged out state as well. Also, we
@@ -154,3 +154,25 @@ Single-lane feature; no cross-lane consumers.
   compose(8014).fullSVG; hasToken membership; traitsForGene(11) =
   78 sorted records; walletless load of 12345 via Enter; junk and
   unknown ids rejected inline with no load started. Full suite 9/9.
+- 2026-08-22 — Steps 3-5 applied (PR #9): scene override state
+  (baselinePicks + per-gene overrides, previewGeneration + token/
+  size guards, resize composes current picks), card Edit/was/undo/
+  Reset-all (Reset-all placed at the top of the section body rather
+  than the header - the SidePanel header is registry-owned), and
+  TraitEditModal (batched true thumbnails styled by the current
+  colors, gender filter + show-all, swatch grids for color slots).
+  Validated by Tests/lab-test.js: 39/78 hair styles pass the female
+  filter; override changes pixels and shows was/undo; undo and
+  Reset-all restore the exact baseline frame; visibility toggles
+  work on overridden layers; a token load clears overrides. Suite
+  10/10.
+- 2026-08-22 — Operator QA on the modal: (a) filter bar added (free
+  text + rarity + series); (b) thumbnails were structurally tiny -
+  fragments draw at their natural position on the 1000x1000 face
+  canvas, so tile size alone couldn't help; thumbnails now zoom to
+  the art's measured bounding box (getBBox, cached per traitId,
+  square crop with 30% pad, 140-unit floor); (c) "show all" renamed
+  "all genders". Series was not in Traits/index.json - it IS in the
+  on-chain TraitInfo (word 2, uint8[] 0-based); extract-traits.js
+  now decodes it and the library index was regenerated (fragments
+  byte-identical, index gains the series field).

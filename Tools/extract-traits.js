@@ -712,6 +712,15 @@ async function writeLibrary(known) {
 		const traitId = num(tidHex, 0).toString();
 		const infoHex = await ethCall(SEL.getTraitInfoById + pad(traitId));
 		const rarity = Number(num(infoHex, 5));
+		// Word 2 is the offset of the dynamic uint8[] series - the
+		// series this trait was mintable in (the trait chooser
+		// filters by it)
+		const seriesOff = Number(num(infoHex, 2)) / 32;
+		const seriesLen = Number(num(infoHex, seriesOff));
+		const series = [];
+		for (let i = 0; i < seriesLen; i++) {
+			series.push(Number(num(infoHex, seriesOff + 1 + i)));
+		}
 		const dir = path.join(TRAITS_DIR, String(gen));
 		fs.mkdirSync(dir, { recursive: true });
 		const file = path.join(dir, traitId + ".svg");
@@ -723,6 +732,7 @@ async function writeLibrary(known) {
 			rarity,
 			rarityName: RARITY_NAMES[rarity] || String(rarity),
 			gender: Number(num(infoHex, 3)),
+			series,
 			name: decodeString(infoHex, 7),
 			sha256: sha256(frag),
 			bytes: frag.length,
