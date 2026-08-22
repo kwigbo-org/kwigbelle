@@ -23,6 +23,12 @@ export default class PickerUI {
 		if (this.picker) {
 			this.picker.remove();
 		}
+		// A thumbnail loop from a previous build must neither block
+		// this session's loads nor write into its cache/DOM: bump
+		// the generation (stale loops check it and die) and clear
+		// the in-flight flag alongside the other state
+		this.buildGeneration = (this.buildGeneration || 0) + 1;
+		this.isLoadingThumbnails = false;
 		this.ownedTokenIds = tokenIds;
 		this.thumbnailCache = {};
 		this.pickerItems = {};
@@ -90,21 +96,33 @@ export default class PickerUI {
 			return;
 		}
 		this.isLoadingThumbnails = true;
+		const generation = this.buildGeneration;
 		for (const tokenId of this.ownedTokenIds) {
 			if (this.thumbnailCache[tokenId]) {
 				continue;
 			}
 			try {
 				const svgString = await this.avastarLoader.renderTokenSVG(tokenId);
+				// The picker may have been rebuilt while the render
+				// was in flight: a stale loop must not touch the new
+				// session's cache, items, or in-flight flag
+				if (generation !== this.buildGeneration) {
+					return;
+				}
 				this.thumbnailCache[tokenId] = true;
 				const item = this.pickerItems[tokenId];
 				item.innerHTML = "";
 				item.appendChild(svgToImage(svgString));
 			} catch (error) {
 				// Leave the token id label as the fallback thumbnail
+				if (generation !== this.buildGeneration) {
+					return;
+				}
 			}
 		}
-		this.isLoadingThumbnails = false;
+		if (generation === this.buildGeneration) {
+			this.isLoadingThumbnails = false;
+		}
 	}
 
 	/// Show the currently loaded Avastar in the collapsed thumbnail

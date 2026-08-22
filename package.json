@@ -8,8 +8,8 @@
 		"check": "eslint . && prettier --check ."
 	},
 	"devDependencies": {
-		"@eslint/js": "^9.0.0",
-		"eslint": "^9.0.0",
+		"@eslint/js": "^9.39.5",
+		"eslint": "^9.39.5",
 		"prettier": "^3.0.0"
 	}
 }
