@@ -80,12 +80,8 @@ const { check } = require("./check.js");
 	const sampleName = await page.locator(".modalOptionName").first().innerText();
 	await page.fill(".modalFilterText", sampleName);
 	await page.waitForTimeout(400);
-	const textFiltered = await page.evaluate(
-		(name) =>
-			[...document.querySelectorAll(".modalOptionName")].map(
-				(n) => n.innerText,
-			),
-		sampleName,
+	const textFiltered = await page.evaluate(() =>
+		[...document.querySelectorAll(".modalOptionName")].map((n) => n.innerText),
 	);
 	check(
 		textFiltered.length > 0 &&

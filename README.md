@@ -1,10 +1,15 @@
 # kwigbelle
 
 Home of kwigbelle — an interactive [Avastars](https://avastars.io)
-display. An Avastar renders as independently-moving layers with
-spring physics, idle breathing, and pointer-follow parallax. Connect
-a wallet to browse your own Avastars; or view any of the 26,617
-tokens directly with `?tokenid=<id>` — no wallet needed.
+display, built to rekindle interest in the collection. An Avastar
+renders as independently-moving layers with spring physics, idle
+breathing, and pointer-follow parallax. The side panel (⚙) lets you
+load any of the 26,617 tokens by id, tune the motion, inspect every
+trait with its rarity, and preview trait swaps — what a replicant
+built from other Avastars' traits could look like (display-only:
+the replicant factory is closed and the contract is locked). No
+wallet needed for any of it; connect one to browse your own
+Avastars in the picker.
 
 Static site, no build step. Layers are composed client-side from a
 committed library of 614 per-trait SVG fragments extracted from the
