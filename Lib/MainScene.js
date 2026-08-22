@@ -10,7 +10,7 @@ export default class MainScene extends Scene {
 	/// Overridden constructor
 	constructor(rootContainer) {
 		super(rootContainer);
-		console.log("kwigbelle build 2026-08-21.7 (trait composition flag)");
+		console.log("kwigbelle build 2026-08-22.1 (trait composition default)");
 		// Build the UI
 		this.buildUI();
 		// Start loading
@@ -21,10 +21,11 @@ export default class MainScene extends Scene {
 		);
 		this.isParserDebugEnabled = urlParams.get("parserdebug");
 		this.isExplodeEnabled = urlParams.get("explode");
-		// TAD Step 4 rollout flag: ?traitcompose=1 composes layers
-		// from the committed trait library instead of slicing the
-		// on-chain render (docs/tads/trait-composition.md)
-		this.isTraitComposeEnabled = urlParams.get("traitcompose") === "1";
+		// Trait composition is the default (TAD Step 5): layers come
+		// from the committed trait library, with the legacy on-chain
+		// render + parser slicing as automatic fallback. Opt out via
+		// ?traitcompose=0 (docs/tads/trait-composition.md).
+		this.isTraitComposeEnabled = urlParams.get("traitcompose") !== "0";
 		this.traitComposer = new TraitComposer();
 		// Object used to load the Avastar SVG from on chain
 		this.avastarLoader = new AvastarLoader(null);
