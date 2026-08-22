@@ -11,6 +11,7 @@ import LoadSection from "./LoadSection.js";
 import EffectsSection from "./EffectsSection.js";
 import TraitsSection from "./TraitsSection.js";
 import TraitEditModal from "./TraitEditModal.js";
+import VRMSection, { progressText } from "./VRMSection.js";
 import VRMSource from "./VRMSource.js";
 import VRMViewer from "./VRMViewer.js";
 import ViewToggleUI from "./ViewToggleUI.js";
@@ -54,7 +55,17 @@ export default class MainScene extends Scene {
 			this.layerSprings,
 			explodeParam !== null ? explodeParam !== "0" : null,
 		);
-		this.sidePanel.addSection("Effects", this.effectsSection.build());
+		// The Effects section element is kept so 3D mode can hide it
+		// wholesale: the spring rig has no meaning for the 3D model
+		this.effectsSectionElement = this.sidePanel.addSection(
+			"Effects",
+			this.effectsSection.build(),
+		);
+		this.vrmSection = new VRMSection(
+			() => this.toggle3D(),
+			() => this.downloadVRM(),
+		);
+		this.sidePanel.addSection("3D model", this.vrmSection.build());
 		this.traitsSection = new TraitsSection({
 			onEdit: (gene) => this.openTraitEditor(gene),
 			onUndo: (gene) => this.undoOverride(gene),
@@ -76,6 +87,9 @@ export default class MainScene extends Scene {
 		this.is3D = false;
 		this.vrmGeneration = 0;
 		this.vrmAbort = null;
+		// Tokens the connected wallet owns (string ids): gates the
+		// Download VRM button in the 3D model section
+		this.ownedTokenIds = new Set();
 		// Object used to load the Avastar SVG from on chain
 		this.avastarLoader = new AvastarLoader(null);
 		// Overlay UI components: picks and connects come back into
@@ -87,6 +101,7 @@ export default class MainScene extends Scene {
 			rootContainer,
 			this.avastarLoader,
 			(ownedTokenIds) => {
+				this.recordOwnership(ownedTokenIds);
 				this.pickerUI.build(ownedTokenIds);
 				this.selectAvastar(ownedTokenIds[0], false);
 			},
@@ -123,6 +138,7 @@ export default class MainScene extends Scene {
 			console.error("Could not list the wallet's Avastars", error);
 		}
 		if (ownedTokenIds.length > 0) {
+			this.recordOwnership(ownedTokenIds);
 			this.pickerUI.build(ownedTokenIds);
 			if (!tokenParam) {
 				// Swap silently: keep the current Avastar animating
@@ -326,6 +342,22 @@ export default class MainScene extends Scene {
 		this.preloader.style.opacity = 0;
 		this.pickerUI.updateSelectedThumbnail();
 		this.traitsSection.update(this.avastar);
+		this.vrmSection.setOwned(
+			this.ownedTokenIds.has(String(this.avastarLoader.tokenId)),
+		);
+	}
+
+	/// Remember which tokens the connected wallet owns and refresh
+	/// the download gate for whatever is currently displayed
+	///
+	/// - Parameter ownedTokenIds: The wallet's token ids
+	recordOwnership(ownedTokenIds) {
+		this.ownedTokenIds = new Set(ownedTokenIds.map(String));
+		if (this.avastar && this.avastar.tokenId != null) {
+			this.vrmSection.setOwned(
+				this.ownedTokenIds.has(String(this.avastar.tokenId)),
+			);
+		}
 	}
 
 	/// Load a picked Avastar and collapse the picker. The current
@@ -497,13 +529,14 @@ export default class MainScene extends Scene {
 		const generation = this.vrmGeneration;
 		const controller = new AbortController();
 		this.vrmAbort = controller;
-		this.viewToggle.setMode("loading");
+		this.setVRMMode("loading");
 		try {
 			const bytes = await this.vrmSource.fetchVRM(
 				tokenId,
 				(loaded, total) => {
 					if (generation === this.vrmGeneration) {
 						this.viewToggle.setProgress(loaded, total);
+						this.vrmSection.setProgress(loaded, total);
 					}
 				},
 				controller.signal,
@@ -520,7 +553,11 @@ export default class MainScene extends Scene {
 			}
 			this.vrmAbort = null;
 			this.is3D = true;
-			this.viewToggle.setMode("3d");
+			this.setVRMMode("3d");
+			// Limited settings while 3D shows (operator directive):
+			// no spring controls, traits as read-only information
+			this.effectsSectionElement.style.display = "none";
+			this.traitsSection.setReadOnly(true);
 			// The 2D canvas would otherwise show its last frame
 			// through the 3D canvas's transparent background
 			const context = this.canvas.getContext("2d");
@@ -530,7 +567,7 @@ export default class MainScene extends Scene {
 				return;
 			}
 			this.vrmAbort = null;
-			this.viewToggle.setMode("vector");
+			this.setVRMMode("vector");
 			if (!error || error.name !== "AbortError") {
 				console.warn(`3D view failed for ${tokenId}`, error);
 				this.viewToggle.showError("3D model unavailable");
@@ -548,7 +585,57 @@ export default class MainScene extends Scene {
 		}
 		this.vrmViewer.hide();
 		this.is3D = false;
-		this.viewToggle.setMode("vector");
+		this.setVRMMode("vector");
+		this.effectsSectionElement.style.display = "";
+		this.traitsSection.setReadOnly(false);
+	}
+
+	/// Keep the floating toggle and the panel section in step
+	setVRMMode(mode) {
+		this.viewToggle.setMode(mode);
+		this.vrmSection.setMode(mode);
+	}
+
+	/// Fetch the displayed token's model and hand it to the browser
+	/// as a file save under its original name. Owner-only by UI
+	/// gating; the token is captured up front, so a token load mid
+	/// download still saves the file that was asked for.
+	async downloadVRM() {
+		if (
+			!this.avastar ||
+			this.avastar.tokenId == null ||
+			this.isDownloadingVRM
+		) {
+			return;
+		}
+		const tokenId = this.avastar.tokenId;
+		this.isDownloadingVRM = true;
+		this.vrmSection.setDownloadState("Preparing…");
+		try {
+			const info = await this.vrmSource.vrmInfo(tokenId);
+			const bytes = await this.vrmSource.fetchVRM(tokenId, (loaded, total) => {
+				this.vrmSection.setDownloadState(
+					"Downloading… " + progressText(loaded, total),
+				);
+			});
+			const url = URL.createObjectURL(
+				new Blob([bytes], { type: "model/gltf-binary" }),
+			);
+			const anchor = document.createElement("a");
+			anchor.href = url;
+			anchor.download = info.filename;
+			document.body.appendChild(anchor);
+			anchor.click();
+			anchor.remove();
+			// Give the browser time to start the save before revoking
+			setTimeout(() => URL.revokeObjectURL(url), 10000);
+			this.vrmSection.setDownloadState(null);
+		} catch (error) {
+			console.warn(`VRM download failed for ${tokenId}`, error);
+			this.vrmSection.setDownloadState("Download failed");
+			setTimeout(() => this.vrmSection.setDownloadState(null), 4000);
+		}
+		this.isDownloadingVRM = false;
 	}
 
 	/// Re-render the display for the current picks. Preview-only

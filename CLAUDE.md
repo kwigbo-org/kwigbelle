@@ -12,9 +12,11 @@ Avastars. The replicant factory is CLOSED and the contract is
 LOCKED — no new mints are possible, so the hash corpus (26,617) is
 effectively frozen (check-corpus should always report fresh) and
 everything trait-swap related is preview-only by nature, not just
-by policy. Declared next directions: match avastars.io design cues
-(dark theme, their rarity iconography) and explore a VRM 3D viewer
-(each Avastar has an assigned VRM model; toggle vector <-> 3D).
+by policy. The VRM 3D viewer (docs/tads/vrm-viewer.md) shipped:
+every Avastar toggles vector <-> 3D, with limited settings in 3D
+and an owner-only model download. Declared next direction: match
+avastars.io design cues (dark theme, their rarity iconography,
+series colors).
 
 ## Architecture
 
@@ -38,10 +40,20 @@ Lib/TraitEditModal.js      per-slot trait chooser: true thumbnails
 Lib/EffectsSection.js      spring-rig controls (explode, motion,
                            follow, pause); localStorage persisted
 Lib/TraitsSection.js       per-layer trait rows + visibility the
-                           render loop consults each frame
+                           render loop consults each frame; goes
+                           read-only in 3D mode
+Lib/VRMSource.js           metadata -> vrm_url -> IPFS gateway
+                           fallback fetch (progress, LRU cache)
+Lib/VRMViewer.js           own-canvas three.js VRM display (orbit
+                           controls, spring-bones, full disposal)
+Lib/VRMSection.js          "3D model" panel section: view toggle +
+                           owner-only Download VRM
+Lib/ViewToggleUI.js        floating 3D/2D button with fetch
+                           progress and tap-to-cancel
 Lib/UIHelpers.js           stopSceneEvents, svgToImage
-Lib/vendor/                vendored minified libs (web3) - never
-                           lint/format/edit
+Lib/vendor/                vendored libs (web3; three + three-vrm
+                           ES modules wired by index.html's import
+                           map) - never lint/format/edit
 Lib/TraitComposer.js       THE render path: composes any of the
                            26,617 Avastars from Traits/ + the static
                            hash corpus - no wallet, no chain calls.

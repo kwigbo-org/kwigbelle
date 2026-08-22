@@ -11,6 +11,10 @@ export default class TraitsSection {
 		this.callbacks = callbacks || {};
 		this.hiddenLayers = new Set();
 		this.isBackdropHidden = false;
+		// 3D mode shows traits as read-only information: the model
+		// can't change traits, so edit/undo/visibility are hidden and
+		// rows show the ORIGINAL on-chain traits, not the preview
+		this.isReadOnly = false;
 		// undefined (not null): a static-fallback avastar can carry a
 		// null tokenId, and the first update must still build rows
 		this.currentTokenId = undefined;
@@ -66,6 +70,20 @@ export default class TraitsSection {
 		this.rebuildRows();
 	}
 
+	/// Switch the section between the interactive vector-mode cards
+	/// and the informational 3D-mode cards. Override and visibility
+	/// STATE is untouched - it just isn't shown or editable in 3D,
+	/// and comes back exactly when the vector view returns.
+	///
+	/// - Parameter isReadOnly: Whether 3D mode is active
+	setReadOnly(isReadOnly) {
+		if (this.isReadOnly === isReadOnly) {
+			return;
+		}
+		this.isReadOnly = isReadOnly;
+		this.rebuildRows();
+	}
+
 	rebuildRows() {
 		const avastar = this.avastar;
 		this.content.innerHTML = "";
@@ -75,6 +93,21 @@ export default class TraitsSection {
 			note.setAttribute("class", "traitNote");
 			note.innerText = "Trait data unavailable for this display";
 			this.content.appendChild(note);
+			return;
+		}
+		if (this.isReadOnly) {
+			// The 3D model always shows the token as minted: list the
+			// BASELINE traits plainly, with no controls to mislead
+			const note = document.createElement("div");
+			note.setAttribute("class", "traitNote");
+			note.innerText =
+				"The 3D model shows the original on-chain Avastar. Trait " +
+				"preview and visibility apply to the vector view.";
+			this.content.appendChild(note);
+			const baseline = this.baseline || avastar.traits;
+			baseline.forEach((info, gene) => {
+				this.content.appendChild(this.card(info, gene, { plain: true }));
+			});
 			return;
 		}
 		if (this.overrides.size > 0) {
@@ -156,7 +189,7 @@ export default class TraitsSection {
 				options.onToggle(checkbox.checked),
 			);
 			row.appendChild(checkbox);
-		} else {
+		} else if (!options.plain) {
 			const swatch = document.createElement("span");
 			swatch.setAttribute("class", "traitSwatch");
 			if (options.color) {
@@ -175,7 +208,10 @@ export default class TraitsSection {
 		value.innerText = info.name;
 		text.appendChild(value);
 		const original =
-			this.overrides.has(gene) && this.baseline && this.baseline[gene];
+			!this.isReadOnly &&
+			this.overrides.has(gene) &&
+			this.baseline &&
+			this.baseline[gene];
 		if (original) {
 			const was = document.createElement("span");
 			was.setAttribute("class", "traitWas");
@@ -203,7 +239,7 @@ export default class TraitsSection {
 		tag.setAttribute("class", "traitRarity");
 		tag.innerText = info.rarityName || "";
 		side.appendChild(tag);
-		if (this.callbacks.onEdit) {
+		if (this.callbacks.onEdit && !this.isReadOnly) {
 			const edit = document.createElement("span");
 			edit.setAttribute("class", "traitEdit");
 			edit.innerText = "✎";

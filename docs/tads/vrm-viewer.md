@@ -1,6 +1,6 @@
 # TAD: VRM 3D viewer (vector ↔ 3D toggle)
 
-- **Status:** DRAFT (2026-08-22)
+- **Status:** Steps 1-4 applied — in review (2026-08-22, PR #11)
 - **Driver:** Operator: "there is a 3D model VRM that is assigned
   to each avastar... implement some kind of viewer for the VRM. So
   you could toggle a 3d button to switch between vector and 3d." +
@@ -297,3 +297,33 @@ may restyle the toggle/section it introduces.
   the real baseline (Safari 16.4+); (e) noted beginLoad is the
   single choke point, so picker picks and the silent wallet swap
   exit 3D too, not just the Load section.
+- 2026-08-22 — Panel round 2: STATUS:CLEAN (3/3). Beginning
+  implementation as follow-up commits.
+- 2026-08-22 — Step 1 applied: vendored file set verbatim from the
+  npm tarballs, import map in head, /Lib/vendor/** -diff.
+  Validated: suite 10/10 unchanged; in-page probe resolves three
+  r185 + VRM/VRMLoaderPlugin/VRMUtils/GLTFLoader/OrbitControls.
+- 2026-08-22 — Step 2 applied: Lib/VRMSource.js; /Tests/fixtures/
+  gitignored. Validated by Tests/vrm-source-test.js (routed
+  fixtures): progress streams to completion with byte integrity,
+  cache prevents refetch, 504 advances gateways in the decided
+  order, all-fail rejects with the HTTP error, abort rethrows
+  without advancing.
+- 2026-08-22 — Step 3 applied: Lib/VRMViewer.js + ViewToggleUI +
+  scene wiring (vrmGeneration; beginLoad exits 3D synchronously);
+  stamp 2026-08-22.8. Validated by Tests/vrm-viewer-test.js with
+  the real 8014 model as an auto-downloaded fixture: headless
+  WebGL renders non-blank (8.2% painted share), cached re-entry
+  makes no second fetch, a mid-fetch tap cancels, a token load
+  mid-fetch discards the stale mount.
+- 2026-08-22 — Step 4 applied: VRMSection ("3D model": note +
+  toggle twin + owner-gated Download VRM), TraitsSection read-only
+  mode (baseline cards, no controls, honesty note), Effects hidden
+  in 3D, ownership recorded from both enumeration paths. Validated
+  by Tests/vrm-panel-test.js: limits assert clean, an override
+  survives the 3D round-trip with byte-identical pixels, the
+  download event carries the original filename, an unowned token
+  hides the button. One deviation from the draft surface: the
+  toggle callback pair collapsed into MainScene.setVRMMode keeping
+  button and section in step (no separate setProgress plumbing on
+  ViewToggleUI beyond the shared progressText helper).

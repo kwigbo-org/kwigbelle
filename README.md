@@ -7,9 +7,11 @@ breathing, and pointer-follow parallax. The side panel (⚙) lets you
 load any of the 26,617 tokens by id, tune the motion, inspect every
 trait with its rarity, and preview trait swaps — what a replicant
 built from other Avastars' traits could look like (display-only:
-the replicant factory is closed and the contract is locked). No
-wallet needed for any of it; connect one to browse your own
-Avastars in the picker.
+the replicant factory is closed and the contract is locked). Every
+Avastar also toggles into its assigned 3D model (VRM, fetched from
+IPFS on demand). No wallet needed for any of it; connect one to
+browse your own Avastars in the picker and download the VRMs you
+own.
 
 Static site, no build step. Layers are composed client-side from a
 committed library of 614 per-trait SVG fragments extracted from the
