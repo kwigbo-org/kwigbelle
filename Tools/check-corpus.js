@@ -34,6 +34,14 @@ async function totalSupply() {
 	if (json.error) {
 		throw new Error(json.error.message);
 	}
+	// Some providers return { result: null } without an error field
+	// (misconfigured endpoint, revert) - surface that clearly rather
+	// than a BigInt conversion TypeError
+	if (json.result == null) {
+		throw new Error(
+			`RPC returned no result - check AVASTARS_RPC_URL (response: ${JSON.stringify(json)})`,
+		);
+	}
 	return Number(BigInt(json.result));
 }
 

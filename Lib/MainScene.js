@@ -175,28 +175,56 @@ export default class MainScene extends Scene {
 		if (generation !== this.loadGeneration) {
 			return;
 		}
-		const image = this.staticImage(svgString);
-		image.addEventListener(
-			"load",
-			() => {
-				if (generation !== this.loadGeneration) {
-					return;
-				}
-				this.avastarLoader.tokenId = tokenId;
-				this.avastarLoader.currentAvastar = svgString;
-				this.avastar = {
-					tokenId: tokenId != null ? String(tokenId) : null,
-					isStatic: true,
-					sourceSVG: svgString,
-					backgroundLayer: null,
-					layers: [image],
-					backgroundColor: this.staticBackgroundColor(svgString),
-				};
-				this.setupLayerSprings();
-				this.finishLoad(generation);
-			},
-			{ once: true },
-		);
+		const attempt = () => {
+			// Captured-size staleness: staticImage sizes from the
+			// canvas at call time, so a resize while the image was
+			// decoding means rebuilding at the current size (same
+			// pattern as composeAttempt)
+			const width = this.canvas.width;
+			const height = this.canvas.height;
+			const image = this.staticImage(svgString);
+			image.addEventListener(
+				"load",
+				() => {
+					if (generation !== this.loadGeneration) {
+						return;
+					}
+					if (width !== this.canvas.width || height !== this.canvas.height) {
+						attempt();
+						return;
+					}
+					this.avastarLoader.tokenId = tokenId;
+					this.avastarLoader.currentAvastar = svgString;
+					this.avastar = {
+						tokenId: tokenId != null ? String(tokenId) : null,
+						isStatic: true,
+						sourceSVG: svgString,
+						backgroundLayer: null,
+						layers: [image],
+						backgroundColor: this.staticBackgroundColor(svgString),
+					};
+					this.setupLayerSprings();
+					this.finishLoad(generation);
+				},
+				{ once: true },
+			);
+			image.addEventListener(
+				"error",
+				() => {
+					if (generation !== this.loadGeneration) {
+						return;
+					}
+					// A malformed SVG must not strand the preloader -
+					// recover the UI and keep whatever is on screen
+					console.error(
+						`static fallback image failed to render for ${tokenId}`,
+					);
+					this.finishLoad(generation);
+				},
+				{ once: true },
+			);
+		};
+		attempt();
 	}
 
 	/// An img for a full-render SVG sized to the current canvas.
@@ -298,6 +326,15 @@ export default class MainScene extends Scene {
 					}
 					this.avastar = { ...this.avastar, layers: [image] };
 					this.setupLayerSprings();
+				},
+				{ once: true },
+			);
+			image.addEventListener(
+				"error",
+				() => {
+					// The SVG decoded before, so this is unexpected -
+					// keep the previous image rather than going blank
+					console.warn("static resize rerender failed, keeping previous image");
 				},
 				{ once: true },
 			);
