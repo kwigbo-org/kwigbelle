@@ -32,7 +32,7 @@ const { check } = require("./check.js");
 			}),
 		});
 	});
-	await page.route("**/ipfs/**", (route) => {
+	await page.route("**/ipfs/**", async (route) => {
 		const host = new URL(route.request().url()).hostname;
 		if (host.includes("pinata")) {
 			hits.pinata++;
@@ -40,6 +40,18 @@ const { check } = require("./check.js");
 			hits.ipfsio++;
 		} else {
 			hits.dweb++;
+		}
+		if (mode === "hang" && host.includes("pinata")) {
+			// A gateway that accepts the request and then goes
+			// silent - the field failure the hedge exists for. By
+			// the time this fulfills, the attempt is aborted.
+			await new Promise((resolve) => setTimeout(resolve, 3000));
+			try {
+				await route.fulfill({ status: 504, headers: cors, body: "late" });
+			} catch {
+				// aborted request - expected
+			}
+			return;
 		}
 		const failThis =
 			mode === "allfail" || (mode === "fallback" && host.includes("pinata"));
@@ -173,6 +185,61 @@ const { check } = require("./check.js");
 			hits.ipfsio === 2 &&
 			hits.dweb === 1,
 		"abort still issued a request: " + JSON.stringify(hits),
+	);
+
+	// Hung gateway: pinata accepts and stalls; the stagger starts
+	// ipfs.io in parallel and it wins the race well before the
+	// hung attempt's own timeout
+	mode = "hang";
+	const hung = await page.evaluate(async () => {
+		const { default: VRMSource } = await import("../Lib/VRMSource.js");
+		const source = new VRMSource();
+		source.staggerMs = 400;
+		const start = performance.now();
+		const buffer = await source.fetchVRM(8014);
+		return {
+			byteLength: buffer.byteLength,
+			elapsed: performance.now() - start,
+		};
+	});
+	console.log("hung-gateway rescue:", JSON.stringify(hung));
+	check(hung.byteLength === 131072, "hedged fetch returned wrong bytes");
+	check(
+		hung.elapsed < 2500,
+		"hedge did not rescue a hung gateway in time: " + hung.elapsed,
+	);
+	check(
+		hits.pinata === 4 && hits.ipfsio === 3,
+		"hedge should have raced pinata (hung) and ipfs.io: " +
+			JSON.stringify(hits),
+	);
+
+	// Qm CIDs rewrite to CIDv1 in candidate URLs (pair verified
+	// live against pinata: both forms serve byte-identically)
+	const cidRewrite = await page.evaluate(async () => {
+		const { default: VRMSource } = await import("../Lib/VRMSource.js");
+		const source = new VRMSource();
+		return {
+			qm: source.candidateURLs(
+				"https://ipfs.io/ipfs/QmaqBQnFksmUBXzVqsoMi8hu6wVgj99HAmDnm3FVtjBLQ3/Avastar_Replicant_25500.vrm",
+			),
+			bafy: source.candidateURLs(
+				"https://ipfs.io/ipfs/bafytestcid/Avastar_Prime_8014.vrm",
+			),
+		};
+	});
+	check(
+		cidRewrite.qm.every((u) =>
+			u.includes(
+				"/ipfs/bafybeifztm4emp3u4xkaekpvyqbdxg5uhaxr2zxilqwargr5q7g52snh6q/Avastar_Replicant_25500.vrm",
+			),
+		),
+		"Qm CID not rewritten to the verified CIDv1: " +
+			JSON.stringify(cidRewrite.qm),
+	);
+	check(
+		cidRewrite.bafy.every((u) => u.includes("/ipfs/bafytestcid/")),
+		"CIDv1 URLs must pass through untouched",
 	);
 
 	console.log("errors:", errors.length ? errors : "none");

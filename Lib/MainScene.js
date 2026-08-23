@@ -25,7 +25,7 @@ export default class MainScene extends Scene {
 	/// Overridden constructor
 	constructor(rootContainer) {
 		super(rootContainer);
-		console.log("kwigbelle build 2026-08-23.1 (design cues)");
+		console.log("kwigbelle build 2026-08-23.2 (hedged vrm fetch)");
 		// Build the UI
 		this.buildUI();
 		// Start loading
