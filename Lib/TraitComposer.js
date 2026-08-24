@@ -149,18 +149,24 @@ export default class TraitComposer {
 		return picks;
 	}
 
+	/// The byte-exact renderAvastar reconstruction for a set of
+	/// fragments. The ONE assembly used by both the thumbnail path
+	/// and composePicks's fullSVG, so parity can never fork.
+	assembleSVG(fragments) {
+		return this.manifest.header + fragments.join("") + this.manifest.footer;
+	}
+
 	/// The full-render SVG string for a token, assembled from the
-	/// library: the byte-exact renderAvastar reconstruction without
-	/// building any display layers. The profile drawer's thumbnails
-	/// render through this — no wallet, no chain calls
-	/// (docs/tads/profile-drawer.md Decision 9).
+	/// library without building any display layers. The profile
+	/// drawer's thumbnails render through this — no wallet, no
+	/// chain calls (docs/tads/profile-drawer.md Decision 9).
 	///
 	/// - Parameter tokenId: The Avastar token id
 	/// - Returns: The SVG string
 	async composeSVG(tokenId) {
 		const picks = await this.picksFor(tokenId);
 		const fragments = await Promise.all(picks.map((p) => this.fragmentFor(p)));
-		return this.manifest.header + fragments.join("") + this.manifest.footer;
+		return this.assembleSVG(fragments);
 	}
 
 	/// Compose a token into display layers.
@@ -251,7 +257,7 @@ export default class TraitComposer {
 			styles,
 			backgroundColor: bgMatch ? bgMatch[1] : "#FFFFFF",
 			// Byte-exact reconstruction of renderAvastar output
-			fullSVG: this.manifest.header + fragments.join("") + this.manifest.footer,
+			fullSVG: this.assembleSVG(fragments),
 		};
 	}
 
