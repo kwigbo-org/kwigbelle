@@ -705,6 +705,12 @@
 	}
 }
 
+/* No browser gesture handling (and no synthetic mouse events after
+   touches) on the art canvas — taps are Poke, drags are follow */
+#mainCanvas {
+	touch-action: none;
+}
+
 /* 3D view (docs/tads/vrm-viewer.md): the model canvas overlays the
    vector canvas, under every UI overlay */
 #vrmCanvas {

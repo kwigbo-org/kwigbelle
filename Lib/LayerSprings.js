@@ -13,7 +13,39 @@ export default class LayerSprings {
 		this.motionScale = 1;
 		this.followScale = 1;
 		this.isPaused = false;
+		this.isWaveEnabled = false;
 		this.springs = [];
+	}
+
+	/// Kick every layer's velocity away from a tap point — the Poke
+	/// effect (docs/tads/burned-traits.md Decision 10). Front layers
+	/// take the hardest hit; the underdamped springs scatter and
+	/// settle on their own.
+	///
+	/// - Parameter point: Where the tap landed
+	poke(point) {
+		// A paused rig must not bank velocity for a burst on unpause
+		if (this.isPaused) {
+			return;
+		}
+		for (const spring of this.springs) {
+			let dx = spring.x - point.x;
+			let dy = spring.y - point.y;
+			const distance = Math.hypot(dx, dy);
+			if (distance < 1) {
+				// Tap dead-center on a resting layer: a stable
+				// per-layer direction instead of dividing by zero
+				const angle = spring.phase * 2.6;
+				dx = Math.cos(angle);
+				dy = Math.sin(angle);
+			} else {
+				dx /= distance;
+				dy /= distance;
+			}
+			const strength = 250 + spring.depth * 550;
+			spring.vx += dx * strength;
+			spring.vy += dy * strength;
+		}
 	}
 
 	/// Build one spring per layer, all starting at rest on center
@@ -74,6 +106,27 @@ export default class LayerSprings {
 				const reach = (1 + spring.depth * 0.35) * this.followScale;
 				targetX = center.x + (touchPoint.x - center.x) * reach;
 				targetY = center.y + (touchPoint.y - center.y) * reach;
+			}
+			if (this.isWaveEnabled) {
+				// A traveling PULSE, not another sine: the idle
+				// breathing is already a depth-staggered sine, so a
+				// continuous wave read as "more of the same" (operator
+				// QA). Every few seconds a wavefront sweeps the stack
+				// back-to-front; each layer takes a quick out-and-back
+				// whip as it passes, then rests until the next one.
+				// Rides idle AND follow targets (a steady tilt drive
+				// must not silence it) and is deliberately NOT scaled
+				// by motionScale: Wave stands alone
+				// (docs/tads/burned-traits.md Decision 10).
+				const period = 3.2; // seconds between wavefronts
+				const width = 0.4; // fraction of the period a layer whips
+				let wavePhase = (now % period) / period - spring.depth * 0.35;
+				if (wavePhase < 0) {
+					wavePhase += 1;
+				}
+				if (wavePhase < width) {
+					targetX += Math.sin((wavePhase / width) * Math.PI * 2) * 26;
+				}
 			}
 
 			// Underdamped spring integration so layers overshoot

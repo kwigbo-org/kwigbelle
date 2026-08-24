@@ -25,9 +25,7 @@ export default class MainScene extends Scene {
 	/// Overridden constructor
 	constructor(rootContainer) {
 		super(rootContainer);
-		console.log(
-			"kwigbelle build 2026-08-24.3 (explode retired, sticky panels)",
-		);
+		console.log("kwigbelle build 2026-08-24.4 (poke, wave, trails, tilt)");
 		// Build the UI
 		this.buildUI();
 		// Start loading
@@ -92,7 +90,12 @@ export default class MainScene extends Scene {
 			(tokenId) => this.selectAvastar(tokenId),
 		);
 		this.sidePanel.addSection("Load Avastar", this.loadSection.build());
-		this.effectsSection = new EffectsSection(this.layerSprings);
+		// Tilt follow (docs/tads/burned-traits.md Decision 10): the
+		// section owns the toggle, the scene owns the sensor wiring
+		this.tiltPoint = null;
+		this.effectsSection = new EffectsSection(this.layerSprings, {
+			onTiltChanged: (enabled) => this.setTiltEnabled(enabled),
+		});
 		// The Effects section element is kept so 3D mode can hide it
 		// wholesale: the spring rig has no meaning for the 3D model
 		this.effectsSectionElement = this.sidePanel.addSection(
@@ -443,6 +446,148 @@ export default class MainScene extends Scene {
 
 	// MARK: Overridden Methods
 
+	// Poke (docs/tads/burned-traits.md Decision 10): a quick tap
+	// with little movement kicks the layers; a drag stays the
+	// follow gesture. UI overlays stopSceneEvents their press
+	// events, so beginTap never fires for panel taps (their release
+	// propagates, but finishTap no-ops without a matching start).
+
+	touchStart(event) {
+		super.touchStart(event);
+		this.lastTouchTime = performance.now();
+		this.beginTap(this.touchPoint);
+	}
+
+	touchEnd() {
+		// super resets touchPoint to (0,0): capture the release
+		// point first. Panel-tap releases propagate here too
+		// (stopSceneEvents lets them, to clear a canvas drag that
+		// releases over the panel) — only a touch that actually
+		// started on the scene may arm the synthetic-mouse window,
+		// or a hybrid device would drop a real mouse poke right
+		// after a panel tap.
+		const wasDown = this.isTouchDown;
+		const releasePoint = this.touchPoint;
+		super.touchEnd();
+		if (wasDown) {
+			this.lastTouchTime = performance.now();
+		}
+		this.finishTap(releasePoint);
+	}
+
+	/// Browsers replay a touch as synthetic mouse events; counting
+	/// those as a second tap would double the poke (or fire one at
+	/// the end of a touch drag). touch-action:none suppresses the
+	/// synthesis on most engines; this window is the belt to that
+	/// suspender.
+	isSyntheticMouse() {
+		return (
+			this.lastTouchTime !== undefined &&
+			performance.now() - this.lastTouchTime < 800
+		);
+	}
+
+	mouseDown(event) {
+		super.mouseDown(event);
+		if (!this.isSyntheticMouse()) {
+			this.beginTap(this.touchPoint);
+		}
+	}
+
+	mouseUp() {
+		const releasePoint = this.touchPoint;
+		super.mouseUp();
+		if (!this.isSyntheticMouse()) {
+			this.finishTap(releasePoint);
+		}
+	}
+
+	beginTap(point) {
+		this.tapStart = { time: performance.now(), x: point.x, y: point.y };
+	}
+
+	finishTap(point) {
+		const start = this.tapStart;
+		this.tapStart = null;
+		if (!start || this.is3D) {
+			return;
+		}
+		const isQuick = performance.now() - start.time < 250;
+		const isStill = Math.hypot(point.x - start.x, point.y - start.y) < 10;
+		if (isQuick && isStill) {
+			this.layerSprings.poke(point);
+		}
+	}
+
+	/// Attach or detach the tilt sensor (docs/tads/burned-traits.md
+	/// Decision 10). The first reading is the neutral baseline;
+	/// ±25° of tilt maps to the same follow path as the pointer.
+	/// On iOS the permission call needs a user gesture — invoked
+	/// from the toggle tap it prompts; restored at page load it
+	/// rejects quietly and tilt stays inert until re-toggled.
+	setTiltEnabled(enabled) {
+		// Every call supersedes any pending permission resolution and
+		// detaches the current listener first, so repeated toggles
+		// can never stack listeners and a permission grant that lands
+		// after a disable can never resurrect the sensor
+		this.tiltGeneration = (this.tiltGeneration || 0) + 1;
+		const generation = this.tiltGeneration;
+		if (this.onTilt) {
+			window.removeEventListener("deviceorientation", this.onTilt);
+			this.onTilt = null;
+		}
+		this.tiltPoint = null;
+		if (!enabled) {
+			return;
+		}
+		const attach = () => {
+			if (generation !== this.tiltGeneration) {
+				return;
+			}
+			this.tiltBaseline = null;
+			this.onTilt = (event) => {
+				if (event.beta == null || event.gamma == null) {
+					return;
+				}
+				if (!this.tiltBaseline) {
+					this.tiltBaseline = { beta: event.beta, gamma: event.gamma };
+				}
+				const clamp = (value) => Math.max(-1, Math.min(1, value));
+				const dx = clamp((event.gamma - this.tiltBaseline.gamma) / 25);
+				const dy = clamp((event.beta - this.tiltBaseline.beta) / 25);
+				this.tiltPoint = new Point(
+					this.canvas.width / 2 + dx * this.canvas.width * 0.4,
+					this.canvas.height / 2 + dy * this.canvas.height * 0.4,
+				);
+			};
+			window.addEventListener("deviceorientation", this.onTilt);
+		};
+		if (
+			window.DeviceOrientationEvent &&
+			typeof window.DeviceOrientationEvent.requestPermission === "function"
+		) {
+			window.DeviceOrientationEvent.requestPermission()
+				.then((state) => {
+					if (state === "granted") {
+						attach();
+					}
+				})
+				.catch(() => {
+					// Not called from a gesture (page-load restore) or
+					// denied: leave the toggle set, sensor inert
+				});
+		} else {
+			attach();
+		}
+	}
+
+	/// Overridden teardown: the tilt sensor listener lives outside
+	/// the base class's bound set
+	destroy() {
+		this.setTiltEnabled(false);
+		super.destroy();
+	}
+
 	resize() {
 		this.canvas.width = window.innerWidth;
 		this.canvas.height = window.innerHeight;
@@ -760,7 +905,22 @@ export default class MainScene extends Scene {
 			return;
 		}
 		const context = this.canvas.getContext("2d");
-		context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+		// Guarded: the render loop starts in buildUI, before the
+		// constructor reaches the section wiring
+		const isTrails = !!(
+			this.effectsSection && this.effectsSection.trailsEnabled
+		);
+		if (isTrails) {
+			// Trails (docs/tads/burned-traits.md Decision 10): erase a
+			// fraction per frame instead of clearing, so motion leaves
+			// ghosts behind
+			context.globalCompositeOperation = "destination-out";
+			context.fillStyle = "rgba(0, 0, 0, 0.22)";
+			context.fillRect(0, 0, this.canvas.width, this.canvas.height);
+			context.globalCompositeOperation = "source-over";
+		} else {
+			context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+		}
 		// The avastar guard covers failed loads: isLoading clears on
 		// completion even when no Avastar could be parsed
 		if (this.isLoading || !this.avastar) {
@@ -775,10 +935,14 @@ export default class MainScene extends Scene {
 		dt = Math.min(dt, 1 / 30);
 
 		// The static fallback has no separate background layer, and
-		// the traits panel can hide the backdrop
+		// the traits panel can hide the backdrop. While Trails is on
+		// the backdrop is skipped too: its full-opacity redraw would
+		// cover the ghosts every frame — the themed page background
+		// is the stable ground (TAD Decision 10).
 		if (
 			this.avastar.backgroundLayer &&
-			this.traitsSection.isBackdropVisible()
+			this.traitsSection.isBackdropVisible() &&
+			!isTrails
 		) {
 			context.drawImage(
 				this.avastar.backgroundLayer,
@@ -793,11 +957,13 @@ export default class MainScene extends Scene {
 			this.canvas.width / 2,
 			this.canvas.height / 2,
 		);
+		// A pressed pointer wins; otherwise the tilt sensor (when
+		// enabled) drives the same follow path
 		this.layerSprings.step(
 			dt,
 			now,
 			centerPoint,
-			this.isTouchDown ? this.touchPoint : null,
+			this.isTouchDown ? this.touchPoint : this.tiltPoint,
 		);
 		for (let index = 0; index < this.avastar.layers.length; index++) {
 			// Hidden layers keep their springs (indices stay stable);

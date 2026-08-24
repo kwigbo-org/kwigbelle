@@ -44,7 +44,9 @@ Lib/TraitEditModal.js      per-slot trait chooser: true thumbnails
                            styled by the current colors, gender
                            filter; drives the swap preview
 Lib/EffectsSection.js      spring-rig controls (motion, follow,
-                           pause); localStorage persisted
+                           pause, wave, trails, tilt follow);
+                           localStorage persisted; poke (tap
+                           impulse) is always on, no control
 Lib/TraitsSection.js       per-layer trait rows + visibility the
                            render loop consults each frame; goes
                            read-only in 3D mode

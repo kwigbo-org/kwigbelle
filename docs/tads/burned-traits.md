@@ -67,7 +67,8 @@ class per header click; state is lost on reload.
 | 6 | Trait-card layout rework, same DOM contract (`.traitRow`, checkbox semantics, `.traitEdit`/`.traitUndo` class names and callbacks survive for the tests): two-line hierarchy — top line gene name (small, muted) with the rarity icon+tier right-aligned; second line the trait VALUE prominent; the edit affordance becomes a real labeled pill button ("✎ Edit") with border and larger tap target instead of the bare glyph; BURNED tag sits beside the rarity tag. | Operator: good data, weak hierarchy, edit invisible; keeping class names bounds the test churn. |
 | 7 | Collapsed panel sections persist per browser: `SidePanel.addSection` keys each section by its title in `localStorage["kwigbelle.panels"]` (`{title: true}` = collapsed), applied at build, written on toggle. Applies to settings-drawer sections (the profile drawer has no sections). | Operator directive; mirrors the kwigbelle.effects pattern. |
 | 8 | Ships as two PRs against this TAD: **PR A** — explode removal + panel persistence (small, mechanical); **PR B** — burned capture tool + data + burnedFor + card redesign with burned marks (the data and the layout land together because the layout exists to host the marks). | Review lands on one concern each; PR B waits on the ~40-minute capture run. |
-| 9 | New effects (operator asked for ideas) are OUT of this TAD's implementation scope; candidates are listed under Open Questions and get a follow-up TAD amendment or PR once the operator picks. | Don't block the concrete work on a design conversation. |
+| 9 | New effects: the operator picked ALL FOUR candidates ("lets do them all", 2026-08-24) — they ship as **PR C** per Decision 10. | Amended per this decision's original follow-up clause. |
+| 10 | (Amendment) The four effects, concretely: **Poke** — a quick tap on the Avastar (short press, little movement — a drag stays a follow) kicks every layer's spring velocity away from the tap point, front layers hardest; always on, no control. **Wave** — Effects toggle; a traveling PULSE, not a continuous sine (operator QA: a sine read as indistinguishable from the idle breathing, which is already a depth-staggered sine) — every ~3.2s a wavefront sweeps the stack back-to-front and each layer takes a quick out-and-back whip as it passes, resting between pulses; rides the spring targets (idle AND follow alike, so a steady tilt drive doesn't silence it); fixed amplitude, deliberately NOT scaled by the Motion slider so it stands alone (and stays testable at Motion 0). **Trails** — Effects toggle; the render loop fade-erases (destination-out at ~0.22 alpha) instead of hard-clearing, leaving motion ghosts; the backdrop layer is not redrawn while Trails is on (a full-opacity backdrop redraw would cover the ghosts every frame — the themed page background is the stable ground). **Tilt follow** — Effects toggle; deviceorientation beta/gamma (first reading = neutral baseline, ±25° ≈ full reach, clamped) drives the same follow path as the pointer; on iOS the toggle tap calls DeviceOrientationEvent.requestPermission (a stored-on flag restored at load may stay inert on iOS until the user re-toggles — permission calls need a gesture). All three toggles persist in `kwigbelle.effects`. | Poke restores explode's payoff interactively; Wave/Trails/Trails-vs-backdrop and the tilt permission dance are the load-bearing implementation constraints, locked here so review can check against them. |
 
 ## Proposed design surface
 
@@ -103,6 +104,16 @@ deploy.sh                     ships Tools/data/burned.json
    panel-test/lab-test survive the layout rework unchanged where
    the DOM contract holds; full suite. Rollback: revert PR B —
    PR A stands alone.
+4. **PR C — the four effects (Decision 10).** Action: LayerSprings
+   gains poke() and the wave term; MainScene gains tap detection,
+   trails rendering, and tilt wiring; EffectsSection gains the
+   Wave/Trails/Tilt toggles (persisted). Validate: new
+   Tests/effects-test.js — poke moves an otherwise-static rig
+   (Motion 0, Follow 0, so ONLY the impulse can move layers), Wave
+   animates at Motion 0, Trails leaves intermediate-alpha pixels,
+   a synthetic deviceorientation event steers the rig with tilt
+   enabled, and toggle states survive a reload; full suite.
+   Rollback: revert PR C — A and B stand alone.
 
 ## Client review status
 
@@ -112,20 +123,35 @@ deploy.sh                     ships Tools/data/burned.json
 
 None.
 
-## Open Questions
-
-- **New effects — operator to pick any/none** (each would be a
-  small follow-up): (a) *Poke* — tap the Avastar to fire a physics
-  impulse through the springs, layers scatter and snap back (the
-  fun explode provided, but dynamic); (b) *Tilt follow* — on
-  mobile, the gyroscope drives the pointer-follow parallax
-  (needs the iOS permission tap); (c) *Trails* — a toggle that
-  fade-clears the canvas instead of hard-clearing, so motion
-  leaves ghosting streaks; (d) *Wave* — a slow depth-staggered
-  ripple through the layers at idle.
-
 ## Progress log
 
 - 2026-08-24 — Discovery: selector computed + verified, bool[12]
   layout decoded, gene ordering proven against metadata (8700),
-  prevalence sampled (3/36). TAD drafted; PR opened for review.
+  prevalence sampled (3/36). TAD drafted; PR #18 opened.
+- 2026-08-24 — Round 1 CLEAN 2/3 (lite); sonnet's prose LOW on the
+  explode reach math truth-fixed. Round 2 CLEAN 3/3; merged as
+  `6d05dad`. PR A (#19) opened; capture sweep started.
+- 2026-08-24 — Operator picked ALL FOUR effects candidates: Open
+  Question folded into Decisions 9–10, Step 4 (PR C) added.
+- 2026-08-24 — PR A (#19) merged as `cf7bc76` (round 1 CLEAN 3/4,
+  sonnet test-robustness LOW fixed; round 2 CLEAN 4/4). Capture
+  sweep COMPLETE: 2,229 primes with burns, 16,834 traits burned
+  total (the ~170 shortfall vs 1,417×12 is consistent with
+  replicants using "None"-type empty slots that burn nothing);
+  `--verify 20` matched chain AND metadata on every sample,
+  including partial masks and a full 4095. Step 2 done.
+- 2026-08-24 — Deviation from Decision 8's PR split, recorded
+  honestly: the Step 2 artifacts (fetch-burned.js + the verified
+  burned.json) were swept into PR C (#20) by a `git add -A` during
+  a review fix-push. Kept there rather than rewriting a reviewed
+  head — the panel reviewed the tool (Codex caught a resume gap:
+  failed tokens advanced `through`, so a re-run could finalize
+  without their burns → failures are now recorded in the progress
+  file and retried before finalizing). PR B carries the display
+  code only.
+- 2026-08-24 — Step 4 applied (PR C): poke/wave/trails/tilt per
+  Decision 10. index.html now exposes the scene as
+  `window.kwigbelleScene` for the harness — effects-test asserts
+  on spring state (velocities/offsets) because the underdamped
+  rig decays asymptotically and pixel-equality flakes on subpixel
+  motion.
