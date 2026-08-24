@@ -37,6 +37,7 @@ node lab-test.js       # trait swap preview: modal, override, undo, reset, swap-
 node vrm-source-test.js  # VRM fetch pipeline: gateways, progress, cache, abort (routed fixtures)
 node vrm-viewer-test.js  # 3D toggle: WebGL render, cache re-entry, cancel, load-supersedes
 node vrm-panel-test.js   # 3D-mode settings limits + owner-only Download VRM
+node identity-test.js    # identity card: chips, score bands, distribution, Unique-By
 ```
 
 Every test prints its own pass evidence and exits nonzero on any

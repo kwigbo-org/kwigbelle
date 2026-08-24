@@ -12,11 +12,14 @@ Avastars. The replicant factory is CLOSED and the contract is
 LOCKED — no new mints are possible, so the hash corpus (26,617) is
 effectively frozen (check-corpus should always report fresh) and
 everything trait-swap related is preview-only by nature, not just
-by policy. The VRM 3D viewer (docs/tads/vrm-viewer.md) shipped:
-every Avastar toggles vector <-> 3D, with limited settings in 3D
-and an owner-only model download. Declared next direction: match
-avastars.io design cues (dark theme, their rarity iconography,
-series colors).
+by policy. Both declared directions have SHIPPED: the VRM 3D
+viewer (docs/tads/vrm-viewer.md - vector <-> 3D toggle, limited
+3D settings, owner-only download, hedged IPFS fetch) and the
+avastars.io design match (docs/tads/design-cues.md - dark chrome
+theme, Inconsolata, rarity tier icons, identity card with
+series/score/distribution/Unique-By). No declared next direction;
+parked candidates live in the agent memory ledger (composed
+picker thumbnails; PR #1 wallet LOWs).
 
 ## Architecture
 
@@ -42,8 +45,10 @@ Lib/EffectsSection.js      spring-rig controls (explode, motion,
 Lib/TraitsSection.js       per-layer trait rows + visibility the
                            render loop consults each frame; goes
                            read-only in 3D mode
-Lib/VRMSource.js           metadata -> vrm_url -> IPFS gateway
-                           fallback fetch (progress, LRU cache)
+Lib/VRMSource.js           metadata -> vrm_url -> hedged IPFS
+                           gateway race (staggered starts, first
+                           chunk wins, first-byte timeouts, CIDv0
+                           -> v1 rewrite, progress, LRU cache)
 Lib/VRMViewer.js           own-canvas three.js VRM display (orbit
                            controls, spring-bones, full disposal)
 Lib/VRMSection.js          "3D model" panel section: view toggle +

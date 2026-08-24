@@ -1,6 +1,7 @@
 # TAD: avastars.io design cues (dark theme, rarity icons, identity card)
 
-- **Status:** Steps 1-4 applied — in review (2026-08-23, PR #12)
+- **Status:** IMPLEMENTED (2026-08-23, PR #12) — frozen as
+  historical record
 - **Driver:** Operator: "We need to match the design cues of the
   avastars site... including the rarity icons." + "We need to mark
   avastars with these indicators" (series ranges infographic) +
