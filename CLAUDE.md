@@ -30,10 +30,12 @@ Lib/MainScene.js           scene: load orchestration + async-race
                            repo), render loop, ?param flags
 Lib/LayerSprings.js        spring physics: per-depth params +
                            integration (idle breathing, follow)
-Lib/PickerUI.js            owned-Avastars picker overlay
-Lib/WalletConnectUI.js     wallet button, multi-wallet chooser,
-                           connect/switch flow
-Lib/SidePanel.js           right-side collapsible panel; sections
+Lib/ProfileSection.js      profile drawer: wallet connect flow
+                           (multi-wallet chooser, switch/link) +
+                           owned-Avastars grid w/ lazy thumbnails
+Lib/SidePanel.js           right-side drawer stack: stacked handle
+                           tabs (profile above settings) sharing
+                           one sliding column; settings sections
                            register via addSection(title, element)
 Lib/LoadSection.js         load any Avastar by token id (walletless,
                            corpus-validated before loading)
@@ -53,8 +55,9 @@ Lib/VRMViewer.js           own-canvas three.js VRM display (orbit
                            controls, spring-bones, full disposal)
 Lib/VRMSection.js          "3D model" panel section: view toggle +
                            owner-only Download VRM
-Lib/ViewToggleUI.js        floating 3D/2D button with fetch
-                           progress and tap-to-cancel
+Lib/VRMLoadingUI.js        center-screen VRM loading overlay
+                           (tap-to-cancel) + failure toast; the
+                           3D entry/exit lives in VRMSection
 Lib/RarityIcons.js         tier icons/colors, score->tier bands,
                            kind labels (single design-token source)
 Lib/UIHelpers.js           stopSceneEvents, svgToImage

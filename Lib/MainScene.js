@@ -4,8 +4,7 @@ import Point from "./Point.js";
 import AvastarLoader from "./AvastarLoader.js";
 import TraitComposer from "./TraitComposer.js";
 import LayerSprings from "./LayerSprings.js";
-import PickerUI from "./PickerUI.js";
-import WalletConnectUI from "./WalletConnectUI.js";
+import ProfileSection from "./ProfileSection.js";
 import SidePanel from "./SidePanel.js";
 import LoadSection from "./LoadSection.js";
 import EffectsSection from "./EffectsSection.js";
@@ -14,18 +13,19 @@ import TraitEditModal from "./TraitEditModal.js";
 import VRMSection, { progressText } from "./VRMSection.js";
 import VRMSource from "./VRMSource.js";
 import VRMViewer from "./VRMViewer.js";
-import ViewToggleUI from "./ViewToggleUI.js";
+import VRMLoadingUI from "./VRMLoadingUI.js";
 import { svgToImage } from "./UIHelpers.js";
 
 /// The Avastars scene: load orchestration and rendering. The
-/// overlay UI lives in PickerUI/WalletConnectUI and the physics in
-/// LayerSprings; this class owns the async-race machinery that
-/// keeps loads, resizes, and picks from overwriting each other.
+/// wallet/picker UI lives in the profile drawer (ProfileSection)
+/// and the physics in LayerSprings; this class owns the async-race
+/// machinery that keeps loads, resizes, and picks from overwriting
+/// each other.
 export default class MainScene extends Scene {
 	/// Overridden constructor
 	constructor(rootContainer) {
 		super(rootContainer);
-		console.log("kwigbelle build 2026-08-23.2 (hedged vrm fetch)");
+		console.log("kwigbelle build 2026-08-24.1 (profile drawer)");
 		// Build the UI
 		this.buildUI();
 		// Start loading
@@ -44,6 +44,37 @@ export default class MainScene extends Scene {
 		// render loop consults each frame
 		const explodeParam = urlParams.get("explode");
 		this.sidePanel = new SidePanel(rootContainer);
+		// Object used to load the Avastar SVG from on chain
+		this.avastarLoader = new AvastarLoader(null);
+		// The profile drawer (docs/tads/profile-drawer.md): the tab
+		// above settings holding the wallet connect flow and the
+		// owned-Avastars grid. Registered first so its handle stacks
+		// on top; picks and connects come back through callbacks.
+		this.profileSection = new ProfileSection(this.avastarLoader, {
+			onConnected: (ownedTokenIds) => {
+				this.recordOwnership(ownedTokenIds);
+				this.profileSection.buildGrid(ownedTokenIds);
+				this.sidePanel.setBadge("profile", true);
+				if (ownedTokenIds.length > 0) {
+					this.selectAvastar(ownedTokenIds[0], false);
+				}
+			},
+			onPick: (tokenId) => {
+				// Close the drawer so the load is visible
+				this.sidePanel.close();
+				this.selectAvastar(tokenId);
+			},
+			isDrawerOpen: () => this.sidePanel.isOpen("profile"),
+		});
+		const profileColumn = this.sidePanel.addDrawer(
+			"profile",
+			ProfileSection.handleIcon(),
+			{
+				handleId: "profileHandle",
+				onOpen: () => this.profileSection.onOpen(),
+			},
+		);
+		profileColumn.appendChild(this.profileSection.build());
 		// Top section: view any Avastar by token id (walletless -
 		// composition needs only the static library)
 		this.loadSection = new LoadSection(
@@ -84,29 +115,15 @@ export default class MainScene extends Scene {
 		// parse completion can never mount over a newer state
 		this.vrmSource = new VRMSource();
 		this.vrmViewer = new VRMViewer(rootContainer);
-		this.viewToggle = new ViewToggleUI(rootContainer, () => this.toggle3D());
+		// A tap on the loading overlay cancels the fetch (toggle3D
+		// reads a tap during vrmAbort as a cancel)
+		this.vrmLoading = new VRMLoadingUI(rootContainer, () => this.toggle3D());
 		this.is3D = false;
 		this.vrmGeneration = 0;
 		this.vrmAbort = null;
 		// Tokens the connected wallet owns (string ids): gates the
 		// Download VRM button in the 3D model section
 		this.ownedTokenIds = new Set();
-		// Object used to load the Avastar SVG from on chain
-		this.avastarLoader = new AvastarLoader(null);
-		// Overlay UI components: picks and connects come back into
-		// the scene through these callbacks
-		this.pickerUI = new PickerUI(rootContainer, this.avastarLoader, (tokenId) =>
-			this.selectAvastar(tokenId),
-		);
-		this.walletUI = new WalletConnectUI(
-			rootContainer,
-			this.avastarLoader,
-			(ownedTokenIds) => {
-				this.recordOwnership(ownedTokenIds);
-				this.pickerUI.build(ownedTokenIds);
-				this.selectAvastar(ownedTokenIds[0], false);
-			},
-		);
 		this.initialLoad(urlParams.get("tokenid"));
 	}
 
@@ -128,10 +145,12 @@ export default class MainScene extends Scene {
 		}
 		const hasWallet = await this.avastarLoader.hasWallet();
 		if (!hasWallet) {
+			this.profileSection.setWalletState("none");
 			return;
 		}
 		// Never prompt on page load: only a silent account check.
-		// The Link Wallet button below handles first time connects.
+		// The profile drawer's Link Wallet button handles first
+		// time connects.
 		let ownedTokenIds = [];
 		try {
 			ownedTokenIds = await this.avastarLoader.getOwnedTokenIds(false);
@@ -140,7 +159,9 @@ export default class MainScene extends Scene {
 		}
 		if (ownedTokenIds.length > 0) {
 			this.recordOwnership(ownedTokenIds);
-			this.pickerUI.build(ownedTokenIds);
+			this.profileSection.setWalletState("connected");
+			this.profileSection.buildGrid(ownedTokenIds);
+			this.sidePanel.setBadge("profile", true);
 			if (!tokenParam) {
 				// Swap silently: keep the current Avastar animating
 				// until the wallet's first one has rendered
@@ -150,18 +171,24 @@ export default class MainScene extends Scene {
 		}
 		// The wallet needs help from the user: either it is on the
 		// wrong network for this site, or it has not authorized the
-		// site yet. Offer a button for whichever fix applies.
+		// site yet. The profile drawer shows whichever fix applies.
 		const onMainnet = await this.avastarLoader.isMainnet();
 		if (!onMainnet) {
-			this.walletUI.show("🔗 Switch to Mainnet");
+			this.profileSection.setWalletState("wrongNetwork");
 			return;
 		}
 		const accounts = await this.avastarLoader.provider
 			.request({ method: "eth_accounts" })
 			.catch(() => []);
 		if (!accounts || accounts.length === 0) {
-			this.walletUI.show("🔗 Link Wallet");
+			this.profileSection.setWalletState("disconnected");
+			return;
 		}
+		// Authorized on mainnet but no Avastars: still a connected
+		// wallet — the drawer says so instead of showing nothing
+		this.profileSection.setWalletState("connected");
+		this.profileSection.buildGrid([]);
+		this.sidePanel.setBadge("profile", true);
 	}
 
 	/// Start a load through the given function, ignoring stale
@@ -355,7 +382,7 @@ export default class MainScene extends Scene {
 		}
 		this.isLoading = false;
 		this.preloader.style.opacity = 0;
-		this.pickerUI.updateSelectedThumbnail();
+		this.profileSection.setCurrent(this.avastarLoader.tokenId);
 		this.traitsSection.update(this.avastar);
 		this.vrmSection.setOwned(
 			this.ownedTokenIds.has(String(this.avastarLoader.tokenId)),
@@ -375,15 +402,14 @@ export default class MainScene extends Scene {
 		}
 	}
 
-	/// Load a picked Avastar and collapse the picker. The current
-	/// Avastar keeps animating while the new one loads.
+	/// Load a picked Avastar. The current Avastar keeps animating
+	/// while the new one loads.
 	///
 	/// - Parameters:
 	///		- tokenId: The token id to load
 	///		- isSilent: When true no preloader is shown (used for
 	///			the automatic swap to the wallet's first Avastar)
 	selectAvastar(tokenId, isSilent) {
-		this.pickerUI.collapse();
 		// Guard against the latest REQUESTED token (recorded
 		// synchronously in beginLoad), not the loader's last
 		// completed one - re-picking the displayed token while a
@@ -550,7 +576,7 @@ export default class MainScene extends Scene {
 				tokenId,
 				(loaded, total) => {
 					if (generation === this.vrmGeneration) {
-						this.viewToggle.setProgress(loaded, total);
+						this.vrmLoading.setProgress(loaded, total);
 						this.vrmSection.setProgress(loaded, total);
 					}
 				},
@@ -561,7 +587,7 @@ export default class MainScene extends Scene {
 			}
 			// Bytes are down; parsing ~9MB takes a beat of its own -
 			// keep the overlay honest instead of freezing at 100%
-			this.viewToggle.setPhase("Preparing model…");
+			this.vrmLoading.setPhase("Preparing model…");
 			await this.vrmViewer.show(bytes);
 			if (generation !== this.vrmGeneration) {
 				// Superseded during the async parse (a token load or
@@ -588,7 +614,7 @@ export default class MainScene extends Scene {
 			this.setVRMMode("vector");
 			if (!error || error.name !== "AbortError") {
 				console.warn(`3D view failed for ${tokenId}`, error);
-				this.viewToggle.showError("3D model unavailable");
+				this.vrmLoading.showError("3D model unavailable");
 			}
 		}
 	}
@@ -608,9 +634,9 @@ export default class MainScene extends Scene {
 		this.traitsSection.setReadOnly(false);
 	}
 
-	/// Keep the floating toggle and the panel section in step
+	/// Keep the loading overlay and the panel section in step
 	setVRMMode(mode) {
-		this.viewToggle.setMode(mode);
+		this.vrmLoading.setMode(mode);
 		this.vrmSection.setMode(mode);
 	}
 
@@ -697,8 +723,8 @@ export default class MainScene extends Scene {
 				composed.series = this.baseSeries;
 				composed.ranking = this.baseRanking;
 				this.avastar = composed;
-				// Keep the collapsed picker thumbnail honest about
-				// what is on screen
+				// Keep the loader's state honest about what is on
+				// screen (the same-token guard reads from it)
 				this.avastarLoader.currentAvastar = composed.fullSVG;
 				const contentView = document.getElementById("contentView");
 				contentView.style.backgroundColor = composed.backgroundColor;
@@ -707,7 +733,6 @@ export default class MainScene extends Scene {
 				if (this.layerSprings.springs.length !== composed.layers.length) {
 					this.setupLayerSprings();
 				}
-				this.pickerUI.updateSelectedThumbnail();
 				this.traitsSection.setOverrides(composed, this.overrides);
 			})
 			.catch((error) => console.warn("preview recompose failed", error));

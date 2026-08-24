@@ -1,3 +1,8 @@
+// Profile drawer grid (docs/tads/profile-drawer.md): the owned
+// Avastars live in the profile drawer now — the old floating picker
+// is gone. Silent connect builds the grid and lights the handle
+// badge; opening the drawer loads thumbnails lazily; picking a tile
+// loads that token, closes the drawer, and moves the highlight.
 const { chromium } = require("playwright-core");
 const { check } = require("./check.js");
 
@@ -59,61 +64,84 @@ window.ethereum = {
 		() => document.getElementById("preloader")?.style.opacity === "0",
 		{ timeout: 15000 },
 	);
-	// Wait for the background wallet flow: picker built, auto-swap
-	// to the first owned Avastar done (thumbnail image present)
-	await page.waitForSelector(".pickerThumb.current img", { timeout: 15000 });
-
-	// Thumbnail present, showing the first owned token, list collapsed
-	const collapsed = await page.evaluate(() => ({
-		hasPicker: !!document.getElementById("avastarPicker"),
-		thumbHasImg: !!document.querySelector(".pickerThumb.current img"),
-		listVisible: document
-			.getElementById("pickerList")
-			.classList.contains("expanded"),
-		itemCount: document.querySelectorAll("#pickerList .pickerThumb").length,
-	}));
-	console.log("collapsed state:", JSON.stringify(collapsed));
-	check(collapsed.hasPicker, "picker not built");
-	check(collapsed.thumbHasImg, "current thumbnail has no image");
-	check(!collapsed.listVisible, "picker list expanded before any tap");
-	check(
-		collapsed.itemCount === 3,
-		"expected 3 owned items, got " + collapsed.itemCount,
-	);
-	await page.screenshot({ path: "picker-collapsed.png" });
-
-	// Expand: all three owned Avastars listed, thumbnails render in
-	await page.click(".pickerThumb.current");
-	await page.waitForFunction(
-		() => document.querySelectorAll("#pickerList img").length === 3,
-		{ timeout: 15000 },
-	);
-	await page.screenshot({ path: "picker-expanded.png" });
-
-	// Pick the second Avastar: loads it and collapses the list. The
-	// collapsed thumbnail is rebuilt with a fresh blob URL only when a
-	// load actually completes (the same-token guard skips the rebuild),
-	// so a changed img src is the evidence the pick took effect.
-	const thumbSrcBefore = await page.evaluate(
-		() => document.querySelector(".pickerThumb.current img").src,
-	);
-	await page.locator("#pickerList .pickerThumb").nth(1).click();
+	// The silent wallet flow builds the grid (no drawer interaction
+	// needed) and auto-swaps to the first owned Avastar
+	// (the display starts on a random bundled token, so the
+	// highlight settles on 8014 only once the silent swap lands)
 	await page.waitForFunction(
 		() =>
-			!document.getElementById("pickerList").classList.contains("expanded") &&
-			document.getElementById("preloader")?.style.opacity === "0",
+			document.querySelectorAll("#profileGrid .profileTile").length === 3 &&
+			document.getElementById("preloader")?.style.opacity === "0" &&
+			document.querySelector(".profileTile.current")?.dataset.token === "8014",
+		{ timeout: 20000 },
+	);
+
+	const closed = await page.evaluate(() => ({
+		oldPicker: !!document.getElementById("avastarPicker"),
+		drawerOpen: document.getElementById("sidePanel").classList.contains("open"),
+		badge: document
+			.getElementById("profileHandle")
+			.classList.contains("connected"),
+		// Lazy thumbnails: no wallet renders before the drawer opens
+		thumbs: document.querySelectorAll("#profileGrid img").length,
+		currentLabel: document.querySelector(".profileTile.current").dataset.token,
+	}));
+	console.log("before open:", JSON.stringify(closed));
+	check(!closed.oldPicker, "retired floating picker still present");
+	check(!closed.drawerOpen, "drawer open before any tap");
+	check(closed.badge, "profile handle badge not lit after silent connect");
+	check(closed.thumbs === 0, "thumbnails rendered before the drawer opened");
+	check(
+		closed.currentLabel === "8014",
+		"current highlight not on the first owned token: " + closed.currentLabel,
+	);
+
+	// Open the profile drawer: thumbnails render in
+	await page.click("#profileHandle");
+	const opened = await page.evaluate(() => ({
+		drawerOpen: document.getElementById("sidePanel").classList.contains("open"),
+		profileActive: document
+			.getElementById("profileHandle")
+			.classList.contains("active"),
+	}));
+	check(opened.drawerOpen, "profile handle did not open the drawer");
+	check(opened.profileActive, "profile handle not marked active");
+	await page.waitForFunction(
+		() => document.querySelectorAll("#profileGrid img").length === 3,
 		{ timeout: 15000 },
 	);
-	await page.waitForTimeout(800);
-	const thumbSrcAfter = await page.evaluate(
-		() => document.querySelector(".pickerThumb.current img").src,
+	const address = await page.evaluate(
+		() => document.getElementById("profileAddress")?.innerText,
 	);
-	console.log("pick reloaded thumbnail:", thumbSrcAfter !== thumbSrcBefore);
+	console.log("address line:", JSON.stringify(address));
 	check(
-		thumbSrcAfter !== thumbSrcBefore,
-		"picking the second Avastar did not reload the current thumbnail",
+		!!address && address.includes("…"),
+		"connected address line missing: " + address,
 	);
-	await page.screenshot({ path: "picker-picked.png" });
+	await page.screenshot({ path: "profile-open.png" });
+
+	// Pick the second Avastar: loads it, closes the drawer, moves
+	// the highlight
+	await page.locator("#profileGrid .profileTile").nth(1).click();
+	await page.waitForFunction(
+		() =>
+			!document.getElementById("sidePanel").classList.contains("open") &&
+			document.getElementById("preloader")?.style.opacity === "0" &&
+			document.querySelector(".profileTile.current")?.dataset.token !== "8014",
+		{ timeout: 15000 },
+	);
+	await page.waitForTimeout(500);
+	const picked = await page.evaluate(() => ({
+		current: document.querySelector(".profileTile.current")?.dataset.token,
+		currents: document.querySelectorAll(".profileTile.current").length,
+	}));
+	console.log("picked:", JSON.stringify(picked));
+	check(
+		picked.current === "25495",
+		"highlight did not move to the picked token: " + picked.current,
+	);
+	check(picked.currents === 1, "more than one tile highlighted");
+	await page.screenshot({ path: "profile-picked.png" });
 
 	console.log("errors:", errors.length ? errors : "none");
 	check(errors.length === 0, "page errors: " + JSON.stringify(errors));

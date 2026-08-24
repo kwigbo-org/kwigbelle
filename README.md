@@ -13,9 +13,9 @@ Prime/Replicant, series, 1-100 rarity score with its tier, trait
 distribution, and (for Series 1-5 primes) frozen Unique-By combo
 counts — in the avastars.io visual language. Every
 Avastar also toggles into its assigned 3D model (VRM, fetched from
-IPFS on demand). No wallet needed for any of it; connect one to
-browse your own Avastars in the picker and download the VRMs you
-own.
+IPFS on demand). No wallet needed for any of it; the profile drawer
+(the tab above ⚙) connects one to browse your own Avastars and
+download the VRMs you own.
 
 Static site, no build step. Layers are composed client-side from a
 committed library of 614 per-trait SVG fragments extracted from the

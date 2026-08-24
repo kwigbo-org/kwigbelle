@@ -71,7 +71,7 @@ async function run(name, opts) {
 	// Let the layer blob images finish loading and drawing
 	await page.waitForTimeout(1500);
 	const state = await page.evaluate(() => ({
-		picker: !!document.getElementById("avastarPicker"),
+		gridTiles: document.querySelectorAll("#profileGrid .profileTile").length,
 		canvasDrawn: (() => {
 			const c = document.getElementById("mainCanvas");
 			const px = c
@@ -81,7 +81,7 @@ async function run(name, opts) {
 		})(),
 	}));
 	console.log(
-		`${name}: loaded=${loaded} avatarDrawn=${state.canvasDrawn} picker=${state.picker} alerts=${JSON.stringify(alerts)} pageErrors=${JSON.stringify(pageErrors)}`,
+		`${name}: loaded=${loaded} avatarDrawn=${state.canvasDrawn} gridTiles=${state.gridTiles} alerts=${JSON.stringify(alerts)} pageErrors=${JSON.stringify(pageErrors)}`,
 	);
 	// Trait composition renders without the chain, so every scenario —
 	// including wrong chain and failing render RPC — must still load

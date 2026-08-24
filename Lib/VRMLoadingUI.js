@@ -1,36 +1,23 @@
 import { stopSceneEvents } from "./UIHelpers.js";
 import { progressText } from "./VRMSection.js";
 
-/// The floating vector <-> 3D toggle button (docs/tads/
-/// vrm-viewer.md): "3D" in vector mode, live progress while the
-/// model fetches (a tap then cancels), "2D" while the model shows.
-/// While loading, a centered overlay (the site's spinner plus a
-/// phase line and progress bar) makes the wait unmistakable - the
-/// button alone was too subtle for a ~9MB fetch. Pipeline failures
-/// surface as a transient message beside the button.
-export default class ViewToggleUI {
+/// Center-screen VRM loading feedback (docs/tads/vrm-viewer.md,
+/// reshaped by docs/tads/profile-drawer.md): the site's spinner
+/// with a phase line and progress bar for the ~9MB fetch + parse.
+/// With the floating 3D button retired, the overlay itself is the
+/// cancel affordance — a tap anywhere on it cancels — and pipeline
+/// failures surface as a transient bottom-center toast.
+export default class VRMLoadingUI {
 	/// - Parameters:
 	///		- rootContainer: The element to attach to
-	///		- onToggle: Called on every tap; the scene decides what
-	///			the tap means for the current mode
-	constructor(rootContainer, onToggle) {
-		this.button = document.createElement("div");
-		this.button.setAttribute("id", "viewToggle");
-		stopSceneEvents(this.button);
-		this.button.addEventListener("click", () => onToggle());
-		rootContainer.appendChild(this.button);
-
-		this.error = document.createElement("div");
-		this.error.setAttribute("id", "viewToggleError");
-		rootContainer.appendChild(this.error);
-
-		// The loading overlay: same spinner family as the preloader,
-		// with a phase line, a progress bar, and a cancel hint.
-		// pointer-events stay off so the toggle (cancel) and panel
-		// remain tappable through it.
+	///		- onCancel: Called when the overlay is tapped mid-load;
+	///			the scene turns that into a fetch cancel
+	constructor(rootContainer, onCancel) {
 		this.loading = document.createElement("div");
 		this.loading.setAttribute("id", "vrmLoading");
 		this.loading.setAttribute("class", "centeredContainer");
+		stopSceneEvents(this.loading);
+		this.loading.addEventListener("click", () => onCancel());
 		const spinner = document.createElement("div");
 		spinner.setAttribute("class", "lds-circle");
 		spinner.appendChild(document.createElement("div"));
@@ -46,27 +33,26 @@ export default class ViewToggleUI {
 		this.loading.appendChild(this.loadingBar);
 		const hint = document.createElement("div");
 		hint.setAttribute("id", "vrmLoadingHint");
-		hint.innerText = "Tap the 3D button to cancel";
+		hint.innerText = "Tap to cancel";
 		this.loading.appendChild(hint);
 		rootContainer.appendChild(this.loading);
+
+		this.toast = document.createElement("div");
+		this.toast.setAttribute("id", "vrmToast");
+		rootContainer.appendChild(this.toast);
 
 		this.setMode("vector");
 	}
 
-	/// - Parameter mode: "vector" | "loading" | "3d"
+	/// - Parameter mode: "vector" | "loading" | "3d" — the overlay
+	///		shows only while loading
 	setMode(mode) {
 		this.mode = mode;
-		this.button.classList.toggle("loading", mode === "loading");
 		this.loading.classList.toggle("visible", mode === "loading");
 		if (mode === "loading") {
-			this.button.innerText = "…";
 			this.loadingText.innerText = "Loading 3D model…";
 			this.loadingFill.style.width = "0%";
 			this.loadingBar.classList.add("indeterminate");
-		} else if (mode === "3d") {
-			this.button.innerText = "2D";
-		} else {
-			this.button.innerText = "3D";
 		}
 	}
 
@@ -75,7 +61,6 @@ export default class ViewToggleUI {
 		if (this.mode !== "loading") {
 			return;
 		}
-		this.button.innerText = progressText(loaded, total);
 		this.loadingText.innerText =
 			"Loading 3D model… " + progressText(loaded, total);
 		if (total > 0) {
@@ -98,13 +83,13 @@ export default class ViewToggleUI {
 		this.loadingFill.style.width = "100%";
 	}
 
-	/// A transient failure message beside the button
+	/// A transient failure toast at the bottom center
 	showError(message) {
-		this.error.innerText = message;
-		this.error.classList.add("visible");
+		this.toast.innerText = message;
+		this.toast.classList.add("visible");
 		clearTimeout(this.errorTimer);
 		this.errorTimer = setTimeout(() => {
-			this.error.classList.remove("visible");
+			this.toast.classList.remove("visible");
 		}, 4000);
 	}
 }

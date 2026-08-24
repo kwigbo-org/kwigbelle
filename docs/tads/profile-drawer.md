@@ -1,6 +1,7 @@
 # TAD: profile drawer (wallet + owned Avastars) and composed picker thumbnails
 
-- **Status:** IN REVIEW
+- **Status:** APPROVED (2026-08-24, PR #15) — implementation in
+  progress (PR A of Decision 10)
 - **Driver:** Operator (2026-08-24): "I want a second tab above
   settings on the right. It will be a profile icon. We will put the
   connect wallet button in this drawer and your avastars. Also, we
@@ -138,4 +139,21 @@ None — no other repo consumes these surfaces.
 
 ## Progress log
 
-- 2026-08-24 — TAD drafted; PR opened for panel review.
+- 2026-08-24 — TAD drafted; PR #15 opened for panel review.
+- 2026-08-24 — Panel CLEAN 3/3 round 1 (lite, doc-only); merged as
+  `4429c5f`.
+- 2026-08-24 — Steps 1–2 applied (PR A): SidePanel generalized to a
+  drawer stack (addDrawer/open/close/isOpen/setBadge; settings
+  drawer created lazily by addSection keeping `#panelSections` and
+  `#panelHandle` ids); ProfileSection absorbs the WalletConnectUI
+  flow + the grid (lazy thumbnails on drawer open, `data-token`
+  tile attributes, connected-empty "No Avastars" note; PickerUI and
+  WalletConnectUI deleted); ViewToggleUI became VRMLoadingUI
+  (button + side toast gone, overlay tap-to-cancel with "Tap to
+  cancel" hint, bottom-center failure toast). One addition beyond
+  the letter of Decision 3: the authorized-on-mainnet-but-zero-
+  Avastars wallet now also shows as connected (previously nothing
+  rendered). Full 14-test suite green after harness rework
+  (picker-test rewritten against the drawer; chooser/switch/eip/
+  failure/panel/vrm-viewer tests updated; vrm-panel-test needed no
+  changes).

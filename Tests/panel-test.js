@@ -178,10 +178,13 @@ window.ethereum = {
 	check(motionAfter === "0", "motion setting did not survive reload");
 
 	// In-page token swap resets visibility: hide a trait on the
-	// current token, pick a different one through the picker (real
-	// finishLoad -> update path, no navigation), and the rebuilt
-	// rows must all be checked again
-	await page.waitForSelector(".pickerThumb.current img", { timeout: 15000 });
+	// current token, pick a different one through the profile
+	// drawer's grid (real finishLoad -> update path, no
+	// navigation), and the rebuilt rows must all be checked again
+	await page.waitForFunction(
+		() => document.querySelectorAll("#profileGrid .profileTile").length === 3,
+		{ timeout: 15000 },
+	);
 	await page.locator(".traitRow input").nth(2).uncheck();
 	const hiddenBefore = await page.evaluate(
 		() =>
@@ -190,15 +193,17 @@ window.ethereum = {
 			).length,
 	);
 	check(hiddenBefore === 1, "precondition: expected 1 hidden row");
-	await page.click(".pickerThumb.current");
+	// Switching tabs: the profile drawer replaces the settings
+	// column and lazily renders its thumbnails
+	await page.click("#profileHandle");
 	await page.waitForFunction(
-		() => document.querySelectorAll("#pickerList img").length === 3,
+		() => document.querySelectorAll("#profileGrid img").length === 3,
 		{ timeout: 20000 },
 	);
-	await page.locator("#pickerList .pickerThumb").nth(1).click();
+	await page.locator("#profileGrid .profileTile").nth(1).click();
 	await page.waitForFunction(
 		() =>
-			!document.getElementById("pickerList").classList.contains("expanded") &&
+			!document.getElementById("sidePanel").classList.contains("open") &&
 			document.getElementById("preloader")?.style.opacity === "0",
 		{ timeout: 15000 },
 	);
