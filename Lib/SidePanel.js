@@ -149,6 +149,32 @@ export default class SidePanel {
 		return svg;
 	}
 
+	/// The stored collapsed-section titles, per browser
+	/// (docs/tads/burned-traits.md Decision 7)
+	static PANELS_KEY = "kwigbelle.panels";
+
+	loadCollapsed() {
+		try {
+			return JSON.parse(localStorage.getItem(SidePanel.PANELS_KEY)) || {};
+		} catch (error) {
+			return {};
+		}
+	}
+
+	saveCollapsed(title, isCollapsed) {
+		try {
+			const stored = this.loadCollapsed();
+			if (isCollapsed) {
+				stored[title] = true;
+			} else {
+				delete stored[title];
+			}
+			localStorage.setItem(SidePanel.PANELS_KEY, JSON.stringify(stored));
+		} catch (error) {
+			// Storage unavailable: collapse state just won't persist
+		}
+	}
+
 	addSection(title, contentElement) {
 		if (!this.drawers.has("settings")) {
 			this.addDrawer("settings", SidePanel.settingsIcon(), {
@@ -158,6 +184,10 @@ export default class SidePanel {
 		}
 		const section = document.createElement("div");
 		section.setAttribute("class", "panelSection");
+		// A section the user collapsed stays collapsed across visits
+		if (this.loadCollapsed()[title]) {
+			section.classList.add("collapsed");
+		}
 
 		const header = document.createElement("div");
 		header.setAttribute("class", "panelSectionHeader");
@@ -169,7 +199,8 @@ export default class SidePanel {
 		chevron.innerText = "▾";
 		header.appendChild(chevron);
 		header.addEventListener("click", () => {
-			section.classList.toggle("collapsed");
+			const isCollapsed = section.classList.toggle("collapsed");
+			this.saveCollapsed(title, isCollapsed);
 		});
 		section.appendChild(header);
 

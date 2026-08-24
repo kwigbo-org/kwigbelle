@@ -25,7 +25,9 @@ export default class MainScene extends Scene {
 	/// Overridden constructor
 	constructor(rootContainer) {
 		super(rootContainer);
-		console.log("kwigbelle build 2026-08-24.2 (composed picker thumbnails)");
+		console.log(
+			"kwigbelle build 2026-08-24.3 (explode retired, sticky panels)",
+		);
 		// Build the UI
 		this.buildUI();
 		// Start loading
@@ -37,12 +39,10 @@ export default class MainScene extends Scene {
 		// come from the committed trait library; on failure the token
 		// degrades to a single static full-render layer.
 		this.traitComposer = new TraitComposer();
-		this.layerSprings = new LayerSprings(false);
-		// The right-side panel: effects controls drive the spring rig
-		// (?explode=1, when explicitly present, wins over the stored
-		// setting); trait rows drive per-layer visibility that the
-		// render loop consults each frame
-		const explodeParam = urlParams.get("explode");
+		this.layerSprings = new LayerSprings();
+		// The right-side panel: effects controls drive the spring
+		// rig; trait rows drive per-layer visibility that the render
+		// loop consults each frame
 		this.sidePanel = new SidePanel(rootContainer);
 		// Object used to load the Avastar SVG from on chain
 		this.avastarLoader = new AvastarLoader(null);
@@ -92,10 +92,7 @@ export default class MainScene extends Scene {
 			(tokenId) => this.selectAvastar(tokenId),
 		);
 		this.sidePanel.addSection("Load Avastar", this.loadSection.build());
-		this.effectsSection = new EffectsSection(
-			this.layerSprings,
-			explodeParam !== null ? explodeParam !== "0" : null,
-		);
+		this.effectsSection = new EffectsSection(this.layerSprings);
 		// The Effects section element is kept so 3D mode can hide it
 		// wholesale: the spring rig has no meaning for the 3D model
 		this.effectsSectionElement = this.sidePanel.addSection(

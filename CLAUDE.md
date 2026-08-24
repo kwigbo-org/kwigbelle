@@ -43,8 +43,8 @@ Lib/LoadSection.js         load any Avastar by token id (walletless,
 Lib/TraitEditModal.js      per-slot trait chooser: true thumbnails
                            styled by the current colors, gender
                            filter; drives the swap preview
-Lib/EffectsSection.js      spring-rig controls (explode, motion,
-                           follow, pause); localStorage persisted
+Lib/EffectsSection.js      spring-rig controls (motion, follow,
+                           pause); localStorage persisted
 Lib/TraitsSection.js       per-layer trait rows + visibility the
                            render loop consults each frame; goes
                            read-only in 3D mode
@@ -99,7 +99,7 @@ docs/tads/                 frozen TADs (design history)
 feedback/                  gitignored operator progress log
 ```
 
-URL flags: `?tokenid=N` (any token), `?explode=1`.
+URL flags: `?tokenid=N` (any token).
 
 ## Ground rules learned the hard way
 

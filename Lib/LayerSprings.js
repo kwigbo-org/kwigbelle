@@ -3,15 +3,12 @@
 /// get looser springs, larger breathing motion, and more reach
 /// toward the pointer.
 ///
-/// The effects settings (explode, motion/follow scale, pause) are
-/// applied at step() time - never by re-running setup() - so
-/// changing them retunes the motion mid-flight instead of snapping
-/// every layer back to center.
+/// The effects settings (motion/follow scale, pause) are applied
+/// at step() time - never by re-running setup() - so changing them
+/// retunes the motion mid-flight instead of snapping every layer
+/// back to center.
 export default class LayerSprings {
-	/// - Parameter isExplodeEnabled: ?explode=1 exaggerates the
-	///		pointer-follow separation between layers
-	constructor(isExplodeEnabled) {
-		this.isExplodeEnabled = !!isExplodeEnabled;
+	constructor() {
 		// Effects settings (EffectsSection drives these)
 		this.motionScale = 1;
 		this.followScale = 1;
@@ -60,9 +57,6 @@ export default class LayerSprings {
 		if (this.isPaused) {
 			return;
 		}
-		// Reach is computed live (not baked in setup) so the explode
-		// toggle takes effect without rebuilding the rig
-		const explodeScale = this.isExplodeEnabled ? 4 : 1;
 		for (const spring of this.springs) {
 			// Resting target is the center, drifting on slow sine
 			// waves so the Avastar "breathes" while idle
@@ -77,8 +71,7 @@ export default class LayerSprings {
 			if (touchPoint) {
 				// Front layers overshoot toward the pointer more than
 				// back layers, separating them for a parallax feel
-				const reach =
-					(1 + spring.depth * 0.35 * explodeScale) * this.followScale;
+				const reach = (1 + spring.depth * 0.35) * this.followScale;
 				targetX = center.x + (touchPoint.x - center.x) * reach;
 				targetY = center.y + (touchPoint.y - center.y) * reach;
 			}
