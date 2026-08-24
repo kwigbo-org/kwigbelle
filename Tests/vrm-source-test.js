@@ -1,6 +1,7 @@
 // VRMSource pipeline (docs/tads/vrm-viewer.md Step 2): metadata ->
 // vrm_url -> gateway fallback with streamed progress and caching,
 // verified against routed fixtures - no real network is touched.
+const http = require("http");
 const { chromium } = require("playwright-core");
 const { check } = require("./check.js");
 
@@ -32,7 +33,7 @@ const { check } = require("./check.js");
 			}),
 		});
 	});
-	await page.route("**/ipfs/**", (route) => {
+	await page.route("**/ipfs/**", async (route) => {
 		const host = new URL(route.request().url()).hostname;
 		if (host.includes("pinata")) {
 			hits.pinata++;
@@ -40,6 +41,18 @@ const { check } = require("./check.js");
 			hits.ipfsio++;
 		} else {
 			hits.dweb++;
+		}
+		if (mode === "hang" && host.includes("pinata")) {
+			// A gateway that accepts the request and then goes
+			// silent - the field failure the hedge exists for. By
+			// the time this fulfills, the attempt is aborted.
+			await new Promise((resolve) => setTimeout(resolve, 3000));
+			try {
+				await route.fulfill({ status: 504, headers: cors, body: "late" });
+			} catch {
+				// aborted request - expected
+			}
+			return;
 		}
 		const failThis =
 			mode === "allfail" || (mode === "fallback" && host.includes("pinata"));
@@ -173,6 +186,201 @@ const { check } = require("./check.js");
 			hits.ipfsio === 2 &&
 			hits.dweb === 1,
 		"abort still issued a request: " + JSON.stringify(hits),
+	);
+
+	// Hung gateway: pinata accepts and stalls; the stagger starts
+	// ipfs.io in parallel and it wins the race well before the
+	// hung attempt's own timeout
+	mode = "hang";
+	const hung = await page.evaluate(async () => {
+		const { default: VRMSource } = await import("../Lib/VRMSource.js");
+		const source = new VRMSource();
+		source.staggerMs = 400;
+		const start = performance.now();
+		const buffer = await source.fetchVRM(8014);
+		return {
+			byteLength: buffer.byteLength,
+			elapsed: performance.now() - start,
+		};
+	});
+	console.log("hung-gateway rescue:", JSON.stringify(hung));
+	check(hung.byteLength === 131072, "hedged fetch returned wrong bytes");
+	// Hit counts are the primary signal; the elapsed bound just
+	// proves we didn't sit out the full 3s hang sequentially
+	check(
+		hung.elapsed < 2800,
+		"hedge did not rescue a hung gateway in time: " + hung.elapsed,
+	);
+	check(
+		hits.pinata === 4 && hits.ipfsio === 3,
+		"hedge should have raced pinata (hung) and ipfs.io: " +
+			JSON.stringify(hits),
+	);
+
+	// Mid-stream death and empty bodies need a REAL streaming
+	// server (route.fulfill is atomic): /partial/ sends headers +
+	// half the bytes then kills the socket, /empty/ 200s with no
+	// body, /good/ serves fully. The page's VRMSource gets these
+	// as its gateway list directly.
+	const serverHits = { partial: 0, empty: 0, good: 0, hang: 0 };
+	const hangingResponses = [];
+	const fixtureServer = http.createServer((request, response) => {
+		const head = {
+			"Access-Control-Allow-Origin": "*",
+			"Content-Type": "application/octet-stream",
+		};
+		if (request.url.startsWith("/hang/")) {
+			serverHits.hang++;
+			response.writeHead(200, {
+				...head,
+				"Content-Length": String(bytes.length),
+			});
+			// Headers but never a body byte - parked until cleanup
+			hangingResponses.push(response);
+			return;
+		}
+		if (request.url.startsWith("/partial/")) {
+			serverHits.partial++;
+			response.writeHead(200, {
+				...head,
+				"Content-Length": String(bytes.length),
+			});
+			response.write(bytes.subarray(0, 65536));
+			setTimeout(() => response.destroy(), 100);
+			return;
+		}
+		if (request.url.startsWith("/empty/")) {
+			serverHits.empty++;
+			response.writeHead(200, head);
+			response.end();
+			return;
+		}
+		if (request.url.startsWith("/good/")) {
+			serverHits.good++;
+			response.writeHead(200, {
+				...head,
+				"Content-Length": String(bytes.length),
+			});
+			response.end(bytes);
+			return;
+		}
+		response.writeHead(404, head);
+		response.end();
+	});
+	await new Promise((resolve) => fixtureServer.listen(8799, resolve));
+
+	// A winner that dies mid-download gives up the crown and the
+	// race resumes with the not-yet-started candidate
+	const midStream = await page.evaluate(async () => {
+		const { default: VRMSource } = await import("../Lib/VRMSource.js");
+		const source = new VRMSource();
+		source.gateways = [
+			"http://localhost:8799/partial/",
+			"http://localhost:8799/good/",
+		];
+		source.staggerMs = 200;
+		const buffer = await source.fetchVRM(8014);
+		const view = new Uint8Array(buffer);
+		return { byteLength: buffer.byteLength, spot: view[131071] };
+	});
+	console.log("mid-stream death rescue:", JSON.stringify(midStream));
+	check(
+		midStream.byteLength === 131072 && midStream.spot === 131071 % 251,
+		"mid-stream winner death was not rescued: " + JSON.stringify(midStream),
+	);
+	check(
+		serverHits.partial === 1 && serverHits.good === 1,
+		"unexpected lane usage: " + JSON.stringify(serverHits),
+	);
+
+	// An empty 200 body counts as a failure and advances the race
+	// instead of wedging the bookkeeping
+	const emptyBody = await page.evaluate(async () => {
+		const { default: VRMSource } = await import("../Lib/VRMSource.js");
+		const source = new VRMSource();
+		source.gateways = [
+			"http://localhost:8799/empty/",
+			"http://localhost:8799/good/",
+		];
+		source.staggerMs = 5000; // fail-fast must advance, not the stagger
+		const start = performance.now();
+		const buffer = await source.fetchVRM(8014);
+		return {
+			byteLength: buffer.byteLength,
+			elapsed: performance.now() - start,
+		};
+	});
+	console.log("empty-body advance:", JSON.stringify(emptyBody));
+	check(
+		emptyBody.byteLength === 131072,
+		"empty body did not advance to the good lane",
+	);
+	check(
+		emptyBody.elapsed < 4000,
+		"empty body waited out the stagger instead of failing fast: " +
+			emptyBody.elapsed,
+	);
+	check(
+		serverHits.empty === 1 && serverHits.good === 2,
+		"unexpected empty-body lane usage: " + JSON.stringify(serverHits),
+	);
+
+	// Every lane timing out must reject with a REAL error, never an
+	// AbortError - the caller's contract reads AbortError as a user
+	// cancel and would show no error UI at all
+	const timeoutFailure = await page.evaluate(async () => {
+		const { default: VRMSource } = await import("../Lib/VRMSource.js");
+		const source = new VRMSource();
+		source.gateways = ["http://localhost:8799/hang/"];
+		source.firstByteMs = 300;
+		try {
+			await source.fetchVRM(8014);
+			return null;
+		} catch (error) {
+			return { name: error.name, message: error.message };
+		}
+	});
+	console.log("all-timeout rejection:", JSON.stringify(timeoutFailure));
+	check(
+		timeoutFailure !== null &&
+			timeoutFailure.name !== "AbortError" &&
+			timeoutFailure.message.includes("first-byte timeout"),
+		"timeout rejection masquerades as a cancel: " +
+			JSON.stringify(timeoutFailure),
+	);
+	check(serverHits.hang === 1, "hang lane not exercised");
+
+	for (const response of hangingResponses) {
+		response.destroy();
+	}
+	fixtureServer.close();
+
+	// Qm CIDs rewrite to CIDv1 in candidate URLs (pair verified
+	// live against pinata: both forms serve byte-identically)
+	const cidRewrite = await page.evaluate(async () => {
+		const { default: VRMSource } = await import("../Lib/VRMSource.js");
+		const source = new VRMSource();
+		return {
+			qm: source.candidateURLs(
+				"https://ipfs.io/ipfs/QmaqBQnFksmUBXzVqsoMi8hu6wVgj99HAmDnm3FVtjBLQ3/Avastar_Replicant_25500.vrm",
+			),
+			bafy: source.candidateURLs(
+				"https://ipfs.io/ipfs/bafytestcid/Avastar_Prime_8014.vrm",
+			),
+		};
+	});
+	check(
+		cidRewrite.qm.every((u) =>
+			u.includes(
+				"/ipfs/bafybeifztm4emp3u4xkaekpvyqbdxg5uhaxr2zxilqwargr5q7g52snh6q/Avastar_Replicant_25500.vrm",
+			),
+		),
+		"Qm CID not rewritten to the verified CIDv1: " +
+			JSON.stringify(cidRewrite.qm),
+	);
+	check(
+		cidRewrite.bafy.every((u) => u.includes("/ipfs/bafytestcid/")),
+		"CIDv1 URLs must pass through untouched",
 	);
 
 	console.log("errors:", errors.length ? errors : "none");

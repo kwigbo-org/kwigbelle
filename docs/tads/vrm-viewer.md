@@ -339,3 +339,46 @@ may restyle the toggle/section it introduces.
   a pre-aborted call); (b) hide() calls forceContextLoss() before
   renderer.dispose() so rapid toggling can't accumulate live GL
   contexts.
+- 2026-08-23 — Post-merge amendment (operator: intermittent VRM
+  loading failures). Field measurements falsified Decision 2's
+  sequential-fallback premise: EVERY public gateway intermittently
+  hangs 20s+ on some CID (pinata included), and dweb.link
+  hard-fails on Qm CIDs (its path->subdomain redirect breaks on
+  base58 case) - which is every founder and replicant model. One
+  hung gateway therefore stalled the whole sequential chain with
+  no timeout. Decision 2's ORDER stands but the strategy is now a
+  hedged race (VRMSource.hedgedDownload): attempts start 4s apart
+  (immediately on a fast failure), first body chunk wins and
+  aborts the rest, and each attempt has a 20s first-byte cap.
+  Verified by the new hung-gateway scenario in vrm-source-test
+  (stalled pinata rescued by ipfs.io in ~0.4s at test stagger).
+  Additionally, candidate URLs rewrite CIDv0 (Qm...) to CIDv1
+  base32 (in-repo cidV0toV1, ~50 lines, no dependency): the
+  mixed-case Qm form is what breaks the subdomain redirects, and
+  every founder/replicant model is published under one.
+  Conversion correctness proven live (pinata serves the converted
+  pair byte-range-identically) and pinned in the harness against
+  the verified pair. Live browser check: replicant 25500 - which
+  previously depended on a single viable lane - loads in ~7s with
+  two lanes failing and the race absorbing them.
+- 2026-08-24 — Panel round on the hedge: 0/4, all genuine.
+  Hardened: (a) a winner dying MID-stream now gives up the crown
+  and the race resumes with not-yet-started candidates instead of
+  rejecting outright (Codex HIGH - the settle() bookkeeping
+  counts every attempt exactly once, so the all-settled reject
+  gate stays sound); (b) an empty 200 body now throws instead of
+  wedging the race (neither winning nor failing); (c) a stale
+  race-loser abort can no longer masquerade as the rejection
+  reason (lastError keeps the genuine failure; timeout aborts are
+  marked genuine via timedOut); (d) empty candidate list rejects
+  defensively; (e) the TAD amendment entries were re-ordered
+  append-only. New harness scenarios against a real streaming
+  server (route.fulfill is atomic): mid-stream death rescued
+  byte-perfect via the resumed lane; empty body advances in ms.
+- 2026-08-24 — Round 2 (2/4): all-lanes-timeout rejected with an
+  AbortError, which the scene's contract reads as USER cancel -
+  after ~60s of failed waiting the user would get no error UI at
+  all. Timeouts now store a real "first-byte timeout via <url>"
+  Error (harness scenario pins the rejection shape); the caller
+  signal's abort listener is detached when the race settles so a
+  long-lived controller can't pin the race's closures.
