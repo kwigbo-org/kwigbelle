@@ -108,12 +108,25 @@ export default class LayerSprings {
 				targetY = center.y + (touchPoint.y - center.y) * reach;
 			}
 			if (this.isWaveEnabled) {
-				// A ripple traveling through the layers by depth,
-				// riding on idle AND follow targets — a steady tilt
-				// drive must not silence it. Deliberately NOT scaled
+				// A traveling PULSE, not another sine: the idle
+				// breathing is already a depth-staggered sine, so a
+				// continuous wave read as "more of the same" (operator
+				// QA). Every few seconds a wavefront sweeps the stack
+				// back-to-front; each layer takes a quick out-and-back
+				// whip as it passes, then rests until the next one.
+				// Rides idle AND follow targets (a steady tilt drive
+				// must not silence it) and is deliberately NOT scaled
 				// by motionScale: Wave stands alone
 				// (docs/tads/burned-traits.md Decision 10).
-				targetX += Math.sin(now * 1.5 - spring.depth * 2.2) * 9;
+				const period = 3.2; // seconds between wavefronts
+				const width = 0.4; // fraction of the period a layer whips
+				let wavePhase = (now % period) / period - spring.depth * 0.35;
+				if (wavePhase < 0) {
+					wavePhase += 1;
+				}
+				if (wavePhase < width) {
+					targetX += Math.sin((wavePhase / width) * Math.PI * 2) * 26;
+				}
 			}
 
 			// Underdamped spring integration so layers overshoot

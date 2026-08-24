@@ -168,13 +168,17 @@ const { check } = require("./check.js");
 			const canvas = document.getElementById("mainCanvas");
 			return canvas.getContext("2d").getImageData(10, 10, 1, 1).data[3];
 		});
-	await toggle("Wave").check();
-	await page.waitForTimeout(400);
-	const cleanCount = await intermediateCount();
+	// Motion source is a poke (deterministic burst — Wave is a
+	// duty-cycled pulse now and could be mid-rest when sampled)
 	const cornerBefore = await cornerAlpha();
 	check(cornerBefore === 255, "backdrop corner not opaque before trails");
+	await page.mouse.click(260, 300);
+	await page.waitForTimeout(350);
+	const cleanCount = await intermediateCount();
+	await waitForRest("clean-motion sample");
 	await toggle("Trails").check();
-	await page.waitForTimeout(700);
+	await page.mouse.click(260, 300);
+	await page.waitForTimeout(350);
 	const trailsCount = await intermediateCount();
 	const cornerAfter = await cornerAlpha();
 	console.log(
@@ -186,7 +190,6 @@ const { check } = require("./check.js");
 	);
 	check(cornerAfter < 32, "backdrop still painted while Trails on");
 	await toggle("Trails").uncheck();
-	await toggle("Wave").uncheck();
 	await page.waitForTimeout(600);
 	check(
 		(await cornerAlpha()) === 255,
