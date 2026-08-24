@@ -296,7 +296,9 @@ export default class AvastarLoader {
 	}
 
 	/// Render a token's SVG from the contract without changing
-	/// the currently loaded Avastar. Used for picker thumbnails.
+	/// the currently loaded Avastar. The last on-chain render path:
+	/// only fallbackSVG uses it now (thumbnails compose from the
+	/// library — docs/tads/profile-drawer.md).
 	///
 	/// - Parameter tokenId: The token id to render
 	/// - Returns: The SVG string for the token

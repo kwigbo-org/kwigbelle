@@ -31,8 +31,9 @@ Lib/MainScene.js           scene: load orchestration + async-race
 Lib/LayerSprings.js        spring physics: per-depth params +
                            integration (idle breathing, follow)
 Lib/ProfileSection.js      profile drawer: wallet connect flow
-                           (multi-wallet chooser, switch/link) +
-                           owned-Avastars grid w/ lazy thumbnails
+                           (multi-wallet chooser, switch/link,
+                           logout) + owned-Avastars grid w/ lazy
+                           library-composed thumbnails
 Lib/SidePanel.js           right-side drawer stack: stacked handle
                            tabs (profile above settings) sharing
                            one sliding column; settings sections
@@ -72,7 +73,8 @@ Lib/TraitComposer.js       THE render path: composes any of the
                            TAD); the old heuristic parser is GONE
 Lib/AvastarLoader.js       wallet integration: EIP-6963 discovery,
                            chain guard, owned-token enumeration,
-                           renderAvastar for thumbnails + fallback
+                           renderAvastar as fallback only (its last
+                           on-chain render use)
 Lib/Scene.js, DisplayLoop.js, Point.js, Size.js   small scene plumbing
 Traits/                    committed trait library: 614 SVG fragments
                            (Traits/0/<traitId>.svg), index.json

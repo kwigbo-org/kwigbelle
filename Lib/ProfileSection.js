@@ -10,10 +10,12 @@ const SVG_NS = "http://www.w3.org/2000/svg";
 export default class ProfileSection {
 	/// - Parameters:
 	///		- avastarLoader: The wallet integration to drive
+	///		- traitComposer: Source of the composed thumbnails
 	///		- callbacks: { onConnected(ownedTokenIds),
-	///			onPick(tokenId), isDrawerOpen() }
-	constructor(avastarLoader, callbacks) {
+	///			onPick(tokenId), onLoggedOut(), isDrawerOpen() }
+	constructor(avastarLoader, traitComposer, callbacks) {
 		this.avastarLoader = avastarLoader;
+		this.traitComposer = traitComposer;
 		this.callbacks = callbacks;
 		this.walletState = null;
 	}
@@ -190,8 +192,9 @@ export default class ProfileSection {
 		}
 	}
 
-	/// Render each owned Avastar into its grid tile, one at a time
-	/// to keep the wallet RPC happy
+	/// Render each owned Avastar into its grid tile, composed from
+	/// the trait library — instant and walletless
+	/// (docs/tads/profile-drawer.md Decision 9)
 	async loadThumbnails() {
 		if (this.isLoadingThumbnails) {
 			return;
@@ -203,7 +206,7 @@ export default class ProfileSection {
 				continue;
 			}
 			try {
-				const svgString = await this.avastarLoader.renderTokenSVG(tokenId);
+				const svgString = await this.traitComposer.composeSVG(tokenId);
 				// The grid may have been rebuilt while the render was
 				// in flight: a stale loop must not touch the new
 				// session's cache, items, or in-flight flag
