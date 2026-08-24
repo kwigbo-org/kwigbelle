@@ -222,12 +222,23 @@ const { check } = require("./check.js");
 	// half the bytes then kills the socket, /empty/ 200s with no
 	// body, /good/ serves fully. The page's VRMSource gets these
 	// as its gateway list directly.
-	const serverHits = { partial: 0, empty: 0, good: 0 };
+	const serverHits = { partial: 0, empty: 0, good: 0, hang: 0 };
+	const hangingResponses = [];
 	const fixtureServer = http.createServer((request, response) => {
 		const head = {
 			"Access-Control-Allow-Origin": "*",
 			"Content-Type": "application/octet-stream",
 		};
+		if (request.url.startsWith("/hang/")) {
+			serverHits.hang++;
+			response.writeHead(200, {
+				...head,
+				"Content-Length": String(bytes.length),
+			});
+			// Headers but never a body byte - parked until cleanup
+			hangingResponses.push(response);
+			return;
+		}
 		if (request.url.startsWith("/partial/")) {
 			serverHits.partial++;
 			response.writeHead(200, {
@@ -313,6 +324,35 @@ const { check } = require("./check.js");
 		serverHits.empty === 1 && serverHits.good === 2,
 		"unexpected empty-body lane usage: " + JSON.stringify(serverHits),
 	);
+
+	// Every lane timing out must reject with a REAL error, never an
+	// AbortError - the caller's contract reads AbortError as a user
+	// cancel and would show no error UI at all
+	const timeoutFailure = await page.evaluate(async () => {
+		const { default: VRMSource } = await import("../Lib/VRMSource.js");
+		const source = new VRMSource();
+		source.gateways = ["http://localhost:8799/hang/"];
+		source.firstByteMs = 300;
+		try {
+			await source.fetchVRM(8014);
+			return null;
+		} catch (error) {
+			return { name: error.name, message: error.message };
+		}
+	});
+	console.log("all-timeout rejection:", JSON.stringify(timeoutFailure));
+	check(
+		timeoutFailure !== null &&
+			timeoutFailure.name !== "AbortError" &&
+			timeoutFailure.message.includes("first-byte timeout"),
+		"timeout rejection masquerades as a cancel: " +
+			JSON.stringify(timeoutFailure),
+	);
+	check(serverHits.hang === 1, "hang lane not exercised");
+
+	for (const response of hangingResponses) {
+		response.destroy();
+	}
 	fixtureServer.close();
 
 	// Qm CIDs rewrite to CIDv1 in candidate URLs (pair verified

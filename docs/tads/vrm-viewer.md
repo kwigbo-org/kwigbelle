@@ -375,3 +375,10 @@ may restyle the toggle/section it introduces.
   append-only. New harness scenarios against a real streaming
   server (route.fulfill is atomic): mid-stream death rescued
   byte-perfect via the resumed lane; empty body advances in ms.
+- 2026-08-24 — Round 2 (2/4): all-lanes-timeout rejected with an
+  AbortError, which the scene's contract reads as USER cancel -
+  after ~60s of failed waiting the user would get no error UI at
+  all. Timeouts now store a real "first-byte timeout via <url>"
+  Error (harness scenario pins the rejection shape); the caller
+  signal's abort listener is detached when the race settles so a
+  long-lived controller can't pin the race's closures.

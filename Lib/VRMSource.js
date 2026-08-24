@@ -192,13 +192,13 @@ export default class VRMSource {
 	/// Rejects only when every candidate has settled without a
 	/// completed download.
 	hedgedDownload(urls, onProgress, signal) {
-		return new Promise((resolve, reject) => {
+		return new Promise((outerResolve, outerReject) => {
 			if (signal && signal.aborted) {
-				reject(new DOMException("aborted", "AbortError"));
+				outerReject(new DOMException("aborted", "AbortError"));
 				return;
 			}
 			if (!urls.length) {
-				reject(new Error("no candidate URLs"));
+				outerReject(new Error("no candidate URLs"));
 				return;
 			}
 			const attempts = [];
@@ -217,15 +217,26 @@ export default class VRMSource {
 					attempt.controller.abort();
 				}
 			};
+			const onAbort = () => {
+				abortAll();
+				outerReject(new DOMException("aborted", "AbortError"));
+			};
+			// Settling detaches the abort listener: a long-lived
+			// caller signal must not pin this race's closures alive
+			const resolve = (bytes) => {
+				if (signal) {
+					signal.removeEventListener("abort", onAbort);
+				}
+				outerResolve(bytes);
+			};
+			const reject = (error) => {
+				if (signal) {
+					signal.removeEventListener("abort", onAbort);
+				}
+				outerReject(error);
+			};
 			if (signal) {
-				signal.addEventListener(
-					"abort",
-					() => {
-						abortAll();
-						reject(new DOMException("aborted", "AbortError"));
-					},
-					{ once: true },
-				);
+				signal.addEventListener("abort", onAbort, { once: true });
 			}
 			// One attempt is out of the race for good. Exactly once
 			// per attempt (the settled flag): failures, race-loser
@@ -243,8 +254,13 @@ export default class VRMSource {
 				const isGenuine =
 					attempt.timedOut || !error || error.name !== "AbortError";
 				if (isGenuine) {
-					lastError = error;
-					console.warn(`VRM fetch failed via ${url}`, error);
+					// A timeout's raw error is an AbortError, which the
+					// caller's contract reads as USER cancel (silent, no
+					// toast) - store it as the real failure it is
+					lastError = attempt.timedOut
+						? new Error(`first-byte timeout via ${url}`)
+						: error;
+					console.warn(`VRM fetch failed via ${url}`, lastError);
 				}
 				if (winner || (signal && signal.aborted)) {
 					// Race is owned or cancelled: bookkeeping only
