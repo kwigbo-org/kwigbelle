@@ -184,12 +184,26 @@ async function capture() {
 	fs.mkdirSync(DATA_DIR, { recursive: true });
 	const progress = fs.existsSync(PROGRESS_FILE)
 		? JSON.parse(fs.readFileSync(PROGRESS_FILE, "utf8"))
-		: { through: 0, masks: {} };
+		: { through: 0, masks: {}, failed: [] };
+	progress.failed = progress.failed || [];
 	console.log(
 		`capturing primes ${progress.through}..${PRIME_COUNT - 1} ` +
-			`(${Object.keys(progress.masks).length} burns recorded so far)`,
+			`(${Object.keys(progress.masks).length} burns recorded so far, ` +
+			`${progress.failed.length} pending retries)`,
 	);
-	let hardFailures = 0;
+	// A token that fails past the batch retries is RECORDED, not
+	// just counted: `through` advances regardless, so without the
+	// list a re-run would sail past the gap and finalize a table
+	// silently missing those burns
+	const record = (tokenId, hex) => {
+		if (hex instanceof Error) {
+			console.warn(`token ${tokenId}: ${hex.message}`);
+			progress.failed.push(tokenId);
+			return;
+		}
+		const mask = decodeMask(hex, tokenId);
+		if (mask > 0) progress.masks[tokenId] = mask;
+	};
 	for (let start = progress.through; start < PRIME_COUNT; start += BATCH_SIZE) {
 		const chunk = [];
 		for (let t = start; t < Math.min(start + BATCH_SIZE, PRIME_COUNT); t++) {
@@ -199,14 +213,7 @@ async function capture() {
 			chunk.map((t) => ({ id: t, data: SEL_REPLICATION + pad(t) })),
 		);
 		for (const t of chunk) {
-			const hex = results[t];
-			if (hex instanceof Error) {
-				hardFailures++;
-				console.warn(`token ${t}: ${hex.message}`);
-				continue;
-			}
-			const mask = decodeMask(hex, t);
-			if (mask > 0) progress.masks[t] = mask;
+			record(t, results[t]);
 		}
 		progress.through = Math.min(start + BATCH_SIZE, PRIME_COUNT);
 		if (progress.through % (BATCH_SIZE * 10) < BATCH_SIZE) {
@@ -218,10 +225,24 @@ async function capture() {
 		}
 		await sleep(BATCH_DELAY_MS);
 	}
-	if (hardFailures > 0) {
+	// Give the recorded failures one more pass (a resumed run with
+	// `through` already complete lands here directly)
+	if (progress.failed.length > 0) {
+		const retryIds = [...new Set(progress.failed)];
+		console.log(`retrying ${retryIds.length} failed tokens...`);
+		progress.failed = [];
+		const results = await rpcBatch(
+			retryIds.map((t) => ({ id: t, data: SEL_REPLICATION + pad(t) })),
+		);
+		for (const t of retryIds) {
+			record(t, results[t]);
+		}
+	}
+	if (progress.failed.length > 0) {
 		fs.writeFileSync(PROGRESS_FILE, JSON.stringify(progress));
 		throw new Error(
-			`${hardFailures} tokens failed - re-run to retry (progress kept)`,
+			`${progress.failed.length} tokens still failing - re-run to ` +
+				`retry them (progress kept)`,
 		);
 	}
 	// Deterministic final table: numeric-ascending keys, sparse

@@ -140,6 +140,15 @@ None.
   replicants using "None"-type empty slots that burn nothing);
   `--verify 20` matched chain AND metadata on every sample,
   including partial masks and a full 4095. Step 2 done.
+- 2026-08-24 — Deviation from Decision 8's PR split, recorded
+  honestly: the Step 2 artifacts (fetch-burned.js + the verified
+  burned.json) were swept into PR C (#20) by a `git add -A` during
+  a review fix-push. Kept there rather than rewriting a reviewed
+  head — the panel reviewed the tool (Codex caught a resume gap:
+  failed tokens advanced `through`, so a re-run could finalize
+  without their burns → failures are now recorded in the progress
+  file and retried before finalizing). PR B carries the display
+  code only.
 - 2026-08-24 — Step 4 applied (PR C): poke/wave/trails/tilt per
   Decision 10. index.html now exposes the scene as
   `window.kwigbelleScene` for the harness — effects-test asserts
