@@ -91,9 +91,13 @@
 			(function (window, document, undefined) {
 				window.onload = function () {
 					let contentView = document.getElementById("contentView");
-					// Exposed for the Tests/ harness: physics assertions
-					// read spring state instead of guessing from pixels
-					window.kwigbelleScene = new MainScene(contentView);
+					const scene = new MainScene(contentView);
+					// Exposed for the Tests/ harness only when asked:
+					// physics assertions read spring state instead of
+					// guessing from pixels
+					if (new URLSearchParams(window.location.search).has("testharness")) {
+						window.kwigbelleScene = scene;
+					}
 				};
 			})(window, document, undefined);
 		</script>

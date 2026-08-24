@@ -100,18 +100,20 @@ export default class LayerSprings {
 				Math.sin(now * 0.9 + spring.phase) *
 					spring.breatheAmp *
 					this.motionScale;
-			if (this.isWaveEnabled) {
-				// A ripple traveling through the layers by depth.
-				// Deliberately NOT scaled by motionScale: Wave stands
-				// alone (docs/tads/burned-traits.md Decision 10)
-				targetX += Math.sin(now * 1.5 - spring.depth * 2.2) * 9;
-			}
 			if (touchPoint) {
 				// Front layers overshoot toward the pointer more than
 				// back layers, separating them for a parallax feel
 				const reach = (1 + spring.depth * 0.35) * this.followScale;
 				targetX = center.x + (touchPoint.x - center.x) * reach;
 				targetY = center.y + (touchPoint.y - center.y) * reach;
+			}
+			if (this.isWaveEnabled) {
+				// A ripple traveling through the layers by depth,
+				// riding on idle AND follow targets — a steady tilt
+				// drive must not silence it. Deliberately NOT scaled
+				// by motionScale: Wave stands alone
+				// (docs/tads/burned-traits.md Decision 10).
+				targetX += Math.sin(now * 1.5 - spring.depth * 2.2) * 9;
 			}
 
 			// Underdamped spring integration so layers overshoot

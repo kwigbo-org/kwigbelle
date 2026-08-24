@@ -24,7 +24,11 @@ const { check } = require("./check.js");
 		d.dismiss();
 	});
 
-	await page.goto("http://localhost:8741/index.html?tokenid=8014");
+	// testharness=1 exposes window.kwigbelleScene for the physics
+	// assertions
+	await page.goto(
+		"http://localhost:8741/index.html?tokenid=8014&testharness=1",
+	);
 	await page.waitForFunction(
 		() => document.getElementById("preloader")?.style.opacity === "0",
 		{ timeout: 15000 },
@@ -256,5 +260,43 @@ const { check } = require("./check.js");
 
 	console.log("errors:", errors.length ? errors : "none");
 	check(errors.length === 0, "page errors: " + JSON.stringify(errors));
+
+	// TOUCH: a real touch tap (which browsers replay as synthetic
+	// mouse events) must fire exactly ONE poke — the double-poke
+	// regression the review caught. Instrument poke with a counter
+	// before tapping.
+	const touchContext = await browser.newContext({
+		viewport: { width: 800, height: 600 },
+		hasTouch: true,
+	});
+	const touchPage = await touchContext.newPage();
+	touchPage.on("pageerror", (e) =>
+		errors.push("touch pageerror: " + e.message),
+	);
+	await touchPage.goto(
+		"http://localhost:8741/index.html?tokenid=8014&testharness=1",
+	);
+	await touchPage.waitForFunction(
+		() => document.getElementById("preloader")?.style.opacity === "0",
+		{ timeout: 15000 },
+	);
+	await touchPage.waitForTimeout(500);
+	await touchPage.evaluate(() => {
+		const rig = window.kwigbelleScene.layerSprings;
+		window.__pokeCount = 0;
+		const original = rig.poke.bind(rig);
+		rig.poke = (point) => {
+			window.__pokeCount++;
+			original(point);
+		};
+	});
+	await touchPage.touchscreen.tap(260, 300);
+	// Synthetic mouse replay can lag the touch by a click-delay
+	await touchPage.waitForTimeout(900);
+	const pokeCount = await touchPage.evaluate(() => window.__pokeCount);
+	console.log("touch tap poke count:", pokeCount);
+	check(pokeCount === 1, `touch tap fired ${pokeCount} pokes (expected 1)`);
+	check(errors.length === 0, "touch page errors: " + JSON.stringify(errors));
+	await touchContext.close();
 	await browser.close();
 })();

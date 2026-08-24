@@ -454,6 +454,7 @@ export default class MainScene extends Scene {
 
 	touchStart(event) {
 		super.touchStart(event);
+		this.lastTouchTime = performance.now();
 		this.beginTap(this.touchPoint);
 	}
 
@@ -462,18 +463,35 @@ export default class MainScene extends Scene {
 		// point first
 		const releasePoint = this.touchPoint;
 		super.touchEnd();
+		this.lastTouchTime = performance.now();
 		this.finishTap(releasePoint);
+	}
+
+	/// Browsers replay a touch as synthetic mouse events; counting
+	/// those as a second tap would double the poke (or fire one at
+	/// the end of a touch drag). touch-action:none suppresses the
+	/// synthesis on most engines; this window is the belt to that
+	/// suspender.
+	isSyntheticMouse() {
+		return (
+			this.lastTouchTime !== undefined &&
+			performance.now() - this.lastTouchTime < 800
+		);
 	}
 
 	mouseDown(event) {
 		super.mouseDown(event);
-		this.beginTap(this.touchPoint);
+		if (!this.isSyntheticMouse()) {
+			this.beginTap(this.touchPoint);
+		}
 	}
 
 	mouseUp() {
 		const releasePoint = this.touchPoint;
 		super.mouseUp();
-		this.finishTap(releasePoint);
+		if (!this.isSyntheticMouse()) {
+			this.finishTap(releasePoint);
+		}
 	}
 
 	beginTap(point) {
@@ -500,15 +518,24 @@ export default class MainScene extends Scene {
 	/// from the toggle tap it prompts; restored at page load it
 	/// rejects quietly and tilt stays inert until re-toggled.
 	setTiltEnabled(enabled) {
+		// Every call supersedes any pending permission resolution and
+		// detaches the current listener first, so repeated toggles
+		// can never stack listeners and a permission grant that lands
+		// after a disable can never resurrect the sensor
+		this.tiltGeneration = (this.tiltGeneration || 0) + 1;
+		const generation = this.tiltGeneration;
+		if (this.onTilt) {
+			window.removeEventListener("deviceorientation", this.onTilt);
+			this.onTilt = null;
+		}
+		this.tiltPoint = null;
 		if (!enabled) {
-			if (this.onTilt) {
-				window.removeEventListener("deviceorientation", this.onTilt);
-				this.onTilt = null;
-			}
-			this.tiltPoint = null;
 			return;
 		}
 		const attach = () => {
+			if (generation !== this.tiltGeneration) {
+				return;
+			}
 			this.tiltBaseline = null;
 			this.onTilt = (event) => {
 				if (event.beta == null || event.gamma == null) {
@@ -544,6 +571,13 @@ export default class MainScene extends Scene {
 		} else {
 			attach();
 		}
+	}
+
+	/// Overridden teardown: the tilt sensor listener lives outside
+	/// the base class's bound set
+	destroy() {
+		this.setTiltEnabled(false);
+		super.destroy();
 	}
 
 	resize() {
@@ -863,7 +897,11 @@ export default class MainScene extends Scene {
 			return;
 		}
 		const context = this.canvas.getContext("2d");
-		const isTrails = this.effectsSection.trailsEnabled;
+		// Guarded: the render loop starts in buildUI, before the
+		// constructor reaches the section wiring
+		const isTrails = !!(
+			this.effectsSection && this.effectsSection.trailsEnabled
+		);
 		if (isTrails) {
 			// Trails (docs/tads/burned-traits.md Decision 10): erase a
 			// fraction per frame instead of clearing, so motion leaves
