@@ -89,6 +89,13 @@ window.ethereum = {
 		currentLabel: document.querySelector(".profileTile.current").dataset.token,
 	}));
 	console.log("before open:", JSON.stringify(closed));
+	// The handle carries the always-visible presence dot
+	check(
+		await page.evaluate(() =>
+			document.getElementById("profileHandle").classList.contains("statusDot"),
+		),
+		"profile handle missing the status dot",
+	);
 	check(!closed.oldPicker, "retired floating picker still present");
 	check(!closed.drawerOpen, "drawer open before any tap");
 	check(closed.badge, "profile handle badge not lit after silent connect");

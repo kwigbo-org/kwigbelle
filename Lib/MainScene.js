@@ -80,6 +80,10 @@ export default class MainScene extends Scene {
 			{
 				handleId: "profileHandle",
 				onOpen: () => this.profileSection.onOpen(),
+				// Always-visible wallet presence: grey = logged out,
+				// pulsing green = connected (operator QA — the
+				// appearing accent dot read as decoration, not state)
+				statusDot: true,
 			},
 		);
 		profileColumn.appendChild(this.profileSection.build());

@@ -232,8 +232,10 @@
 	border-color: var(--accent);
 }
 
-/* The profile tab's connected badge dot */
-.panelHandle.connected::after {
+/* The profile tab's wallet presence dot: always visible so both
+   states are learnable — grey when logged out, a gently pulsing
+   green when connected */
+.panelHandle.statusDot::after {
 	content: "";
 	position: absolute;
 	top: 6px;
@@ -241,7 +243,30 @@
 	width: 9px;
 	height: 9px;
 	border-radius: 50%;
-	background: var(--accent);
+	background: rgba(170, 168, 173, 0.55);
+}
+
+.panelHandle.statusDot.connected::after {
+	background: var(--mint);
+	animation: status-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes status-pulse {
+	0%,
+	100% {
+		opacity: 1;
+		transform: scale(1);
+	}
+	50% {
+		opacity: 0.5;
+		transform: scale(0.8);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.panelHandle.statusDot.connected::after {
+		animation: none;
+	}
 }
 
 /* The sliding area every drawer column shares; only the active
