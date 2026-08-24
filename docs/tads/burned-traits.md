@@ -38,9 +38,12 @@ mainnet + the metadata endpoint):
 - Only primes (#0–25,199, promos included) have the concept;
   replicants can't be replicated.
 
-**Explode**: `?explode=1` + the Effects toggle scale the spring
-reach/follow ×4 (`LayerSprings.isExplodeEnabled` → `explodeScale`).
-The Motion (0–3) and Follow (0–2) sliders cover the same ground
+**Explode**: `?explode=1` + the Effects toggle set
+`LayerSprings.isExplodeEnabled`, which multiplies the
+depth-proportional separation term in the reach formula by 4
+(`explodeScale`) — front-layer reach goes from ~1.35× to ~2.4×,
+deeper layers proportionally less, the deepest unchanged. The
+Motion (0–3) and Follow (0–2) sliders cover the same ground
 continuously — operator calls it legacy.
 
 **Trait cards today** (`TraitsSection.card`): one row per trait —
