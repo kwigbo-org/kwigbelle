@@ -184,17 +184,39 @@ window.ethereum = {
 	check(afterReload.tiles === 0, "silent reconnect after logout");
 	check(!afterReload.badge, "badge lit after logged-out reload");
 
-	// Link Wallet ends the logged-out state and reconnects
+	// Link Wallet ends the logged-out state and reconnects (the
+	// reconnect loads the first owned token, so the highlight lands
+	// on it via finishLoad)
 	await page.click("#profileHandle");
 	await page.waitForSelector(".connectButton", { timeout: 5000 });
 	await page.click(".connectButton");
 	await page.waitForFunction(
 		() =>
 			document.querySelectorAll("#profileGrid .profileTile").length === 3 &&
-			document.getElementById("profileHandle").classList.contains("connected"),
+			document
+				.getElementById("profileHandle")
+				.classList.contains("connected") &&
+			document.querySelector(".profileTile.current")?.dataset.token ===
+				"8014" &&
+			document.getElementById("preloader")?.style.opacity === "0",
 		{ timeout: 20000 },
 	);
 	console.log("reconnected after logout");
+
+	// Logout/reconnect while the DISPLAYED token is already the
+	// first owned one: the reconnect's same-token load
+	// short-circuits (no finishLoad), so the highlight must survive
+	// from the preserved currentTokenId
+	await page.click(".profileLogout");
+	await page.waitForSelector(".connectButton", { timeout: 5000 });
+	await page.click(".connectButton");
+	await page.waitForFunction(
+		() =>
+			document.querySelectorAll("#profileGrid .profileTile").length === 3 &&
+			document.querySelector(".profileTile.current")?.dataset.token === "8014",
+		{ timeout: 20000 },
+	);
+	console.log("same-token reconnect keeps the highlight");
 
 	console.log("errors:", errors.length ? errors : "none");
 	check(errors.length === 0, "page errors: " + JSON.stringify(errors));

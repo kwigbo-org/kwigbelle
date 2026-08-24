@@ -238,7 +238,10 @@ export default class ProfileSection {
 		this.ownedTokenIds = [];
 		this.thumbnailCache = {};
 		this.gridItems = {};
-		this.currentTokenId = null;
+		// currentTokenId survives: logout does not change what is
+		// displayed, and a reconnect to the same token short-circuits
+		// the load (no finishLoad -> no setCurrent), so the rebuilt
+		// grid restores its highlight from here
 		this.grid.innerHTML = "";
 		this.avastarLoader.forgetWallet();
 		this.setWalletState("disconnected");
