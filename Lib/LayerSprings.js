@@ -13,7 +13,39 @@ export default class LayerSprings {
 		this.motionScale = 1;
 		this.followScale = 1;
 		this.isPaused = false;
+		this.isWaveEnabled = false;
 		this.springs = [];
+	}
+
+	/// Kick every layer's velocity away from a tap point — the Poke
+	/// effect (docs/tads/burned-traits.md Decision 10). Front layers
+	/// take the hardest hit; the underdamped springs scatter and
+	/// settle on their own.
+	///
+	/// - Parameter point: Where the tap landed
+	poke(point) {
+		// A paused rig must not bank velocity for a burst on unpause
+		if (this.isPaused) {
+			return;
+		}
+		for (const spring of this.springs) {
+			let dx = spring.x - point.x;
+			let dy = spring.y - point.y;
+			const distance = Math.hypot(dx, dy);
+			if (distance < 1) {
+				// Tap dead-center on a resting layer: a stable
+				// per-layer direction instead of dividing by zero
+				const angle = spring.phase * 2.6;
+				dx = Math.cos(angle);
+				dy = Math.sin(angle);
+			} else {
+				dx /= distance;
+				dy /= distance;
+			}
+			const strength = 250 + spring.depth * 550;
+			spring.vx += dx * strength;
+			spring.vy += dy * strength;
+		}
 	}
 
 	/// Build one spring per layer, all starting at rest on center
@@ -68,6 +100,12 @@ export default class LayerSprings {
 				Math.sin(now * 0.9 + spring.phase) *
 					spring.breatheAmp *
 					this.motionScale;
+			if (this.isWaveEnabled) {
+				// A ripple traveling through the layers by depth.
+				// Deliberately NOT scaled by motionScale: Wave stands
+				// alone (docs/tads/burned-traits.md Decision 10)
+				targetX += Math.sin(now * 1.5 - spring.depth * 2.2) * 9;
+			}
 			if (touchPoint) {
 				// Front layers overshoot toward the pointer more than
 				// back layers, separating them for a parallax feel

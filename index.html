@@ -91,7 +91,9 @@
 			(function (window, document, undefined) {
 				window.onload = function () {
 					let contentView = document.getElementById("contentView");
-					const currentScene = new MainScene(contentView);
+					// Exposed for the Tests/ harness: physics assertions
+					// read spring state instead of guessing from pixels
+					window.kwigbelleScene = new MainScene(contentView);
 				};
 			})(window, document, undefined);
 		</script>

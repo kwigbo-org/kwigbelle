@@ -69,6 +69,7 @@ export default [
 				document: "readonly",
 				AbortController: "readonly",
 				performance: "readonly",
+				DeviceOrientationEvent: "readonly",
 				sessionStorage: "readonly",
 				localStorage: "readonly",
 				CustomEvent: "readonly",
