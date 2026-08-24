@@ -78,6 +78,39 @@ export default class AvastarLoader {
 		}
 	}
 
+	/// The user chose to log out: forget the remembered wallet, drop
+	/// the active provider and its bound contract state, and record
+	/// the choice so a reload does not silently reconnect
+	forgetWallet() {
+		this.provider = undefined;
+		this.avastarContract = null;
+		this.web3 = null;
+		this.connectPromise = null;
+		try {
+			localStorage.removeItem("kwigbelle.wallet");
+			localStorage.setItem("kwigbelle.disconnected", "1");
+		} catch (error) {
+			// Storage unavailable: the logout just won't persist
+		}
+	}
+
+	/// Whether the user logged out (suppresses the silent
+	/// enumeration on page load)
+	isLoggedOut() {
+		try {
+			return localStorage.getItem("kwigbelle.disconnected") === "1";
+		} catch (error) {
+			return false;
+		}
+	}
+
+	/// A connect tap ends the logged-out state
+	clearLoggedOut() {
+		try {
+			localStorage.removeItem("kwigbelle.disconnected");
+		} catch (error) {}
+	}
+
 	/// Reload on network switches (e.g. Base -> mainnet) so the
 	/// wallet's Avastars appear without a manual refresh
 	watchChain(provider) {

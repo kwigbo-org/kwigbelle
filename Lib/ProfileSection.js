@@ -21,15 +21,29 @@ export default class ProfileSection {
 	/// The profile tab's face: a person glyph as inline SVG so it
 	/// obeys the chrome's CSS colors (platform emoji would not)
 	static handleIcon() {
-		const svg = document.createElementNS(SVG_NS, "svg");
-		svg.setAttribute("viewBox", "0 0 24 24");
-		svg.setAttribute("class", "profileHandleIcon");
-		const path = document.createElementNS(SVG_NS, "path");
-		path.setAttribute(
-			"d",
+		return ProfileSection.icon(
 			"M12 12.3c2.8 0 5-2.3 5-5.1S14.8 2 12 2 7 4.3 7 7.2s2.2 5.1 5 5.1z" +
 				"m0 2.6c-3.3 0-10 1.7-10 5v2.1h20v-2.1c0-3.3-6.7-5-10-5z",
+			"handleIcon",
 		);
+	}
+
+	/// The logout button's door-with-arrow glyph
+	static logoutIcon() {
+		return ProfileSection.icon(
+			"M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3" +
+				"H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z",
+			"logoutIcon",
+		);
+	}
+
+	/// A currentColor inline SVG from a 24x24 path
+	static icon(pathData, className) {
+		const svg = document.createElementNS(SVG_NS, "svg");
+		svg.setAttribute("viewBox", "0 0 24 24");
+		svg.setAttribute("class", className);
+		const path = document.createElementNS(SVG_NS, "path");
+		path.setAttribute("d", pathData);
 		path.setAttribute("fill", "currentColor");
 		svg.appendChild(path);
 		return svg;
@@ -69,10 +83,20 @@ export default class ProfileSection {
 			return;
 		}
 		if (state === "connected") {
+			// Address on the left, log out on the right
+			const row = document.createElement("div");
+			row.setAttribute("id", "profileConnectedRow");
 			const address = document.createElement("div");
 			address.setAttribute("id", "profileAddress");
 			address.innerText = "Connected";
-			this.status.appendChild(address);
+			row.appendChild(address);
+			const logout = document.createElement("div");
+			logout.setAttribute("class", "profileLogout");
+			logout.setAttribute("title", "Log out");
+			logout.appendChild(ProfileSection.logoutIcon());
+			logout.addEventListener("click", () => this.logout());
+			row.appendChild(logout);
+			this.status.appendChild(row);
 			this.fillAddress(address);
 			return;
 		}
@@ -202,6 +226,25 @@ export default class ProfileSection {
 		}
 	}
 
+	/// Log out: clear the grid and the remembered wallet, and return
+	/// the drawer to the disconnected state. The wallet extension
+	/// itself stays authorized (pages cannot revoke that), so a
+	/// later Link Wallet reconnects without a prompt.
+	logout() {
+		// Kill any in-flight thumbnail loop the same way a rebuild
+		// would
+		this.buildGeneration = (this.buildGeneration || 0) + 1;
+		this.isLoadingThumbnails = false;
+		this.ownedTokenIds = [];
+		this.thumbnailCache = {};
+		this.gridItems = {};
+		this.currentTokenId = null;
+		this.grid.innerHTML = "";
+		this.avastarLoader.forgetWallet();
+		this.setWalletState("disconnected");
+		this.callbacks.onLoggedOut();
+	}
+
 	/// Entry point for the connect button: with several wallets
 	/// installed show a chooser first, otherwise connect directly.
 	/// Fired from click listeners, so it must swallow its own
@@ -209,6 +252,8 @@ export default class ProfileSection {
 	/// this way it at least logs.
 	async connectWallet() {
 		try {
+			// A connect tap ends a logged-out state
+			this.avastarLoader.clearLoggedOut();
 			const wallets = await this.avastarLoader.getWallets();
 			if (wallets.length > 1) {
 				this.toggleWalletChooser(wallets);

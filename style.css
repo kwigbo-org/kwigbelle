@@ -52,11 +52,35 @@
 	line-height: 1.4;
 }
 
+#profileConnectedRow {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+}
+
 #profileAddress {
 	font-family: var(--font);
 	font-size: 14px;
 	font-weight: 700;
 	color: var(--text);
+}
+
+.profileLogout {
+	padding: 4px;
+	color: var(--muted);
+	cursor: pointer;
+	-webkit-tap-highlight-color: transparent;
+}
+
+.profileLogout:hover {
+	color: var(--text);
+}
+
+.logoutIcon {
+	display: block;
+	width: 20px;
+	height: 20px;
 }
 
 #profileGrid {
@@ -182,18 +206,24 @@
 
 .panelHandle {
 	position: relative;
-	/* Sized to read as a peer of the 64px profile tiles */
-	padding: 14px 16px;
-	border-radius: 20px 0 0 20px;
+	padding: 12px 14px;
+	border-radius: 18px 0 0 18px;
 	border: 2px solid var(--border);
 	border-right: none;
 	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
 	background: rgba(21, 4, 55, 0.85);
 	color: var(--text);
-	font-size: 44px;
 	line-height: 1;
 	cursor: pointer;
 	-webkit-tap-highlight-color: transparent;
+}
+
+/* Both tab faces are currentColor inline SVGs at one shared size —
+   text glyphs (⚙) turn into platform color emoji on mobile */
+.handleIcon {
+	display: block;
+	width: 30px;
+	height: 30px;
 }
 
 .panelHandle.active {
@@ -204,18 +234,12 @@
 .panelHandle.connected::after {
 	content: "";
 	position: absolute;
-	top: 8px;
-	right: 8px;
-	width: 10px;
-	height: 10px;
+	top: 6px;
+	right: 6px;
+	width: 9px;
+	height: 9px;
 	border-radius: 50%;
 	background: var(--accent);
-}
-
-.profileHandleIcon {
-	display: block;
-	width: 44px;
-	height: 44px;
 }
 
 /* The sliding area every drawer column shares; only the active

@@ -64,6 +64,12 @@ export default class MainScene extends Scene {
 				this.sidePanel.close();
 				this.selectAvastar(tokenId);
 			},
+			onLoggedOut: () => {
+				// Ownership gates (Download VRM) close; the displayed
+				// Avastar stays up
+				this.recordOwnership([]);
+				this.sidePanel.setBadge("profile", false);
+			},
 			isDrawerOpen: () => this.sidePanel.isOpen("profile"),
 		});
 		const profileColumn = this.sidePanel.addDrawer(
@@ -146,6 +152,12 @@ export default class MainScene extends Scene {
 		const hasWallet = await this.avastarLoader.hasWallet();
 		if (!hasWallet) {
 			this.profileSection.setWalletState("none");
+			return;
+		}
+		// A logged-out user stays logged out across reloads: no
+		// silent enumeration until they tap Link Wallet again
+		if (this.avastarLoader.isLoggedOut()) {
+			this.profileSection.setWalletState("disconnected");
 			return;
 		}
 		// Never prompt on page load: only a silent account check.

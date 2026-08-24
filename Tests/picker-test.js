@@ -143,6 +143,59 @@ window.ethereum = {
 	check(picked.currents === 1, "more than one tile highlighted");
 	await page.screenshot({ path: "profile-picked.png" });
 
+	// Log out: the drawer returns to Link Wallet, the badge and
+	// grid clear, and the choice persists
+	await page.click("#profileHandle");
+	await page.waitForSelector(".profileLogout", { timeout: 5000 });
+	await page.click(".profileLogout");
+	const loggedOut = await page.evaluate(() => ({
+		button: document.querySelector(".connectButton")?.innerText || null,
+		badge: document
+			.getElementById("profileHandle")
+			.classList.contains("connected"),
+		tiles: document.querySelectorAll("#profileGrid .profileTile").length,
+		stored: localStorage.getItem("kwigbelle.wallet"),
+		flag: localStorage.getItem("kwigbelle.disconnected"),
+	}));
+	console.log("logged out:", JSON.stringify(loggedOut));
+	check(
+		loggedOut.button === "🔗 Link Wallet",
+		"logout did not restore the connect button: " + loggedOut.button,
+	);
+	check(!loggedOut.badge, "handle badge still lit after logout");
+	check(loggedOut.tiles === 0, "grid not cleared by logout");
+	check(loggedOut.stored === null, "remembered wallet survived logout");
+	check(loggedOut.flag === "1", "logout flag not persisted");
+
+	// A reload stays logged out: no silent reconnect
+	await page.reload();
+	await page.waitForFunction(
+		() => document.getElementById("preloader")?.style.opacity === "0",
+		{ timeout: 15000 },
+	);
+	await page.waitForTimeout(800);
+	const afterReload = await page.evaluate(() => ({
+		tiles: document.querySelectorAll("#profileGrid .profileTile").length,
+		badge: document
+			.getElementById("profileHandle")
+			.classList.contains("connected"),
+	}));
+	console.log("after logged-out reload:", JSON.stringify(afterReload));
+	check(afterReload.tiles === 0, "silent reconnect after logout");
+	check(!afterReload.badge, "badge lit after logged-out reload");
+
+	// Link Wallet ends the logged-out state and reconnects
+	await page.click("#profileHandle");
+	await page.waitForSelector(".connectButton", { timeout: 5000 });
+	await page.click(".connectButton");
+	await page.waitForFunction(
+		() =>
+			document.querySelectorAll("#profileGrid .profileTile").length === 3 &&
+			document.getElementById("profileHandle").classList.contains("connected"),
+		{ timeout: 20000 },
+	);
+	console.log("reconnected after logout");
+
 	console.log("errors:", errors.length ? errors : "none");
 	check(errors.length === 0, "page errors: " + JSON.stringify(errors));
 	await browser.close();
