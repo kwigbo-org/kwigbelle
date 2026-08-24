@@ -460,10 +460,18 @@ export default class MainScene extends Scene {
 
 	touchEnd() {
 		// super resets touchPoint to (0,0): capture the release
-		// point first
+		// point first. Panel-tap releases propagate here too
+		// (stopSceneEvents lets them, to clear a canvas drag that
+		// releases over the panel) — only a touch that actually
+		// started on the scene may arm the synthetic-mouse window,
+		// or a hybrid device would drop a real mouse poke right
+		// after a panel tap.
+		const wasDown = this.isTouchDown;
 		const releasePoint = this.touchPoint;
 		super.touchEnd();
-		this.lastTouchTime = performance.now();
+		if (wasDown) {
+			this.lastTouchTime = performance.now();
+		}
 		this.finishTap(releasePoint);
 	}
 
