@@ -17,6 +17,7 @@
 	--muted: #aaa8ad;
 	--error: #ff6b81;
 	--font: "Inconsolata", monospace;
+	--burned: #ff8c42;
 	--tier-common: #0d8ffb;
 	--tier-uncommon: #2ecc71;
 	--tier-rare: #f5a623;
@@ -422,53 +423,102 @@
 	min-width: 0;
 	display: flex;
 	flex-direction: column;
-	gap: 2px;
+	gap: 3px;
+}
+
+/* Card top line: gene name left, tier + burn marks right
+   (docs/tads/burned-traits.md Decision 6) */
+.traitTop {
+	display: flex;
+	/* A tier tag + burn tag can outgrow the narrow column: wrap
+	   onto a second line instead of crowding the Edit pill */
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 3px 8px;
+}
+
+.traitTop .traitTags {
+	margin-left: auto;
 }
 
 .traitGene {
-	font-weight: 700;
-	font-size: 13px;
+	font-size: 11px;
+	font-weight: 600;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: var(--muted);
+	white-space: nowrap;
 }
 
+/* The trait's NAME is the card's main line now */
 .traitValue {
 	/* Full trait names always show - wrap instead of truncating */
 	overflow-wrap: anywhere;
 	line-height: 1.25;
-	color: var(--muted);
+	font-size: 14px;
+	font-weight: 700;
+	color: var(--text);
 }
 
-.traitRarity {
+.traitTags {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: flex-end;
+	align-items: center;
+	gap: 3px 4px;
+	min-width: 0;
+}
+
+.traitRarity,
+.traitBurned {
 	font-size: 11px;
 	font-weight: 600;
 	padding: 2px 8px;
 	border-radius: 10px;
 	background: var(--surface-2);
 	white-space: nowrap;
-	margin-top: 1px;
 	display: inline-flex;
 	align-items: center;
 	gap: 4px;
 }
 
+.traitBurned {
+	color: var(--burned);
+	border: 1px solid rgba(255, 140, 66, 0.4);
+}
+
 .traitSide {
 	display: flex;
 	flex-direction: column;
-	align-items: flex-end;
-	gap: 6px;
+	justify-content: center;
+	align-self: stretch;
 }
 
+/* A real button, not a glyph: the edit affordance was too easy
+   to miss (operator QA, TAD Decision 6) */
 .traitEdit {
-	font-size: 15px;
-	padding: 1px 8px;
-	border-radius: 8px;
+	font-size: 12px;
+	font-weight: 700;
+	padding: 7px 10px;
+	border-radius: 10px;
+	border: 1px solid var(--border);
 	background: var(--surface-2);
+	color: var(--text);
+	white-space: nowrap;
 	cursor: pointer;
 	-webkit-tap-highlight-color: transparent;
 }
 
+.traitEdit:hover {
+	border-color: var(--accent);
+}
+
 .traitWas {
 	display: flex;
-	gap: 8px;
+	/* The line carries text + a possible burn tag + undo: wrap
+	   inside the column instead of overflowing under the Edit pill */
+	flex-wrap: wrap;
+	gap: 4px 8px;
 	align-items: center;
 	font-size: 12px;
 	color: var(--muted);
@@ -886,6 +936,13 @@
 	background: var(--series-5);
 }
 
+/* Zero-burn primes carry the collection's own badge of honor */
+.identityChip.mintChip {
+	background: transparent;
+	border: 1px solid var(--burned);
+	color: var(--burned);
+}
+
 .identityScore {
 	display: inline-flex;
 	align-items: center;
@@ -904,6 +961,14 @@
 	display: inline-flex;
 	align-items: center;
 	gap: 4px;
+}
+
+.identityBurned {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	font-size: 13px;
+	font-weight: 600;
 }
 
 .identityUB {

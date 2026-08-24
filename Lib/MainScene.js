@@ -25,7 +25,7 @@ export default class MainScene extends Scene {
 	/// Overridden constructor
 	constructor(rootContainer) {
 		super(rootContainer);
-		console.log("kwigbelle build 2026-08-24.4 (poke, wave, trails, tilt)");
+		console.log("kwigbelle build 2026-08-24.5 (burned traits, trait cards)");
 		// Build the UI
 		this.buildUI();
 		// Start loading
@@ -112,6 +112,7 @@ export default class MainScene extends Scene {
 			onUndo: (gene) => this.undoOverride(gene),
 			onResetAll: () => this.resetOverrides(),
 			ubFor: (tokenId) => this.traitComposer.ubFor(tokenId),
+			burnedFor: (tokenId) => this.traitComposer.burnedFor(tokenId),
 		});
 		this.sidePanel.addSection("Traits", this.traitsSection.build());
 		this.traitEditModal = new TraitEditModal(this.traitComposer);

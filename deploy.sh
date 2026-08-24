@@ -89,6 +89,7 @@ cp -r Traits build
 mkdir -p build/Tools/data
 cp Tools/data/hashes.json build/Tools/data/hashes.json
 cp Tools/data/ub.json build/Tools/data/ub.json
+cp Tools/data/burned.json build/Tools/data/burned.json
 
 # Keep macOS metadata out of every deploy target
 find build -name '.DS_Store' -delete
