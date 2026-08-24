@@ -182,21 +182,34 @@ export default class VRMSource {
 	/// hard-fails on Qm CIDs - sequential attempts stalled the
 	/// whole load behind one hung gateway). Gateways start
 	/// staggerMs apart - or immediately when the previous attempt
-	/// ERRORS - and the first one to deliver a body chunk wins;
-	/// every other attempt aborts. Each attempt also has a hard
-	/// firstByteMs cap, so a hung gateway can never wedge the
-	/// race. Rejects only when every candidate has failed.
+	/// ERRORS - and the first one to deliver a body chunk becomes
+	/// the winner; every other attempt aborts. Each attempt has a
+	/// hard firstByteMs cap, so a hung gateway can never wedge the
+	/// race. A winner that dies MID-stream gives up the crown and
+	/// the race resumes with any candidates not yet started
+	/// (already-aborted losers are gone - restarting them would
+	/// re-download from zero on a lane that just lost anyway).
+	/// Rejects only when every candidate has settled without a
+	/// completed download.
 	hedgedDownload(urls, onProgress, signal) {
 		return new Promise((resolve, reject) => {
 			if (signal && signal.aborted) {
 				reject(new DOMException("aborted", "AbortError"));
 				return;
 			}
+			if (!urls.length) {
+				reject(new Error("no candidate URLs"));
+				return;
+			}
 			const attempts = [];
 			let started = 0;
-			let failedCount = 0;
+			let settledCount = 0;
 			let winner = null;
 			let staggerTimer = null;
+			// The most meaningful failure to reject with: a stale
+			// race-loser abort must never masquerade as the reason
+			// (its AbortError would read as a user cancel upstream)
+			let lastError = null;
 			const abortAll = () => {
 				clearTimeout(staggerTimer);
 				for (const attempt of attempts) {
@@ -214,12 +227,32 @@ export default class VRMSource {
 					{ once: true },
 				);
 			}
-			const failOne = (url, error) => {
-				console.warn(`VRM fetch failed via ${url}`, error);
-				failedCount++;
-				if (failedCount === urls.length) {
+			// One attempt is out of the race for good. Exactly once
+			// per attempt (the settled flag): failures, race-loser
+			// aborts, and dead ex-winners all funnel through here,
+			// so "every candidate settled" is a sound reject gate.
+			const settle = (attempt, url, error) => {
+				if (attempt.settled) {
+					return;
+				}
+				attempt.settled = true;
+				settledCount++;
+				// A genuine failure is anything except a pure
+				// race-loser abort (a first-byte timeout aborts too,
+				// but timedOut marks it as a real failure)
+				const isGenuine =
+					attempt.timedOut || !error || error.name !== "AbortError";
+				if (isGenuine) {
+					lastError = error;
+					console.warn(`VRM fetch failed via ${url}`, error);
+				}
+				if (winner || (signal && signal.aborted)) {
+					// Race is owned or cancelled: bookkeeping only
+					return;
+				}
+				if (settledCount === urls.length) {
 					clearTimeout(staggerTimer);
-					reject(error);
+					reject(lastError || error);
 					return;
 				}
 				// Fail fast: don't sit out the stagger on a dead lane
@@ -232,11 +265,14 @@ export default class VRMSource {
 				clearTimeout(staggerTimer);
 				const url = urls[started++];
 				const controller = new AbortController();
-				const attempt = { controller, timer: null };
+				const attempt = { controller, timer: null, settled: false };
 				attempts.push(attempt);
 				// Hard cap on reaching the first body chunk; cleared
 				// the moment this attempt wins
-				attempt.timer = setTimeout(() => controller.abort(), this.firstByteMs);
+				attempt.timer = setTimeout(() => {
+					attempt.timedOut = true;
+					controller.abort();
+				}, this.firstByteMs);
 				this.download(
 					url,
 					(loaded, total) => {
@@ -271,15 +307,12 @@ export default class VRMSource {
 					(error) => {
 						clearTimeout(attempt.timer);
 						if (winner === attempt) {
-							// The winning stream died mid-download
-							reject(error);
-							return;
+							// The winning stream died mid-download:
+							// give up the crown and let settle()
+							// resume the race with whatever remains
+							winner = null;
 						}
-						if (winner || (signal && signal.aborted)) {
-							// Aborted as a race loser / caller cancel
-							return;
-						}
-						failOne(url, error);
+						settle(attempt, url, error);
 					},
 				);
 				if (started < urls.length) {
@@ -320,6 +353,12 @@ export default class VRMSource {
 			if (onProgress) {
 				onProgress(loaded, total);
 			}
+		}
+		if (isFirst) {
+			// A 200 with an empty body never fires onFirstChunk, so
+			// without this the attempt would neither win nor count
+			// as failed - wedging the race bookkeeping
+			throw new Error(`empty response body from ${url}`);
 		}
 		const bytes = new Uint8Array(loaded);
 		let offset = 0;

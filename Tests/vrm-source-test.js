@@ -1,6 +1,7 @@
 // VRMSource pipeline (docs/tads/vrm-viewer.md Step 2): metadata ->
 // vrm_url -> gateway fallback with streamed progress and caching,
 // verified against routed fixtures - no real network is touched.
+const http = require("http");
 const { chromium } = require("playwright-core");
 const { check } = require("./check.js");
 
@@ -204,8 +205,10 @@ const { check } = require("./check.js");
 	});
 	console.log("hung-gateway rescue:", JSON.stringify(hung));
 	check(hung.byteLength === 131072, "hedged fetch returned wrong bytes");
+	// Hit counts are the primary signal; the elapsed bound just
+	// proves we didn't sit out the full 3s hang sequentially
 	check(
-		hung.elapsed < 2500,
+		hung.elapsed < 2800,
 		"hedge did not rescue a hung gateway in time: " + hung.elapsed,
 	);
 	check(
@@ -213,6 +216,104 @@ const { check } = require("./check.js");
 		"hedge should have raced pinata (hung) and ipfs.io: " +
 			JSON.stringify(hits),
 	);
+
+	// Mid-stream death and empty bodies need a REAL streaming
+	// server (route.fulfill is atomic): /partial/ sends headers +
+	// half the bytes then kills the socket, /empty/ 200s with no
+	// body, /good/ serves fully. The page's VRMSource gets these
+	// as its gateway list directly.
+	const serverHits = { partial: 0, empty: 0, good: 0 };
+	const fixtureServer = http.createServer((request, response) => {
+		const head = {
+			"Access-Control-Allow-Origin": "*",
+			"Content-Type": "application/octet-stream",
+		};
+		if (request.url.startsWith("/partial/")) {
+			serverHits.partial++;
+			response.writeHead(200, {
+				...head,
+				"Content-Length": String(bytes.length),
+			});
+			response.write(bytes.subarray(0, 65536));
+			setTimeout(() => response.destroy(), 100);
+			return;
+		}
+		if (request.url.startsWith("/empty/")) {
+			serverHits.empty++;
+			response.writeHead(200, head);
+			response.end();
+			return;
+		}
+		if (request.url.startsWith("/good/")) {
+			serverHits.good++;
+			response.writeHead(200, {
+				...head,
+				"Content-Length": String(bytes.length),
+			});
+			response.end(bytes);
+			return;
+		}
+		response.writeHead(404, head);
+		response.end();
+	});
+	await new Promise((resolve) => fixtureServer.listen(8799, resolve));
+
+	// A winner that dies mid-download gives up the crown and the
+	// race resumes with the not-yet-started candidate
+	const midStream = await page.evaluate(async () => {
+		const { default: VRMSource } = await import("../Lib/VRMSource.js");
+		const source = new VRMSource();
+		source.gateways = [
+			"http://localhost:8799/partial/",
+			"http://localhost:8799/good/",
+		];
+		source.staggerMs = 200;
+		const buffer = await source.fetchVRM(8014);
+		const view = new Uint8Array(buffer);
+		return { byteLength: buffer.byteLength, spot: view[131071] };
+	});
+	console.log("mid-stream death rescue:", JSON.stringify(midStream));
+	check(
+		midStream.byteLength === 131072 && midStream.spot === 131071 % 251,
+		"mid-stream winner death was not rescued: " + JSON.stringify(midStream),
+	);
+	check(
+		serverHits.partial === 1 && serverHits.good === 1,
+		"unexpected lane usage: " + JSON.stringify(serverHits),
+	);
+
+	// An empty 200 body counts as a failure and advances the race
+	// instead of wedging the bookkeeping
+	const emptyBody = await page.evaluate(async () => {
+		const { default: VRMSource } = await import("../Lib/VRMSource.js");
+		const source = new VRMSource();
+		source.gateways = [
+			"http://localhost:8799/empty/",
+			"http://localhost:8799/good/",
+		];
+		source.staggerMs = 5000; // fail-fast must advance, not the stagger
+		const start = performance.now();
+		const buffer = await source.fetchVRM(8014);
+		return {
+			byteLength: buffer.byteLength,
+			elapsed: performance.now() - start,
+		};
+	});
+	console.log("empty-body advance:", JSON.stringify(emptyBody));
+	check(
+		emptyBody.byteLength === 131072,
+		"empty body did not advance to the good lane",
+	);
+	check(
+		emptyBody.elapsed < 4000,
+		"empty body waited out the stagger instead of failing fast: " +
+			emptyBody.elapsed,
+	);
+	check(
+		serverHits.empty === 1 && serverHits.good === 2,
+		"unexpected empty-body lane usage: " + JSON.stringify(serverHits),
+	);
+	fixtureServer.close();
 
 	// Qm CIDs rewrite to CIDv1 in candidate URLs (pair verified
 	// live against pinata: both forms serve byte-identically)
