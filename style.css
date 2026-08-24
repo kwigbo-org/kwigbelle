@@ -18,6 +18,7 @@
 	--error: #ff6b81;
 	--font: "Inconsolata", monospace;
 	--burned: #ff8c42;
+	--mint: #3eb489;
 	--tier-common: #0d8ffb;
 	--tier-uncommon: #2ecc71;
 	--tier-rare: #f5a623;
@@ -426,19 +427,13 @@
 	gap: 3px;
 }
 
-/* Card top line: gene name left, tier + burn marks right
-   (docs/tads/burned-traits.md Decision 6) */
+/* Card top line: gene name left, the edit chip borrowing the
+   line's empty tail (docs/tads/burned-traits.md Decision 6) */
 .traitTop {
 	display: flex;
-	/* A tier tag + burn tag can outgrow the narrow column: wrap
-	   onto a second line instead of crowding the Edit pill */
-	flex-wrap: wrap;
 	align-items: center;
-	gap: 3px 8px;
-}
-
-.traitTop .traitTags {
-	margin-left: auto;
+	justify-content: space-between;
+	gap: 8px;
 }
 
 .traitGene {
@@ -460,13 +455,13 @@
 	color: var(--text);
 }
 
+/* Tags own a full-width line under the name: tier and burn mark
+   side by side, nothing to crowd */
 .traitTags {
 	display: flex;
 	flex-wrap: wrap;
-	justify-content: flex-end;
 	align-items: center;
 	gap: 3px 4px;
-	min-width: 0;
 }
 
 .traitRarity,
@@ -487,29 +482,24 @@
 	border: 1px solid rgba(255, 140, 66, 0.4);
 }
 
-.traitSide {
-	display: flex;
-	flex-direction: column;
-	justify-content: center;
-	align-self: stretch;
-}
-
-/* A real button, not a glyph: the edit affordance was too easy
-   to miss (operator QA, TAD Decision 6) */
+/* The whole card is the edit tap target; this chip is the visible
+   hint, riding the gene line instead of owning a column
+   (operator QA: the pill column crowded everything else) */
 .traitEdit {
-	font-size: 12px;
+	font-size: 11px;
 	font-weight: 700;
-	padding: 7px 10px;
-	border-radius: 10px;
+	padding: 3px 9px;
+	border-radius: 9px;
 	border: 1px solid var(--border);
 	background: var(--surface-2);
 	color: var(--text);
 	white-space: nowrap;
 	cursor: pointer;
+	flex-shrink: 0;
 	-webkit-tap-highlight-color: transparent;
 }
 
-.traitEdit:hover {
+.traitRow.editable:hover {
 	border-color: var(--accent);
 }
 
@@ -936,11 +926,12 @@
 	background: var(--series-5);
 }
 
-/* Zero-burn primes carry the collection's own badge of honor */
+/* Zero-burn primes carry the collection's own badge of honor —
+   a POSITIVE mint green, never the warning orange of a burn */
 .identityChip.mintChip {
 	background: transparent;
-	border: 1px solid var(--burned);
-	color: var(--burned);
+	border: 1px solid var(--mint);
+	color: var(--mint);
 }
 
 .identityScore {

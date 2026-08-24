@@ -257,7 +257,7 @@ const { check } = require("./check.js");
 	const overriddenBurn = await page.evaluate(() => {
 		const row = document.querySelectorAll(".traitRow")[9];
 		return {
-			topBurned: !!row.querySelector(".traitTop .traitBurned"),
+			topBurned: !!row.querySelector(".traitTags .traitBurned"),
 			wasBurned: !!row.querySelector(".traitWas .traitBurned"),
 		};
 	});
@@ -276,7 +276,7 @@ const { check } = require("./check.js");
 			() =>
 				document
 					.querySelectorAll(".traitRow")[9]
-					.querySelector(".traitTop .traitBurned") !== null,
+					.querySelector(".traitTags .traitBurned") !== null,
 		)) === true,
 		"burn mark did not return after undo",
 	);

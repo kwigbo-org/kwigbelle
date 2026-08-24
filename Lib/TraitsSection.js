@@ -336,7 +336,11 @@ export default class TraitsSection {
 	///		- options: { onToggle, checked } or { color }
 	card(info, gene, options) {
 		const isToggle = typeof options.onToggle === "function";
-		const row = document.createElement(isToggle ? "label" : "div");
+		const isEditable = this.callbacks.onEdit && !this.isReadOnly;
+		// Always a div (never a <label>): the WHOLE CARD is the edit
+		// tap target, so the checkbox must be its own island — a
+		// label would toggle visibility on every card tap
+		const row = document.createElement("div");
 		row.setAttribute("class", isToggle ? "traitRow" : "traitRow info");
 		if (isToggle) {
 			const checkbox = document.createElement("input");
@@ -345,6 +349,8 @@ export default class TraitsSection {
 			checkbox.addEventListener("change", () =>
 				options.onToggle(checkbox.checked),
 			);
+			// A visibility tap must not also open the editor
+			checkbox.addEventListener("click", (event) => event.stopPropagation());
 			row.appendChild(checkbox);
 		} else if (!options.plain) {
 			const swatch = document.createElement("span");
@@ -361,12 +367,32 @@ export default class TraitsSection {
 			this.baseline[gene];
 		const text = document.createElement("span");
 		text.setAttribute("class", "traitText");
+		// Line 1: gene name, with the edit chip borrowing the empty
+		// space at the end of the line instead of owning a column
 		const top = document.createElement("span");
 		top.setAttribute("class", "traitTop");
 		const geneTitle = document.createElement("span");
 		geneTitle.setAttribute("class", "traitGene");
 		geneTitle.innerText = info.geneName;
 		top.appendChild(geneTitle);
+		if (isEditable) {
+			const edit = document.createElement("span");
+			edit.setAttribute("class", "traitEdit");
+			edit.innerText = "✎ Edit";
+			edit.addEventListener("click", (event) => {
+				event.stopPropagation();
+				this.callbacks.onEdit(gene);
+			});
+			top.appendChild(edit);
+		}
+		text.appendChild(top);
+		// Line 2: the trait's name, the card's main line
+		const value = document.createElement("span");
+		value.setAttribute("class", "traitValue");
+		value.innerText = info.name;
+		text.appendChild(value);
+		// Line 3: tags on their own full-width line — tier and burn
+		// mark sit side by side and never crowd anything
 		const tags = document.createElement("span");
 		tags.setAttribute("class", "traitTags");
 		const tag = document.createElement("span");
@@ -383,12 +409,7 @@ export default class TraitsSection {
 		if (this.isBurned(gene) && !isOverridden) {
 			tags.appendChild(this.burnedTag());
 		}
-		top.appendChild(tags);
-		text.appendChild(top);
-		const value = document.createElement("span");
-		value.setAttribute("class", "traitValue");
-		value.innerText = info.name;
-		text.appendChild(value);
+		text.appendChild(tags);
 		if (isOverridden) {
 			const was = document.createElement("span");
 			was.setAttribute("class", "traitWas");
@@ -402,8 +423,6 @@ export default class TraitsSection {
 			undo.setAttribute("class", "traitUndo");
 			undo.innerText = "↺ undo";
 			undo.addEventListener("click", (event) => {
-				// The card may be a <label>: don't toggle visibility
-				event.preventDefault();
 				event.stopPropagation();
 				if (this.callbacks.onUndo) {
 					this.callbacks.onUndo(gene);
@@ -413,19 +432,10 @@ export default class TraitsSection {
 			text.appendChild(was);
 		}
 		row.appendChild(text);
-		if (this.callbacks.onEdit && !this.isReadOnly) {
-			const side = document.createElement("span");
-			side.setAttribute("class", "traitSide");
-			const edit = document.createElement("span");
-			edit.setAttribute("class", "traitEdit");
-			edit.innerText = "✎ Edit";
-			edit.addEventListener("click", (event) => {
-				event.preventDefault();
-				event.stopPropagation();
-				this.callbacks.onEdit(gene);
-			});
-			side.appendChild(edit);
-			row.appendChild(side);
+		if (isEditable) {
+			// The whole card opens the editor (the chip is the hint)
+			row.classList.add("editable");
+			row.addEventListener("click", () => this.callbacks.onEdit(gene));
 		}
 		return row;
 	}
