@@ -1,6 +1,7 @@
 # TAD: profile drawer (wallet + owned Avastars) and composed picker thumbnails
 
-- **Status:** IN REVIEW
+- **Status:** APPROVED (2026-08-24, PR #15) — implementation in
+  progress (PR A of Decision 10)
 - **Driver:** Operator (2026-08-24): "I want a second tab above
   settings on the right. It will be a profile icon. We will put the
   connect wallet button in this drawer and your avastars. Also, we
@@ -56,12 +57,13 @@ main display when composition fails.
 | 3 | Profile drawer contents by wallet state: (no wallet detected) a short note; (wallet, not connected) the Connect Wallet button and, when several wallets are installed, the chooser rows; (wrong network) the Switch to Mainnet button; (connected) short address line + owned-Avastars grid. WalletConnectUI's flow logic moves in wholesale — connect semantics are unchanged. | The drawer is the one place wallet state lives; every state has a visible home instead of a button that appears/disappears over the art. |
 | 4 | The owned grid replaces PickerUI: tap a token to load it; the current token is highlighted; picking closes the drawer so the load is visible. The top-left collapsed "current avastar" thumbnail is retired — current identity already lives in the Traits identity card. | Clears the art area entirely on the left; drawer-close-on-pick shows the result of the tap. |
 | 5 | Profile handle shows a small accent badge when a wallet is connected. | Wallet state visible without opening the drawer. |
-| 6 | Handle icons are inline SVG glyphs (person for profile; the ⚙ text glyph stays for settings unless contrast testing argues for SVG there too), colored via CSS tokens. | Emoji render with platform color and clash with the dark chrome; inline SVG obeys `--text`. |
+| 6 | BOTH handle icons are inline SVG glyphs at one shared size (30px), colored via currentColor. (Amended during PR A: the draft kept the ⚙ text glyph, but operator QA found mobile platforms substitute their color emoji for it and the mismatched sizes bloated the tabs.) | Emoji render with platform color and clash with the dark chrome; inline SVG obeys `--text` everywhere. |
 | 7 | The floating 3D/2D button and its side toast are removed. The centered loading overlay survives (renamed home: VRMLoadingUI), becomes tap-to-cancel (pointer-events on, hint "Tap to cancel"), and pipeline errors surface as a transient bottom-center toast in the same visual style. | Operator directive; the panel's VRMSection already duplicates toggle/cancel/progress. The overlay is a larger, more discoverable cancel target than the old button. |
 | 8 | Exit from 3D is VRMSection's "Back to vector" only. | Accepted UX cost (one extra tap); the user necessarily used that drawer to enter 3D. `beginLoad`'s exit3D choke point is untouched. |
 | 9 | Grid thumbnails are composed from the `Traits/` library (full-figure, one static SVG per token via a small TraitComposer helper), rendered lazily as the grid scrolls/opens and cached per session. On per-token composition failure the tile keeps its token-id text label (current PickerUI fallback behavior). | Instant, walletless, zero RPC; retires the picker's `renderTokenSVG` dependency — the last heavy on-chain render use. |
 | 10 | Ships as two code PRs against this one TAD: **PR A** — drawer restructure + wallet/picker move + 3D-button removal (thumbnails still on the old render path inside the new grid); **PR B** — composed thumbnails swapped into the grid. | Each panel review lands on one concern; PR A is UI plumbing, PR B is render-path correctness. |
-| 11 | No new URL flags, no new network calls, no localStorage changes. Remembered-wallet persistence (`kwigbelle.wallet`) and effects persistence are untouched. | Scope discipline. |
+| 11 | No new URL flags, no new network calls. Remembered-wallet persistence (`kwigbelle.wallet`) and effects persistence are untouched; the one storage addition is the `kwigbelle.disconnected` logout flag of Decision 12 (amended during PR A). | Scope discipline. |
+| 12 | (Operator addition during PR A QA) The connected profile header carries a logout button — door-with-arrow icon, upper right, opposite the address. It clears the grid and ownership gates (Download VRM hides), forgets `kwigbelle.wallet`, sets `kwigbelle.disconnected` so a reload does NOT silently reconnect, and returns the drawer to Link Wallet; a connect tap clears the flag. | Pages cannot revoke a wallet extension's authorization, so logout is site-side state; without the flag the silent enumeration would undo it on the next reload. |
 
 ## Proposed design surface
 
@@ -138,4 +140,30 @@ None — no other repo consumes these surfaces.
 
 ## Progress log
 
-- 2026-08-24 — TAD drafted; PR opened for panel review.
+- 2026-08-24 — TAD drafted; PR #15 opened for panel review.
+- 2026-08-24 — Panel CLEAN 3/3 round 1 (lite, doc-only); merged as
+  `4429c5f`.
+- 2026-08-24 — Steps 1–2 applied (PR A): SidePanel generalized to a
+  drawer stack (addDrawer/open/close/isOpen/setBadge; settings
+  drawer created lazily by addSection keeping `#panelSections` and
+  `#panelHandle` ids); ProfileSection absorbs the WalletConnectUI
+  flow + the grid (lazy thumbnails on drawer open, `data-token`
+  tile attributes, connected-empty "No Avastars" note; PickerUI and
+  WalletConnectUI deleted); ViewToggleUI became VRMLoadingUI
+  (button + side toast gone, overlay tap-to-cancel with "Tap to
+  cancel" hint, bottom-center failure toast). One addition beyond
+  the letter of Decision 3: the authorized-on-mainnet-but-zero-
+  Avastars wallet now also shows as connected (previously nothing
+  rendered). Full 14-test suite green after harness rework
+  (picker-test rewritten against the drawer; chooser/switch/eip/
+  failure/panel/vrm-viewer tests updated; vrm-panel-test needed no
+  changes).
+- 2026-08-24 — PR #16 review round 1: CLEAN 3/4; sonnet's genuine
+  minority MEDIUM (silent rejection paths in the moved connect
+  flow, pre-existing from WalletConnectUI) fixed with per-arm
+  try/catch + logged returns. Round 2: CLEAN 4/4.
+- 2026-08-24 — Operator QA on PR A: (1) icon sizes mismatched and
+  the ⚙ text glyph rendered as color emoji on mobile → Decision 6
+  amended, both tabs now share one 30px currentColor SVG size;
+  (2) logout button requested → Decision 12 added (with the
+  Decision 11 truth-fix for its `kwigbelle.disconnected` flag).

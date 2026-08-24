@@ -76,21 +76,26 @@ async function run(name, opts) {
 	);
 
 	if (opts.gestureRequired) {
-		// Expect the Link Wallet button, tap it, then expect the picker
+		// Expect the Link Wallet button in the profile drawer, tap
+		// it, then expect the grid
+		await page.click("#profileHandle");
 		await page.waitForSelector(".connectButton", { timeout: 10000 });
 		await page.screenshot({ path: "link-wallet-button.png" });
 		const prompts = await page.evaluate(() => window.__requestAccountCalls);
 		if (prompts !== 0) throw new Error("prompted on page load!");
 		await page.click(".connectButton");
 	}
-	await page.waitForSelector(".pickerThumb.current img", { timeout: 15000 });
+	await page.waitForFunction(
+		() => document.querySelectorAll("#profileGrid .profileTile").length === 3,
+		{ timeout: 15000 },
+	);
 	const items = await page.evaluate(
-		() => document.querySelectorAll("#pickerList .pickerThumb").length,
+		() => document.querySelectorAll("#profileGrid .profileTile").length,
 	);
 	console.log(
-		`${name}: picker with ${items} items, alerts=${JSON.stringify(alerts)} pageErrors=${JSON.stringify(pageErrors)}`,
+		`${name}: grid with ${items} tiles, alerts=${JSON.stringify(alerts)} pageErrors=${JSON.stringify(pageErrors)}`,
 	);
-	check(items === 3, `${name}: expected 3 picker items, got ${items}`);
+	check(items === 3, `${name}: expected 3 grid tiles, got ${items}`);
 	check(alerts.length === 0, `${name}: alerts: ` + JSON.stringify(alerts));
 	check(
 		pageErrors.length === 0,

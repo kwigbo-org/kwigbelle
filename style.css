@@ -30,24 +30,70 @@
 	--series-5: #7c4dff;
 }
 
-/*Avastar Picker*/
+/* Profile drawer: wallet state + the owned-Avastars grid
+   (docs/tads/profile-drawer.md) */
 
-#avastarPicker,
-#walletConnect {
-	position: absolute;
-	top: 16px;
-	left: 16px;
-	z-index: 10;
+#profileContent {
 	display: flex;
 	flex-direction: column;
-	gap: 10px;
-	max-height: calc(100% - 32px);
+	gap: 12px;
 }
 
-.pickerThumb {
+#profileStatus {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.profileNote {
+	font-family: var(--font);
+	font-size: 13px;
+	color: var(--muted);
+	line-height: 1.4;
+}
+
+#profileConnectedRow {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+}
+
+#profileAddress {
+	font-family: var(--font);
+	font-size: 14px;
+	font-weight: 700;
+	color: var(--text);
+}
+
+.profileLogout {
+	padding: 4px;
+	color: var(--muted);
+	cursor: pointer;
+	-webkit-tap-highlight-color: transparent;
+}
+
+.profileLogout:hover {
+	color: var(--text);
+}
+
+.logoutIcon {
+	display: block;
+	width: 20px;
+	height: 20px;
+}
+
+#profileGrid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, 64px);
+	gap: 10px;
+	/* Room so the tiles' shadows aren't clipped by the column */
+	padding: 4px;
+}
+
+.profileTile {
 	width: 64px;
 	height: 64px;
-	flex: 0 0 64px;
 	border-radius: 50%;
 	border: 2px solid var(--border);
 	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
@@ -60,17 +106,17 @@
 	-webkit-tap-highlight-color: transparent;
 }
 
-.pickerThumb.current {
+.profileTile.current {
 	border-color: var(--heading);
 }
 
-.pickerThumb img {
+.profileTile img {
 	width: 100%;
 	height: 100%;
 	pointer-events: none;
 }
 
-.pickerThumb span {
+.profileTile span {
 	font-size: 13px;
 	color: var(--text);
 	pointer-events: none;
@@ -126,20 +172,6 @@
 	pointer-events: none;
 }
 
-#pickerList {
-	display: none;
-	flex-direction: column;
-	gap: 10px;
-	overflow-y: auto;
-	/* Room so the last thumbnail's shadow isn't clipped */
-	padding: 4px;
-	margin: -4px;
-}
-
-#pickerList.expanded {
-	display: flex;
-}
-
 /*Side Panel*/
 
 #sidePanel {
@@ -160,34 +192,71 @@
 	transform: translateX(0);
 }
 
-#panelHandle {
+/* The stacked drawer tabs, sitting just left of the sliding area */
+#panelHandles {
 	pointer-events: auto;
-	margin-top: 16px;
-	/* Sits just left of the sliding column */
-	transform: translateX(-100%);
 	position: absolute;
-	/* Sized to read as a peer of the 64px picker thumbnail */
-	padding: 14px 16px;
-	border-radius: 20px 0 0 20px;
+	top: 16px;
+	left: 0;
+	transform: translateX(-100%);
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.panelHandle {
+	position: relative;
+	padding: 12px 14px;
+	border-radius: 18px 0 0 18px;
 	border: 2px solid var(--border);
 	border-right: none;
 	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
 	background: rgba(21, 4, 55, 0.85);
 	color: var(--text);
-	font-size: 44px;
 	line-height: 1;
 	cursor: pointer;
 	-webkit-tap-highlight-color: transparent;
 }
 
-#panelSections {
+/* Both tab faces are currentColor inline SVGs at one shared size —
+   text glyphs (⚙) turn into platform color emoji on mobile */
+.handleIcon {
+	display: block;
+	width: 30px;
+	height: 30px;
+}
+
+.panelHandle.active {
+	border-color: var(--accent);
+}
+
+/* The profile tab's connected badge dot */
+.panelHandle.connected::after {
+	content: "";
+	position: absolute;
+	top: 6px;
+	right: 6px;
+	width: 9px;
+	height: 9px;
+	border-radius: 50%;
+	background: var(--accent);
+}
+
+/* The sliding area every drawer column shares; only the active
+   drawer's column shows */
+#panelColumns {
 	pointer-events: auto;
 	width: min(280px, 80vw);
+	height: 100%;
+}
+
+.panelColumn {
+	width: 100%;
 	height: 100%;
 	overflow-y: auto;
 	box-sizing: border-box;
 	padding: 12px;
-	display: flex;
+	display: none;
 	flex-direction: column;
 	gap: 10px;
 	background: var(--panel);
@@ -195,6 +264,10 @@
 	box-shadow: -2px 0 12px rgba(0, 0, 0, 0.5);
 	font-family: var(--font);
 	color: var(--text);
+}
+
+.panelColumn.active {
+	display: flex;
 }
 
 /* Range sliders and checkboxes pick up the accent */
@@ -644,39 +717,15 @@
 	touch-action: none;
 }
 
-/* Floating vector <-> 3D toggle, mirroring the panel handle's look */
-#viewToggle {
+/* Transient bottom-center toast for 3D pipeline failures (the
+   floating toggle the message used to sit beside is gone) */
+#vrmToast {
 	position: absolute;
-	left: 16px;
-	bottom: 16px;
+	left: 50%;
+	bottom: 24px;
+	transform: translateX(-50%);
 	z-index: 10;
-	min-width: 44px;
-	padding: 12px 14px;
-	border-radius: 20px;
-	border: 2px solid var(--border);
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
-	background: rgba(21, 4, 55, 0.85);
-	color: var(--text);
-	font-family: var(--font);
-	font-size: 26px;
-	font-weight: 700;
-	line-height: 1;
-	text-align: center;
-	cursor: pointer;
-	-webkit-tap-highlight-color: transparent;
-}
-
-#viewToggle.loading {
-	font-size: 17px;
-	padding: 16px 14px;
-}
-
-#viewToggleError {
-	position: absolute;
-	left: 16px;
-	bottom: 84px;
-	z-index: 10;
-	max-width: 240px;
+	max-width: min(320px, 80vw);
 	padding: 8px 12px;
 	border-radius: 10px;
 	border: 1px solid var(--border);
@@ -689,7 +738,7 @@
 	pointer-events: none;
 }
 
-#viewToggleError.visible {
+#vrmToast.visible {
 	opacity: 1;
 }
 
@@ -707,12 +756,13 @@
 }
 
 /* VRM loading overlay: unmistakable center-screen feedback for the
-   ~9MB fetch + parse (the button percent alone was too subtle) */
+   ~9MB fetch + parse. The overlay is also the cancel affordance —
+   a tap anywhere on it cancels — so it takes pointer events. */
 #vrmLoading {
 	display: none;
 	z-index: 15;
 	text-align: center;
-	pointer-events: none;
+	cursor: pointer;
 	background-color: rgba(21, 4, 55, 0.88);
 	color: var(--text);
 }

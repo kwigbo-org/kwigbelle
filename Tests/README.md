@@ -26,16 +26,16 @@ python3 -m http.server 8741
 cd Tests
 node smoke.js          # no-wallet load, spring motion, follow/release
 node compose-test.js   # trait composition: parity, layer names, forced-failure static fallback
-node picker-test.js    # wallet picker: build, expand, pick, thumbnails
+node picker-test.js    # profile drawer grid: silent build, badge, lazy thumbnails, pick
 node chooser-test.js   # multi-wallet chooser + localStorage persistence across reload
-node switch-test.js    # wrong-network -> Switch to Mainnet button -> reload -> picker
+node switch-test.js    # wrong-network -> Switch to Mainnet button -> reload -> grid
 node eip-test.js       # EIP-6963 discovery, legacy fallback, tap-to-connect
 node failure-test.js   # happy mainnet / wrong chain / failing RPC render
 node panel-test.js     # side panel: open, pause/resume, trait visibility, persistence
 node load-test.js      # Load Avastar section: walletless load, validation, composer split
 node lab-test.js       # trait swap preview: modal, override, undo, reset, swap-clears
 node vrm-source-test.js  # VRM fetch pipeline: gateways, progress, cache, abort (routed fixtures)
-node vrm-viewer-test.js  # 3D toggle: WebGL render, cache re-entry, cancel, load-supersedes
+node vrm-viewer-test.js  # 3D entry/exit: WebGL render, cache re-entry, overlay cancel, load-supersedes
 node vrm-panel-test.js   # 3D-mode settings limits + owner-only Download VRM
 node identity-test.js    # identity card: chips, score bands, distribution, Unique-By
 ```

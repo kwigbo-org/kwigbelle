@@ -1,11 +1,13 @@
-// VRM viewer (docs/tads/vrm-viewer.md Step 3): the 3D toggle
-// fetches with progress and renders a non-blank WebGL canvas,
-// toggling back restores the vector view, the byte cache makes the
-// second entry instant, a tap mid-fetch cancels, and a token load
-// mid-fetch supersedes the 3D entry entirely. All network is
-// routed to a local fixture; the fixture itself (the real 8014
-// model, ~9.3MB) is auto-downloaded ONCE into Tests/fixtures/
-// (gitignored) and reused after - that first run needs network.
+// VRM viewer (docs/tads/vrm-viewer.md Step 3, entry points
+// reshaped by docs/tads/profile-drawer.md): the panel's "View in
+// 3D" button fetches with progress and renders a non-blank WebGL
+// canvas, "Back to vector" restores the vector view, the byte
+// cache makes the second entry instant, a tap on the loading
+// overlay cancels, and a token load mid-fetch supersedes the 3D
+// entry entirely. All network is routed to a local fixture; the
+// fixture itself (the real 8014 model, ~9.3MB) is auto-downloaded
+// ONCE into Tests/fixtures/ (gitignored) and reused after - that
+// first run needs network.
 const fs = require("fs");
 const path = require("path");
 const { chromium } = require("playwright-core");
@@ -122,16 +124,27 @@ async function ensureFixture() {
 			return painted / (pixels.length / 4);
 		});
 
+	// The 3D entry point is the panel's "3D model" section now (the
+	// floating toggle is retired)
+	await page.click("#panelHandle");
+	check(
+		!(await page.evaluate(() => !!document.getElementById("viewToggle"))),
+		"retired floating 3D toggle still present",
+	);
+
 	// Enter 3D: fetch, parse, non-blank render
-	await page.click("#viewToggle");
+	await page.click(".vrmViewButton");
 	await page.waitForSelector("#vrmCanvas", { timeout: 20000 });
 	await page.waitForTimeout(1500);
 	const share = await paintedShare();
 	console.log("painted share:", share, "gateway hits:", gatewayHits);
 	check(share > 0.02, "3D canvas is blank (painted share " + share + ")");
 	check(gatewayHits === 1, "expected exactly one model fetch");
-	const toggleIn3D = await page.locator("#viewToggle").innerText();
-	check(toggleIn3D === "2D", "toggle should read 2D in 3D mode");
+	const buttonIn3D = await page.locator(".vrmViewButton").innerText();
+	check(
+		buttonIn3D === "Back to vector",
+		"section button should read Back to vector in 3D mode: " + buttonIn3D,
+	);
 	check(
 		!(await page.evaluate(() =>
 			document.getElementById("vrmLoading").classList.contains("visible"),
@@ -141,7 +154,7 @@ async function ensureFixture() {
 	await page.screenshot({ path: "vrm-3d.png" });
 
 	// Back to vector: 3D canvas unmounts, vector canvas draws again
-	await page.click("#viewToggle");
+	await page.click(".vrmViewButton");
 	await page.waitForFunction(() => !document.getElementById("vrmCanvas"), {
 		timeout: 5000,
 	});
@@ -154,23 +167,22 @@ async function ensureFixture() {
 		"vector canvas did not resume drawing after 3D exit",
 	);
 	check(
-		(await page.locator("#viewToggle").innerText()) === "3D",
-		"toggle should read 3D back in vector mode",
+		(await page.locator(".vrmViewButton").innerText()) === "View in 3D",
+		"section button should read View in 3D back in vector mode",
 	);
 
 	// Second entry comes from the byte cache: no new gateway hit
-	await page.click("#viewToggle");
+	await page.click(".vrmViewButton");
 	await page.waitForSelector("#vrmCanvas", { timeout: 20000 });
 	check(gatewayHits === 1, "cached re-entry refetched the model");
-	await page.click("#viewToggle");
+	await page.click(".vrmViewButton");
 	await page.waitForFunction(() => !document.getElementById("vrmCanvas"), {
 		timeout: 5000,
 	});
 
-	// A tap mid-fetch cancels back to vector (12345 is uncached;
-	// the delayed gateway keeps the fetch in flight)
+	// A tap on the loading overlay cancels back to vector (12345 is
+	// uncached; the delayed gateway keeps the fetch in flight)
 	gatewayDelay = 800;
-	await page.click("#panelHandle");
 	await page.fill("#loadTokenInput", "12345");
 	await page.press("#loadTokenInput", "Enter");
 	await page.waitForFunction(
@@ -178,40 +190,43 @@ async function ensureFixture() {
 		{ timeout: 15000 },
 	);
 	await page.waitForTimeout(300);
-	await page.click("#viewToggle");
+	await page.click(".vrmViewButton");
+	// The center-screen overlay is the load's primary feedback
 	await page.waitForFunction(
-		() => document.getElementById("viewToggle").classList.contains("loading"),
+		() => document.getElementById("vrmLoading").classList.contains("visible"),
 		{ timeout: 5000 },
 	);
-	const loadingText = await page.locator("#viewToggle").innerText();
-	check(
-		/%|MB|…/.test(loadingText),
-		"no progress indication while loading: " + loadingText,
-	);
-	// The center-screen overlay is the load's primary feedback
 	const overlay = await page.evaluate(() => ({
-		visible: document
-			.getElementById("vrmLoading")
-			.classList.contains("visible"),
 		text: document.getElementById("vrmLoadingText").innerText,
 		hasBar: !!document.getElementById("vrmLoadingBar"),
+		hint: document.getElementById("vrmLoadingHint").innerText,
+		cancelLabel: document.querySelector(".vrmViewButton").innerText,
 	}));
 	console.log("loading overlay:", JSON.stringify(overlay));
-	check(overlay.visible, "loading overlay not shown during fetch");
 	check(
 		overlay.text.includes("Loading 3D model"),
 		"overlay text wrong: " + overlay.text,
 	);
 	check(overlay.hasBar, "loading overlay has no progress bar");
-	await page.click("#viewToggle");
+	check(
+		overlay.hint === "Tap to cancel",
+		"overlay cancel hint wrong: " + overlay.hint,
+	);
+	check(
+		overlay.cancelLabel === "Cancel loading",
+		"section button should read Cancel loading mid-fetch: " +
+			overlay.cancelLabel,
+	);
+	// Cancel by tapping the overlay itself
+	await page.click("#vrmLoading");
 	await page.waitForTimeout(1500);
 	check(
 		!(await page.evaluate(() => !!document.getElementById("vrmCanvas"))),
 		"cancelled fetch still mounted the 3D view",
 	);
 	check(
-		(await page.locator("#viewToggle").innerText()) === "3D",
-		"toggle not back to 3D after cancel",
+		(await page.locator(".vrmViewButton").innerText()) === "View in 3D",
+		"section button not back to View in 3D after cancel",
 	);
 	check(
 		!(await page.evaluate(() =>
@@ -222,9 +237,9 @@ async function ensureFixture() {
 
 	// A token load mid-fetch supersedes the 3D entry: the stale
 	// completion must not mount anything over the new token
-	await page.click("#viewToggle");
+	await page.click(".vrmViewButton");
 	await page.waitForFunction(
-		() => document.getElementById("viewToggle").classList.contains("loading"),
+		() => document.getElementById("vrmLoading").classList.contains("visible"),
 		{ timeout: 5000 },
 	);
 	await page.fill("#loadTokenInput", "8014");
@@ -239,8 +254,14 @@ async function ensureFixture() {
 		"stale 3D fetch mounted over a newer token load",
 	);
 	check(
-		(await page.locator("#viewToggle").innerText()) === "3D",
-		"toggle stuck after a superseding token load",
+		(await page.locator(".vrmViewButton").innerText()) === "View in 3D",
+		"section button stuck after a superseding token load",
+	);
+	check(
+		!(await page.evaluate(() =>
+			document.getElementById("vrmLoading").classList.contains("visible"),
+		)),
+		"loading overlay stuck after a superseding token load",
 	);
 
 	console.log("errors:", errors.length ? errors : "none");

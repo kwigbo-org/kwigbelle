@@ -66,7 +66,9 @@ window.ethereum = {
 		() => document.getElementById("preloader")?.style.opacity === "0",
 		{ timeout: 15000 },
 	);
-	// Expect the network-fix button, labeled accordingly
+	// The network-fix button lives in the profile drawer now: open
+	// it and expect the button, labeled accordingly
+	await page.click("#profileHandle");
 	await page.waitForSelector(".connectButton", { timeout: 10000 });
 	const label = await page.locator(".connectButton").innerText();
 	console.log("button label:", JSON.stringify(label));
@@ -76,16 +78,21 @@ window.ethereum = {
 	);
 	await page.screenshot({ path: "switch-button.png" });
 
-	// Tap: wallet "switches" to mainnet, page reloads, picker appears
+	// Tap: wallet "switches" to mainnet, page reloads, the grid
+	// builds silently (the reload closes the drawer, so tiles exist
+	// without thumbnails)
 	await page.click(".connectButton");
-	await page.waitForSelector(".pickerThumb.current img", { timeout: 20000 });
+	await page.waitForFunction(
+		() => document.querySelectorAll("#profileGrid .profileTile").length === 3,
+		{ timeout: 20000 },
+	);
 	const items = await page.evaluate(
-		() => document.querySelectorAll("#pickerList .pickerThumb").length,
+		() => document.querySelectorAll("#profileGrid .profileTile").length,
 	);
 	console.log(
-		`after switch: picker with ${items} items, alerts=${JSON.stringify(alerts)} pageErrors=${JSON.stringify(pageErrors)}`,
+		`after switch: grid with ${items} tiles, alerts=${JSON.stringify(alerts)} pageErrors=${JSON.stringify(pageErrors)}`,
 	);
-	check(items === 3, "expected 3 picker items after switch, got " + items);
+	check(items === 3, "expected 3 grid tiles after switch, got " + items);
 	check(alerts.length === 0, "alerts: " + JSON.stringify(alerts));
 	check(pageErrors.length === 0, "page errors: " + JSON.stringify(pageErrors));
 	await page.screenshot({ path: "switch-after.png" });

@@ -76,6 +76,8 @@ announce();
 		() => document.getElementById("preloader")?.style.opacity === "0",
 		{ timeout: 15000 },
 	);
+	// The connect button lives in the profile drawer now: open it
+	await page.click("#profileHandle");
 	await page.waitForSelector(".connectButton", { timeout: 10000 });
 
 	// Tap the button: expect a chooser listing both wallets
@@ -91,15 +93,19 @@ announce();
 	);
 	await page.screenshot({ path: "wallet-chooser.png" });
 
-	// Pick HotMock: expect connect + picker, and Rabby never prompted
+	// Pick HotMock: expect connect + the owned grid (the drawer is
+	// open, so thumbnails render in), and Rabby never prompted
 	await page.click(".walletRow:nth-child(2)");
-	await page.waitForSelector(".pickerThumb.current img", { timeout: 20000 });
+	await page.waitForFunction(
+		() => document.querySelectorAll("#profileGrid img").length === 3,
+		{ timeout: 20000 },
+	);
 	const rabbyPrompts = await page.evaluate(() => window.__rabbyPrompts);
 	const stored = await page.evaluate(() =>
 		localStorage.getItem("kwigbelle.wallet"),
 	);
 	console.log(
-		`picked HotMock: picker up, rabbyPrompts=${rabbyPrompts}, stored=${JSON.stringify(stored)}`,
+		`picked HotMock: grid up, rabbyPrompts=${rabbyPrompts}, stored=${JSON.stringify(stored)}`,
 	);
 	check(
 		rabbyPrompts === 0,
@@ -107,15 +113,18 @@ announce();
 	);
 	check(stored === "io.mock.hotmock", "choice not persisted: " + stored);
 
-	// Reload: the stored choice + authorized account should go
-	// straight to the picker with no button and no chooser
+	// Reload: the stored choice + authorized account should rebuild
+	// the grid silently with no button and no chooser
 	await page.reload();
-	await page.waitForSelector(".pickerThumb.current img", { timeout: 20000 });
+	await page.waitForFunction(
+		() => document.querySelectorAll("#profileGrid .profileTile").length === 3,
+		{ timeout: 20000 },
+	);
 	const buttonAfter = await page.evaluate(
 		() => !!document.querySelector(".connectButton"),
 	);
 	console.log(
-		`after reload: picker restored, connectButton=${buttonAfter}, alerts=${JSON.stringify(alerts)} pageErrors=${JSON.stringify(pageErrors)}`,
+		`after reload: grid restored, connectButton=${buttonAfter}, alerts=${JSON.stringify(alerts)} pageErrors=${JSON.stringify(pageErrors)}`,
 	);
 	check(!buttonAfter, "connect button reappeared after reload");
 	check(alerts.length === 0, "alerts: " + JSON.stringify(alerts));
