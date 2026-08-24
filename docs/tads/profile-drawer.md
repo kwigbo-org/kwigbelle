@@ -1,0 +1,141 @@
+# TAD: profile drawer (wallet + owned Avastars) and composed picker thumbnails
+
+- **Status:** IN REVIEW
+- **Driver:** Operator (2026-08-24): "I want a second tab above
+  settings on the right. It will be a profile icon. We will put the
+  connect wallet button in this drawer and your avastars. Also, we
+  can ditch the lower left 3d button since that UI is duplicated in
+  the settings drawer." This absorbs the previously-parked "composed
+  picker thumbnails" follow-up — the picker gets rebuilt anyway, so
+  its thumbnails switch from on-chain renders to library composition
+  in the same effort.
+
+## Context
+
+Current screen layout (all positions verified in `style.css` and the
+Lib classes on 2026-08-24):
+
+- **Top-left:** `#walletConnect` (WalletConnectUI — connect /
+  switch-network button + multi-wallet chooser) and
+  `#avastarPicker` (PickerUI — collapsed current-token thumbnail
+  that expands into the owned list). Both float over the art.
+- **Top-right:** `#sidePanel` — single ⚙ handle sliding out the
+  settings column (Load / Effects / 3D model / Traits sections).
+- **Bottom-left:** `#viewToggle` (ViewToggleUI — 3D/2D toggle,
+  fetch progress, tap-to-cancel) plus `#viewToggleError` toast and
+  the centered `#vrmLoading` overlay whose hint reads "Tap the 3D
+  button to cancel".
+
+Duplication facts driving the 3D-button removal: VRMSection (the
+"3D model" panel section) already exposes the full toggle surface —
+"View in 3D" / "Cancel loading" / "Back to vector" plus a progress
+line — and the centered overlay already carries phase + progress.
+The floating button's only non-duplicated roles are (a) the cancel
+affordance named by the overlay hint and (b) an always-visible exit
+while in 3D. (a) moves onto the overlay itself; (b) is accepted as
+one extra tap (the settings drawer remains accessible in 3D and is
+where the user just came from).
+
+Thumbnail facts: PickerUI thumbnails come from
+`AvastarLoader.renderTokenSVG` — one `renderAvastar` wallet RPC
+round-trip per owned token, serialized "to keep the wallet RPC
+happy". This is the last heavy on-chain render path in the site.
+`TraitComposer.compose(tokenId, displaySize)` already builds any of
+the 26,617 tokens from the committed `Traits/` library with zero
+network; the trait modal's bbox-crop technique produces styled
+thumbnails from the same fragments. `renderTokenSVG` itself stays —
+`fallbackSVG` still uses it as the wallet-connected fallback for the
+main display when composition fails.
+
+## Decisions
+
+| # | Decision | Rationale |
+|---|----------|-----------|
+| 1 | Two stacked handles on the right edge — profile above settings — sharing one sliding-drawer mechanism; opening one closes the other. | Operator directive ("second tab above settings"). One mechanism keeps the slide/backdrop behavior consistent and avoids two panels fighting for the same edge. |
+| 2 | SidePanel generalizes to named drawers: the existing class grows a handle stack and per-drawer content columns; the settings drawer keeps its current DOM ids (`#panelSections`, `.panelSection`) so section code and tests stay stable. | Smallest refactor that supports two drawers; existing sections register exactly as before via `addSection`. |
+| 3 | Profile drawer contents by wallet state: (no wallet detected) a short note; (wallet, not connected) the Connect Wallet button and, when several wallets are installed, the chooser rows; (wrong network) the Switch to Mainnet button; (connected) short address line + owned-Avastars grid. WalletConnectUI's flow logic moves in wholesale — connect semantics are unchanged. | The drawer is the one place wallet state lives; every state has a visible home instead of a button that appears/disappears over the art. |
+| 4 | The owned grid replaces PickerUI: tap a token to load it; the current token is highlighted; picking closes the drawer so the load is visible. The top-left collapsed "current avastar" thumbnail is retired — current identity already lives in the Traits identity card. | Clears the art area entirely on the left; drawer-close-on-pick shows the result of the tap. |
+| 5 | Profile handle shows a small accent badge when a wallet is connected. | Wallet state visible without opening the drawer. |
+| 6 | Handle icons are inline SVG glyphs (person for profile; the ⚙ text glyph stays for settings unless contrast testing argues for SVG there too), colored via CSS tokens. | Emoji render with platform color and clash with the dark chrome; inline SVG obeys `--text`. |
+| 7 | The floating 3D/2D button and its side toast are removed. The centered loading overlay survives (renamed home: VRMLoadingUI), becomes tap-to-cancel (pointer-events on, hint "Tap to cancel"), and pipeline errors surface as a transient bottom-center toast in the same visual style. | Operator directive; the panel's VRMSection already duplicates toggle/cancel/progress. The overlay is a larger, more discoverable cancel target than the old button. |
+| 8 | Exit from 3D is VRMSection's "Back to vector" only. | Accepted UX cost (one extra tap); the user necessarily used that drawer to enter 3D. `beginLoad`'s exit3D choke point is untouched. |
+| 9 | Grid thumbnails are composed from the `Traits/` library (full-figure, one static SVG per token via a small TraitComposer helper), rendered lazily as the grid scrolls/opens and cached per session. On per-token composition failure the tile keeps its token-id text label (current PickerUI fallback behavior). | Instant, walletless, zero RPC; retires the picker's `renderTokenSVG` dependency — the last heavy on-chain render use. |
+| 10 | Ships as two code PRs against this one TAD: **PR A** — drawer restructure + wallet/picker move + 3D-button removal (thumbnails still on the old render path inside the new grid); **PR B** — composed thumbnails swapped into the grid. | Each panel review lands on one concern; PR A is UI plumbing, PR B is render-path correctness. |
+| 11 | No new URL flags, no new network calls, no localStorage changes. Remembered-wallet persistence (`kwigbelle.wallet`) and effects persistence are untouched. | Scope discipline. |
+
+## Proposed design surface
+
+```
+Lib/SidePanel.js
+  constructor(rootContainer)
+  addDrawer(id, handleContent) -> drawer handle registered top-down;
+      returns a content column element. Opening a drawer closes the
+      other. Settings drawer keeps id #panelSections.
+  addSection(title, element)   -> unchanged, targets the settings
+      drawer (back-compat).
+  open(id) / close()           -> programmatic control (pick-to-close,
+      tests).
+
+Lib/ProfileSection.js (new)    -> owns the profile drawer content:
+  setWalletState(state)        -> "none" | "disconnected" | "wrongNetwork"
+                                  | "connected"
+  buildGrid(tokenIds)          -> owned grid (PR A: renderTokenSVG
+                                  thumbnails; PR B: composed)
+  setCurrent(tokenId)          -> highlight
+  callbacks: onConnectTap, onWalletChosen, onPick
+  (absorbs WalletConnectUI's connectWallet/toggleWalletChooser/
+   continueConnect flow logic unchanged; PickerUI and
+   WalletConnectUI are deleted)
+
+Lib/VRMLoadingUI.js (renamed from ViewToggleUI, button removed)
+  setMode / setProgress / setPhase  -> unchanged semantics
+  showError(message)                -> bottom-center transient toast
+  overlay tap                        -> onCancel callback
+
+Lib/TraitComposer.js
+  composeSVG(tokenId)          -> full minified SVG string for one
+                                  token (thumbnail surface, PR B);
+                                  reuses picksFor + the existing
+                                  header/footer assembly.
+
+Lib/MainScene.js
+  wallet wiring targets ProfileSection instead of
+  WalletConnectUI/PickerUI; toggle3D wiring drops the button and
+  keeps VRMSection + overlay paths; build stamp bumped per PR.
+```
+
+## Steps
+
+1. **SidePanel drawer generalization + profile drawer shell (PR A).**
+   Action: `addDrawer`, handle stack CSS, profile handle + badge;
+   move WalletConnectUI flow + picker grid into ProfileSection;
+   delete PickerUI/WalletConnectUI; MainScene rewiring; drawer
+   styles. Validate: full Tests/ suite with picker/chooser/eip/
+   switch/failure tests updated to the drawer selectors; manual
+   `./deploy.sh -w` pass across all four wallet states. Rollback:
+   revert the PR (squash-merge makes this one commit).
+2. **3D button removal (PR A, same branch).** Action: ViewToggleUI →
+   VRMLoadingUI (button + side toast removed, overlay tap-to-cancel,
+   bottom toast); MainScene toggle3D/setVRMMode wiring; hint copy.
+   Validate: vrm-viewer-test / vrm-panel-test updated (enter via
+   panel button, cancel via overlay tap, exit via Back to vector);
+   manual 3D round-trip. Rollback: same PR revert.
+3. **Composed thumbnails (PR B).** Action: `composeSVG` helper;
+   ProfileSection grid renders through it (lazy, cached, id-label
+   fallback); picker no longer calls `renderTokenSVG`. Validate:
+   grid renders for a mocked wallet WITHOUT any `renderAvastar`
+   eth_call (assert on the mock's call log); spot-check thumbnails
+   vs the same tokens' main renders; suite green. Rollback: revert
+   PR B — PR A's grid still works on the old path.
+
+## Client review status
+
+- [x] kwigbelle (single-lane feature; no cross-lane consumers)
+
+## Downstream commitments
+
+None — no other repo consumes these surfaces.
+
+## Progress log
+
+- 2026-08-24 — TAD drafted; PR opened for panel review.
