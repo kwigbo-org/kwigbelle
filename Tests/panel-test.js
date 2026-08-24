@@ -176,13 +176,20 @@ window.ethereum = {
 			);
 			return section ? section.classList.contains("collapsed") : null;
 		}, title);
-	await page.evaluate(() => {
-		const section = [...document.querySelectorAll(".panelSection")].find(
-			(s) =>
-				s.querySelector(".panelSectionHeader span").textContent === "3D model",
-		);
-		section.querySelector(".panelSectionHeader").click();
-	});
+	// Throws a readable error on a missing section instead of an
+	// opaque null dereference
+	const toggleSection = (title) =>
+		page.evaluate((wanted) => {
+			const section = [...document.querySelectorAll(".panelSection")].find(
+				(s) =>
+					s.querySelector(".panelSectionHeader span").textContent === wanted,
+			);
+			if (!section) {
+				throw new Error(`panel section "${wanted}" not found`);
+			}
+			section.querySelector(".panelSectionHeader").click();
+		}, title);
+	await toggleSection("3D model");
 	check(
 		(await sectionState("3D model")) === true,
 		"3D model section did not collapse",
@@ -207,13 +214,7 @@ window.ethereum = {
 	check(effectsAfter === false, "untouched section came back collapsed");
 	// Expand it again (and persist that) so the later steps see the
 	// section layout they expect
-	await page.evaluate(() => {
-		const section = [...document.querySelectorAll(".panelSection")].find(
-			(s) =>
-				s.querySelector(".panelSectionHeader span").textContent === "3D model",
-		);
-		section.querySelector(".panelSectionHeader").click();
-	});
+	await toggleSection("3D model");
 	check(
 		(await sectionState("3D model")) === false,
 		"3D model section did not re-expand",
