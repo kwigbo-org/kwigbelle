@@ -203,14 +203,21 @@ export default class ProfileSection {
 	}
 
 	/// Entry point for the connect button: with several wallets
-	/// installed show a chooser first, otherwise connect directly
+	/// installed show a chooser first, otherwise connect directly.
+	/// Fired from click listeners, so it must swallow its own
+	/// rejections — an unhandled one would fail silently anyway,
+	/// this way it at least logs.
 	async connectWallet() {
-		const wallets = await this.avastarLoader.getWallets();
-		if (wallets.length > 1) {
-			this.toggleWalletChooser(wallets);
-			return;
+		try {
+			const wallets = await this.avastarLoader.getWallets();
+			if (wallets.length > 1) {
+				this.toggleWalletChooser(wallets);
+				return;
+			}
+			await this.continueConnect();
+		} catch (error) {
+			console.error("Wallet connect failed", error);
 		}
-		this.continueConnect();
 	}
 
 	/// Expand or collapse the list of installed wallets under the
@@ -242,7 +249,9 @@ export default class ProfileSection {
 					this.avastarLoader.selectWallet(wallet);
 					this.walletList.remove();
 					this.walletList = null;
-					this.continueConnect();
+					this.continueConnect().catch((error) =>
+						console.error("Wallet connect failed", error),
+					);
 				}.bind(this),
 			);
 			this.walletList.appendChild(row);
@@ -263,10 +272,23 @@ export default class ProfileSection {
 		try {
 			// Wrong network: ask the wallet to switch. The page
 			// reloads into the working state via the chainChanged
-			// listener.
-			const onMainnet = await this.avastarLoader.isMainnet();
+			// listener. An unresponsive wallet must not become a
+			// silent dropped promise: log and leave the button.
+			let onMainnet = false;
+			try {
+				onMainnet = await this.avastarLoader.isMainnet();
+			} catch (error) {
+				console.error("Wallet network check failed", error);
+				return;
+			}
 			if (!onMainnet) {
-				const switched = await this.avastarLoader.switchToMainnet();
+				let switched = false;
+				try {
+					switched = await this.avastarLoader.switchToMainnet();
+				} catch (error) {
+					console.error("Network switch failed", error);
+					return;
+				}
 				if (switched) {
 					// Fallback for wallets that do not emit chainChanged
 					window.location.reload();
