@@ -4,15 +4,13 @@
 export default class EffectsSection {
 	static STORAGE_KEY = "kwigbelle.effects";
 
-	/// - Parameters:
-	///		- layerSprings: The rig the controls drive
-	///		- explodeOverride: The ?explode url param when explicitly
-	///			present (wins over the stored setting), else null
-	constructor(layerSprings, explodeOverride) {
+	/// - Parameter layerSprings: The rig the controls drive
+	constructor(layerSprings) {
 		this.layerSprings = layerSprings;
+		// A legacy stored `explode` key from before its retirement
+		// (docs/tads/burned-traits.md Decision 1) is simply ignored
 		const stored = this.loadSettings();
 		if (stored) {
-			this.layerSprings.isExplodeEnabled = !!stored.explode;
 			this.layerSprings.isPaused = !!stored.paused;
 			// Clamp to the sliders' ranges so a stale or hand-edited
 			// stored value can't run the rig outside what the
@@ -23,9 +21,6 @@ export default class EffectsSection {
 			if (Number.isFinite(stored.follow)) {
 				this.layerSprings.followScale = Math.max(0, Math.min(2, stored.follow));
 			}
-		}
-		if (explodeOverride !== null) {
-			this.layerSprings.isExplodeEnabled = explodeOverride;
 		}
 	}
 
@@ -42,7 +37,6 @@ export default class EffectsSection {
 			localStorage.setItem(
 				EffectsSection.STORAGE_KEY,
 				JSON.stringify({
-					explode: this.layerSprings.isExplodeEnabled,
 					paused: this.layerSprings.isPaused,
 					motion: this.layerSprings.motionScale,
 					follow: this.layerSprings.followScale,
@@ -57,12 +51,6 @@ export default class EffectsSection {
 	build() {
 		const content = document.createElement("div");
 		content.setAttribute("class", "effectsControls");
-		content.appendChild(
-			this.toggleRow("Explode", this.layerSprings.isExplodeEnabled, (on) => {
-				this.layerSprings.isExplodeEnabled = on;
-				this.saveSettings();
-			}),
-		);
 		content.appendChild(
 			this.toggleRow("Pause motion", this.layerSprings.isPaused, (on) => {
 				this.layerSprings.isPaused = on;

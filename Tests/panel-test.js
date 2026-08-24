@@ -154,7 +154,10 @@ window.ethereum = {
 	check(backAlpha !== 0, "re-checked trait did not redraw");
 	await page.screenshot({ path: "panel-traits.png" });
 
-	// Effects persist: set Motion to 0 and reload
+	// Effects persist: set Motion to 0 and reload. Collapsed
+	// sections persist too (docs/tads/burned-traits.md Decision 7):
+	// collapse "3D model" before the reload and expect it back
+	// collapsed, with the untouched "Effects" still expanded.
 	await page.getByRole("slider", { name: "Motion" }).evaluate((slider) => {
 		slider.value = "0";
 		// input applies live; change (drag release) persists
@@ -165,6 +168,32 @@ window.ethereum = {
 		JSON.parse(localStorage.getItem("kwigbelle.effects")),
 	);
 	check(stored && stored.motion === 0, "motion setting not persisted");
+	const sectionState = (title) =>
+		page.evaluate((wanted) => {
+			const section = [...document.querySelectorAll(".panelSection")].find(
+				(s) =>
+					s.querySelector(".panelSectionHeader span").textContent === wanted,
+			);
+			return section ? section.classList.contains("collapsed") : null;
+		}, title);
+	// Throws a readable error on a missing section instead of an
+	// opaque null dereference
+	const toggleSection = (title) =>
+		page.evaluate((wanted) => {
+			const section = [...document.querySelectorAll(".panelSection")].find(
+				(s) =>
+					s.querySelector(".panelSectionHeader span").textContent === wanted,
+			);
+			if (!section) {
+				throw new Error(`panel section "${wanted}" not found`);
+			}
+			section.querySelector(".panelSectionHeader").click();
+		}, title);
+	await toggleSection("3D model");
+	check(
+		(await sectionState("3D model")) === true,
+		"3D model section did not collapse",
+	);
 	await page.reload();
 	await page.waitForFunction(
 		() => document.getElementById("preloader")?.style.opacity === "0",
@@ -176,6 +205,20 @@ window.ethereum = {
 		.inputValue();
 	console.log("motion after reload:", motionAfter);
 	check(motionAfter === "0", "motion setting did not survive reload");
+	const collapsedAfter = await sectionState("3D model");
+	const effectsAfter = await sectionState("Effects");
+	console.log(
+		`after reload: 3D model collapsed=${collapsedAfter} Effects collapsed=${effectsAfter}`,
+	);
+	check(collapsedAfter === true, "collapsed section did not survive reload");
+	check(effectsAfter === false, "untouched section came back collapsed");
+	// Expand it again (and persist that) so the later steps see the
+	// section layout they expect
+	await toggleSection("3D model");
+	check(
+		(await sectionState("3D model")) === false,
+		"3D model section did not re-expand",
+	);
 
 	// In-page token swap resets visibility: hide a trait on the
 	// current token, pick a different one through the profile
