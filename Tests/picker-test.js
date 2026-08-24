@@ -8,6 +8,7 @@ const { check } = require("./check.js");
 
 const MOCK_PROVIDER = `
 window.__ownedIds = [8014, 25495, 25470];
+window.__renderCalls = 0;
 window.ethereum = {
 	isMetaMask: true,
 	on: () => {},
@@ -33,6 +34,7 @@ window.ethereum = {
 				return abi.encodeParameter("uint256", window.__ownedIds[index]);
 			}
 			if (sel === sig("renderAvastar(uint256)")) {
+				window.__renderCalls++;
 				const id = parseInt(data.slice(-64), 16);
 				const res = await fetch("/SVG/Avastar-" + id + ".svg");
 				if (!res.ok) throw new Error("no svg for " + id);
@@ -117,6 +119,14 @@ window.ethereum = {
 	check(
 		!!address && address.includes("…"),
 		"connected address line missing: " + address,
+	);
+	// Thumbnails compose from the library: ZERO on-chain renders
+	// (docs/tads/profile-drawer.md Decision 9)
+	const renderCalls = await page.evaluate(() => window.__renderCalls);
+	console.log("renderAvastar calls:", renderCalls);
+	check(
+		renderCalls === 0,
+		"thumbnails hit the chain render RPC " + renderCalls + "x",
 	);
 	await page.screenshot({ path: "profile-open.png" });
 

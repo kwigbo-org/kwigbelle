@@ -1,7 +1,8 @@
 # TAD: profile drawer (wallet + owned Avastars) and composed picker thumbnails
 
-- **Status:** APPROVED (2026-08-24, PR #15) — implementation in
-  progress (PR A of Decision 10)
+- **Status:** IMPLEMENTED (2026-08-24: TAD PR #15, drawer PR #16,
+  composed thumbnails PR #17) — frozen as historical record once
+  PR #17 merges
 - **Driver:** Operator (2026-08-24): "I want a second tab above
   settings on the right. It will be a profile icon. We will put the
   connect wallet button in this drawer and your avastars. Also, we
@@ -167,3 +168,15 @@ None — no other repo consumes these surfaces.
   amended, both tabs now share one 30px currentColor SVG size;
   (2) logout button requested → Decision 12 added (with the
   Decision 11 truth-fix for its `kwigbelle.disconnected` flag).
+- 2026-08-24 — PR #16 rounds 3–4: round 3 CLEAN 3/4 with a genuine
+  Codex LOW (logout cleared `currentTokenId`, so a same-token
+  reconnect rebuilt the grid unhighlighted) → preserved; round 4
+  CLEAN 4/4. Operator QA +1; merged as `4a6efdc`.
+- 2026-08-24 — Step 3 applied (PR B / PR #17): TraitComposer gains
+  `composeSVG(tokenId)` (the fullSVG assembly without layer
+  rasterization); the grid thumbnails render through it — zero
+  wallet RPC, asserted in picker-test via a renderAvastar call
+  counter pinned at 0. Byte parity of the assembly vs the chain
+  render is already covered by compose-test, so the thumbnails
+  inherit it. `renderTokenSVG` survives only as fallbackSVG's
+  wallet fallback.

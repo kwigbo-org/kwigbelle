@@ -25,7 +25,7 @@ export default class MainScene extends Scene {
 	/// Overridden constructor
 	constructor(rootContainer) {
 		super(rootContainer);
-		console.log("kwigbelle build 2026-08-24.1 (profile drawer)");
+		console.log("kwigbelle build 2026-08-24.2 (composed picker thumbnails)");
 		// Build the UI
 		this.buildUI();
 		// Start loading
@@ -50,28 +50,32 @@ export default class MainScene extends Scene {
 		// above settings holding the wallet connect flow and the
 		// owned-Avastars grid. Registered first so its handle stacks
 		// on top; picks and connects come back through callbacks.
-		this.profileSection = new ProfileSection(this.avastarLoader, {
-			onConnected: (ownedTokenIds) => {
-				this.recordOwnership(ownedTokenIds);
-				this.profileSection.buildGrid(ownedTokenIds);
-				this.sidePanel.setBadge("profile", true);
-				if (ownedTokenIds.length > 0) {
-					this.selectAvastar(ownedTokenIds[0], false);
-				}
+		this.profileSection = new ProfileSection(
+			this.avastarLoader,
+			this.traitComposer,
+			{
+				onConnected: (ownedTokenIds) => {
+					this.recordOwnership(ownedTokenIds);
+					this.profileSection.buildGrid(ownedTokenIds);
+					this.sidePanel.setBadge("profile", true);
+					if (ownedTokenIds.length > 0) {
+						this.selectAvastar(ownedTokenIds[0], false);
+					}
+				},
+				onPick: (tokenId) => {
+					// Close the drawer so the load is visible
+					this.sidePanel.close();
+					this.selectAvastar(tokenId);
+				},
+				onLoggedOut: () => {
+					// Ownership gates (Download VRM) close; the displayed
+					// Avastar stays up
+					this.recordOwnership([]);
+					this.sidePanel.setBadge("profile", false);
+				},
+				isDrawerOpen: () => this.sidePanel.isOpen("profile"),
 			},
-			onPick: (tokenId) => {
-				// Close the drawer so the load is visible
-				this.sidePanel.close();
-				this.selectAvastar(tokenId);
-			},
-			onLoggedOut: () => {
-				// Ownership gates (Download VRM) close; the displayed
-				// Avastar stays up
-				this.recordOwnership([]);
-				this.sidePanel.setBadge("profile", false);
-			},
-			isDrawerOpen: () => this.sidePanel.isOpen("profile"),
-		});
+		);
 		const profileColumn = this.sidePanel.addDrawer(
 			"profile",
 			ProfileSection.handleIcon(),

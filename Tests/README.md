@@ -26,7 +26,7 @@ python3 -m http.server 8741
 cd Tests
 node smoke.js          # no-wallet load, spring motion, follow/release
 node compose-test.js   # trait composition: parity, layer names, forced-failure static fallback
-node picker-test.js    # profile drawer grid: silent build, badge, lazy thumbnails, pick
+node picker-test.js    # profile drawer: grid, badge, composed thumbnails (0 RPC), pick, logout
 node chooser-test.js   # multi-wallet chooser + localStorage persistence across reload
 node switch-test.js    # wrong-network -> Switch to Mainnet button -> reload -> grid
 node eip-test.js       # EIP-6963 discovery, legacy fallback, tap-to-connect
