@@ -1,6 +1,7 @@
 # TAD: VRM 3D viewer (vector ↔ 3D toggle)
 
-- **Status:** Steps 1-4 applied — in review (2026-08-22, PR #11)
+- **Status:** IMPLEMENTED (2026-08-22, PR #11; fetch strategy
+  amended post-merge via PR #13) — frozen as historical record
 - **Driver:** Operator: "there is a 3D model VRM that is assigned
   to each avastar... implement some kind of viewer for the VRM. So
   you could toggle a 3d button to switch between vector and 3d." +
@@ -26,6 +27,12 @@ VRM extension). Discovery was live-verified on 2026-08-22:
   — ~9.3MB) and `dweb.link` 301-redirected to a subdomain form.
 - The site is static with no build step (ES modules served as-is),
   so 3D libraries must be vendored, not bundled.
+- (Learned post-merge, 2026-08-24:) the models live in SEVEN IPFS
+  bundles — founders, exclusives, and replicants in three Qm
+  (CIDv0) directory CIDs; primes across four bafy bundles — and
+  the very late replicants (~#26600+) have NO `vrm_url` in their
+  metadata at all: the "3D model unavailable" toast on those
+  tokens is correct behavior, not a failure.
 
 The vector display (composition, springs, trait preview) is
 untouched by this feature; 3D is an alternate view of the SAME
