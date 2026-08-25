@@ -28,7 +28,7 @@ export default class MainScene extends Scene {
 	/// Overridden constructor
 	constructor(rootContainer) {
 		super(rootContainer);
-		console.log("kwigbelle build 2026-08-27.2 (backup indicator)");
+		console.log("kwigbelle build 2026-08-27.3 (mirror-first 3D)");
 		// Build the UI
 		this.buildUI();
 		// Start loading
@@ -157,6 +157,13 @@ export default class MainScene extends Scene {
 		// mode transition AND by beginLoad, so a stale fetch or
 		// parse completion can never mount over a newer state
 		this.vrmSource = new VRMSource();
+		// Mirror-first 3D (docs/tads/vrm-mirror.md Decision 5): the
+		// hash corpus derives the mirror filename, so the happy path
+		// makes no avastars.io call and outlives that endpoint
+		this.vrmSource.kindFor = async (tokenId) => {
+			const info = await this.traitComposer.tokenInfo(tokenId);
+			return info ? info.kind : null;
+		};
 		this.vrmViewer = new VRMViewer(rootContainer);
 		// A tap on the loading overlay cancels the fetch (toggle3D
 		// reads a tap during vrmAbort as a cancel)
