@@ -129,3 +129,24 @@ None.
   their own temp names after the live run clobbered the shared
   one mid-test. Parallelism hides gateway latency and backoff
   sleeps; it cannot exceed the uplink's bandwidth.
+- 2026-08-25 — Parallel-capture amendment merged (PR #27,
+  9f62607) after FIVE rounds of genuine lock hardening: atomic
+  wx create, rename-steal reclaim, exclusive-create restore, and
+  finally the structural guarantee - per-token AND per-write
+  ownership gates on the manifest, so no lock race can interleave
+  snapshots. Plus async uploads (a sync exec froze all sibling
+  workers), scoped temp sweep, capture-counted --limit.
+- 2026-08-25 — Gateway saga, in order: the laptop capture proved
+  UPLINK-bound (~0.36 MB/s regardless of workers); moved to the
+  operator's Lightsail instance (~3.2 MB/s, ETA ~28h); pinata
+  then 429'd the instance even at --parallel 1 (datacenter IP
+  ranges are throttled harder than residential). PR #28 (the
+  implemented serving lane) was CLOSED and preserved at 0c103a3
+  so a hotfix could take develop: PR #29 (merged 800dd73) adds a
+  SHARED 429 cooldown (all workers pause together, Retry-After
+  honored in both header forms, 300s clamp, bodies drained) and
+  --gateway so the capture can run through a local kubo node's
+  gateway (bitswap, no HTTP limits) or any alternative gateway -
+  CORS-dead ones are fine server-side. First kubo probe 504'd on
+  a cold DHT; provider existence and the alternative-gateway
+  sweep are PENDING operator results, which pick the lane.
