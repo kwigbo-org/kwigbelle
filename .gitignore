@@ -12,4 +12,4 @@
 /Tests/fixtures/
 /Tools/data/vrm-tmp.part*
 /Tools/data/vrm-manifest.json.tmp
-/Tools/data/vrm-mirror.lock
+/Tools/data/vrm-mirror.lock*

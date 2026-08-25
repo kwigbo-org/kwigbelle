@@ -92,10 +92,13 @@ const acquireLock = () => {
 	// Atomic create ("wx") closes the read-check-write race two
 	// simultaneous starts would otherwise slip through (review
 	// catch). A dead owner's lock is reclaimed by an atomic RENAME
-	// steal - exactly one contender can win the rename, so two
-	// processes racing over the same stale lock can never delete
-	// each other's fresh locks (review catch); the loser loops and
-	// meets the winner's live lock instead.
+	// steal - exactly one contender can win the rename; the loser
+	// loops and meets the winner's live lock instead. Deeper
+	// (3-way) interleavings can still strand a live process without
+	// its lock file, so the CAPTURE LOOP re-verifies ownership
+	// before every token and aborts if the lock changed hands -
+	// that backstop, not this dance, is the corruption guarantee
+	// (review catch).
 	let acquired = false;
 	for (let attempt = 0; attempt < 3 && !acquired; attempt++) {
 		try {
@@ -133,11 +136,19 @@ const acquireLock = () => {
 			// Unreadable spoils: discard below and retry
 		}
 		if (stolenPid && stolenPid !== pid && isAlive(stolenPid)) {
+			// The steal caught a lock that changed hands to a LIVE
+			// owner mid-dance. Hand it back by EXCLUSIVE create only -
+			// a rename here could atomically overwrite a THIRD
+			// contender's fresh lock (review catch). If someone else
+			// claimed the name meanwhile, their lock stands untouched
+			// and the displaced owner's per-token ownership check
+			// stops that run safely.
 			try {
-				fs.renameSync(stolen, LOCK_FILE);
+				fs.writeFileSync(LOCK_FILE, String(stolenPid), { flag: "wx" });
 			} catch (error) {
-				fs.rmSync(stolen, { force: true });
+				// A fresh lock exists: leave it standing
 			}
+			fs.rmSync(stolen, { force: true });
 			refuseLock(stolenPid);
 		}
 		fs.rmSync(stolen, { force: true });
@@ -427,11 +438,35 @@ async function capture(dest, limit, parallel) {
 	const workerTemp = new RegExp(
 		`^${path.basename(TMP_FILE).replace(/\./g, "\\.")}\\.\\d+$`,
 	);
+	// A crashed reclaim can also strand a .reclaim-* lock temp
+	// (review catch); a live contender's copy lives microseconds
+	// and its deletion is harmless
+	const reclaimTemp = `${path.basename(LOCK_FILE)}.reclaim-`;
 	for (const stale of fs.readdirSync(DATA_DIR)) {
-		if (workerTemp.test(stale)) {
+		if (workerTemp.test(stale) || stale.startsWith(reclaimTemp)) {
 			fs.rmSync(path.join(DATA_DIR, stale), { force: true });
 		}
 	}
+	// The corruption BACKSTOP for every exotic lock interleaving:
+	// a worker only proceeds while this process still owns the
+	// lock file. A displaced run aborts before it can interleave
+	// manifest snapshots with the new owner (review catch).
+	const assertLockOwned = () => {
+		let owner = 0;
+		try {
+			owner = Number(fs.readFileSync(LOCK_FILE, "utf8"));
+		} catch (error) {
+			// A missing lock counts as lost
+		}
+		if (owner !== process.pid) {
+			status.event(
+				"run ABORTED: capture lock lost to another process - " +
+					"re-run when no other capture is active",
+			);
+			console.error("aborting: capture lock lost - see " + STATUS_FILE);
+			process.exit(1);
+		}
+	};
 	// Filename uniqueness across tokens: a duplicate key would
 	// silently overwrite another token's mirror object (review
 	// catch). mirroredFiles = completed captures; inFlightFiles
@@ -588,6 +623,7 @@ async function capture(dest, limit, parallel) {
 	const worker = async (workerId) => {
 		const tmpFile = `${TMP_FILE}.${workerId}`;
 		for (;;) {
+			assertLockOwned();
 			const tokenId = claimNext();
 			if (tokenId === undefined) {
 				status.inFlight.delete(workerId);
