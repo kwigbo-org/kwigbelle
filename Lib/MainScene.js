@@ -619,6 +619,11 @@ export default class MainScene extends Scene {
 		this.canvas.height = window.innerHeight;
 		this.backdropCanvas.width = window.innerWidth;
 		this.backdropCanvas.height = window.innerHeight;
+		// The dimension assignment above blanked the backdrop bitmap;
+		// in 2D the next frame repaints it, but the render loop is
+		// paused during 3D - repaint now so the art stays up behind
+		// the model (round-4 review, all four panelists)
+		this.paintBackdrop();
 		if (!this.avastar) {
 			return;
 		}
@@ -913,6 +918,10 @@ export default class MainScene extends Scene {
 				composed.series = this.baseSeries;
 				composed.ranking = this.baseRanking;
 				this.avastar = composed;
+				// A 3D-mode resize lands here with the render loop
+				// paused: hand the fresh backdrop raster to its canvas
+				// now (a no-op visually in 2D - the next frame repaints)
+				this.paintBackdrop();
 				// Keep the loader's state honest about what is on
 				// screen (the same-token guard reads from it)
 				this.avastarLoader.currentAvastar = composed.fullSVG;
@@ -926,6 +935,54 @@ export default class MainScene extends Scene {
 				this.traitsSection.setOverrides(composed, this.overrides);
 			})
 			.catch((error) => console.warn("preview recompose failed", error));
+	}
+
+	/// Repaint the backdrop's own canvas: cleared, then the art (the
+	/// static fallback has no separate background layer, and the
+	/// traits panel can hide the backdrop). The render loop calls
+	/// this every 2D frame; resize() calls it directly because
+	/// assigning canvas dimensions blanks the bitmap and the render
+	/// loop is paused while 3D shows (docs/tads/info-tab.md
+	/// Decision 6 - the art must stay up behind the model).
+	paintBackdrop() {
+		const context = this.backdropCanvas.getContext("2d");
+		context.clearRect(
+			0,
+			0,
+			this.backdropCanvas.width,
+			this.backdropCanvas.height,
+		);
+		if (
+			!this.isLoading &&
+			this.avastar &&
+			this.avastar.backgroundLayer &&
+			this.traitsSection.isBackdropVisible()
+		) {
+			const layer = this.avastar.backgroundLayer;
+			if (!layer.complete) {
+				// Compositions resolve while their images still decode;
+				// the 60fps loop normally absorbs that, but a one-shot
+				// paint (3D-mode resize) would draw nothing silently -
+				// repaint when the decode lands, if still current
+				layer.addEventListener(
+					"load",
+					() => {
+						if (this.avastar && this.avastar.backgroundLayer === layer) {
+							this.paintBackdrop();
+						}
+					},
+					{ once: true },
+				);
+				return;
+			}
+			context.drawImage(
+				layer,
+				0,
+				0,
+				this.backdropCanvas.width,
+				this.backdropCanvas.height,
+			);
+		}
 	}
 
 	render() {
@@ -955,13 +1012,7 @@ export default class MainScene extends Scene {
 		}
 		// The backdrop's canvas redraws fully every frame - it never
 		// fades with Trails (the ghosts float over the visible art)
-		const bgContext = this.backdropCanvas.getContext("2d");
-		bgContext.clearRect(
-			0,
-			0,
-			this.backdropCanvas.width,
-			this.backdropCanvas.height,
-		);
+		this.paintBackdrop();
 		// The avastar guard covers failed loads: isLoading clears on
 		// completion even when no Avastar could be parsed
 		if (this.isLoading || !this.avastar) {
@@ -974,23 +1025,6 @@ export default class MainScene extends Scene {
 		let dt = now - (this.lastFrameTime || now);
 		this.lastFrameTime = now;
 		dt = Math.min(dt, 1 / 30);
-
-		// The static fallback has no separate background layer, and
-		// the traits panel can hide the backdrop. Drawn on its OWN
-		// canvas behind the layers (docs/tads/info-tab.md): Trails
-		// ghosts float over it, and it stays behind the VRM in 3D.
-		if (
-			this.avastar.backgroundLayer &&
-			this.traitsSection.isBackdropVisible()
-		) {
-			bgContext.drawImage(
-				this.avastar.backgroundLayer,
-				0,
-				0,
-				this.backdropCanvas.width,
-				this.backdropCanvas.height,
-			);
-		}
 
 		const centerPoint = new Point(
 			this.canvas.width / 2,

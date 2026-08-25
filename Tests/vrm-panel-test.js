@@ -173,6 +173,18 @@ async function launch(withWallet) {
 			(await backdropCorner()) === 255,
 			"backdrop art not visible behind the 3D view",
 		);
+
+		// Resize while 3D is up: assigning canvas dimensions blanks
+		// the bitmap and the paused 2D loop can't repaint - resize()
+		// must (round-4 review, all four panelists)
+		await page.setViewportSize({ width: 700, height: 520 });
+		await page.waitForTimeout(400);
+		check(
+			(await backdropCorner()) === 255,
+			"backdrop art lost after resizing during 3D",
+		);
+		await page.setViewportSize({ width: 800, height: 600 });
+		await page.waitForTimeout(400);
 		const limits = await page.evaluate(() => {
 			const sections = [...document.querySelectorAll(".panelSection")];
 			const effects = sections.find(
