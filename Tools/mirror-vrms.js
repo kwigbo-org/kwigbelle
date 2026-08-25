@@ -128,8 +128,7 @@ class Status {
 		const avg = done > 0 ? totalBytes / done : FALLBACK_AVG_BYTES;
 		const elapsed = (Date.now() - this.runStart) / 1000;
 		const rate = elapsed > 1 ? this.runBytes / elapsed : 0;
-		const etaHours =
-			rate > 0 ? (remaining * avg) / rate / 3600 : null;
+		const etaHours = rate > 0 ? (remaining * avg) / rate / 3600 : null;
 		const gb = (bytes) => (bytes / 1e9).toFixed(2);
 		const lines = [
 			"# VRM mirror status",
@@ -270,9 +269,7 @@ async function capture(dest, limit) {
 					success = true;
 					break;
 				}
-				const file = decodeURIComponent(
-					metadata.vrm_url.split("/").pop(),
-				);
+				const file = decodeURIComponent(metadata.vrm_url.split("/").pop());
 				status.current = `#${tokenId} ${file} (attempt ${attempt + 1})`;
 				status.write();
 				const { size, sha256 } = await downloadVerified(
@@ -378,7 +375,9 @@ async function verify(sampleSize) {
 		}
 		fs.rmSync(TMP_FILE, { force: true });
 	}
-	console.log(`${sample.length - bad}/${sample.length} verified against the manifest`);
+	console.log(
+		`${sample.length - bad}/${sample.length} verified against the manifest`,
+	);
 	process.exit(bad === 0 ? 0 : 1);
 }
 
@@ -386,10 +385,7 @@ async function verify(sampleSize) {
 // passes with the right size+sha, a bad magic is rejected, and a
 // truncated body (content-length disagreement) is rejected.
 async function selftest() {
-	const good = Buffer.concat([
-		Buffer.from("glTF"),
-		crypto.randomBytes(100000),
-	]);
+	const good = Buffer.concat([Buffer.from("glTF"), crypto.randomBytes(100000)]);
 	const expectedSha = crypto.createHash("sha256").update(good).digest("hex");
 	const server = http.createServer((request, response) => {
 		if (request.url === "/good.vrm") {
@@ -428,7 +424,9 @@ async function selftest() {
 	);
 	fs.rmSync(TMP_FILE, { force: true });
 	server.close();
-	console.log("SELFTEST PASS: verified round-trip, bad-magic and truncation rejection");
+	console.log(
+		"SELFTEST PASS: verified round-trip, bad-magic and truncation rejection",
+	);
 }
 
 // ---- entry ----
