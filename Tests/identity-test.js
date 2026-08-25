@@ -74,6 +74,20 @@ const { check } = require("./check.js");
 	);
 	check(card.rowIcons === 12, "every trait card needs a tier icon");
 
+	// 8014 has zero burns: the Mint condition chip fills in async
+	// from the frozen burned table, with no burned line or tags
+	// (docs/tads/burned-traits.md Decision 5)
+	await page.waitForSelector(".identityChip.mintChip", { timeout: 15000 });
+	const mintState = await page.evaluate(() => ({
+		chip: document.querySelector(".identityChip.mintChip")?.innerText,
+		burnedLine: !!document.querySelector(".identityBurned"),
+		burnedTags: document.querySelectorAll(".traitRow .traitBurned").length,
+	}));
+	console.log("8014 mint state:", JSON.stringify(mintState));
+	check(mintState.chip === "Mint condition", "mint chip wrong/missing");
+	check(!mintState.burnedLine, "mint-condition prime shows a burned line");
+	check(mintState.burnedTags === 0, "mint-condition prime shows burned tags");
+
 	// Unique-By line fills in async from the frozen table; 8014 is
 	// a lottery prime with locally-verified anchors u2=1 / u3=41
 	await page.waitForSelector(".identityUB", { timeout: 15000 });
@@ -166,6 +180,19 @@ const { check } = require("./check.js");
 		!(await page.evaluate(() => !!document.querySelector(".identityUB"))),
 		"replicant shows a Unique-By line",
 	);
+	// Replicants have no burn concept: neither chip nor line.
+	// (Boolean coercion IN the page: a DOM node would serialize to
+	// nothing and make this check vacuous.)
+	check(
+		!(await page.evaluate(
+			() =>
+				!!(
+					document.querySelector(".identityChip.mintChip") ||
+					document.querySelector(".identityBurned")
+				),
+		)),
+		"replicant shows mint/burned state",
+	);
 
 	// Founder: promo kind chip + Series 0 (token 50 -> score 62)
 	await page.fill("#loadTokenInput", "50");
@@ -190,6 +217,81 @@ const { check } = require("./check.js");
 	check(
 		!(await page.evaluate(() => !!document.querySelector(".identityUB"))),
 		"founder shows a Unique-By line (hand-picked traits, no lottery)",
+	);
+	// Unlike the lottery-only Unique-By, burn state is an on-chain
+	// fact for EVERY prime — promos included. Token 50 has zero
+	// burns, so the founder card carries the mint chip (policy
+	// pinned deliberately, per review).
+	await page.waitForSelector(".identityChip.mintChip", { timeout: 15000 });
+	check(
+		!(await page.evaluate(() => !!document.querySelector(".identityBurned"))),
+		"mint-condition founder shows a burned line",
+	);
+
+	// Burned prime: 8700's on-chain mask is 651 = genes 0,1,3,7,9
+	// (verified against the chain AND the metadata endpoint's
+	// "- burned" markers during TAD discovery). The card rows are
+	// gene-ordered, so the flame tags land on those exact rows.
+	await page.fill("#loadTokenInput", "8700");
+	await page.press("#loadTokenInput", "Enter");
+	await page.waitForFunction(
+		() =>
+			document.querySelector(".identityTitle")?.textContent === "Avastar #8700",
+		{ timeout: 15000 },
+	);
+	await page.waitForSelector(".identityBurned", { timeout: 15000 });
+	const burned = await page.evaluate(() => ({
+		line: document.querySelector(".identityBurned")?.innerText || "",
+		mintChip: !!document.querySelector(".identityChip.mintChip"),
+		burnedRows: [...document.querySelectorAll(".traitRow")]
+			.map((row, index) => (row.querySelector(".traitBurned") ? index : -1))
+			.filter((index) => index >= 0),
+	}));
+	console.log("8700 burned state:", JSON.stringify(burned));
+	check(
+		burned.line === "5 of 12 traits burned",
+		"wrong burned line: " + burned.line,
+	);
+	check(!burned.mintChip, "burned prime shows the mint chip");
+	check(
+		JSON.stringify(burned.burnedRows) === JSON.stringify([0, 1, 3, 7, 9]),
+		"burned tags on wrong genes: " + JSON.stringify(burned.burnedRows),
+	);
+
+	// Preview-overriding a burned gene moves the flame to the "was"
+	// line: the burn belongs to the MINTED trait, not the preview
+	await page.locator(".traitRow").nth(9).locator(".traitEdit").click();
+	await page.waitForSelector("#traitModal .modalOption", { timeout: 15000 });
+	await page.locator(".modalOption:not(.current)").first().click();
+	await page.waitForFunction(
+		() => document.querySelectorAll(".traitUndo").length === 1,
+		{ timeout: 15000 },
+	);
+	const overriddenBurn = await page.evaluate(() => {
+		const row = document.querySelectorAll(".traitRow")[9];
+		return {
+			topBurned: !!row.querySelector(".traitTags .traitBurned"),
+			wasBurned: !!row.querySelector(".traitWas .traitBurned"),
+		};
+	});
+	console.log("8700 overridden gene 9:", JSON.stringify(overriddenBurn));
+	check(
+		!overriddenBurn.topBurned && overriddenBurn.wasBurned,
+		"burn mark did not move to the was line under override",
+	);
+	await page.locator(".traitUndo").click();
+	await page.waitForFunction(
+		() => document.querySelectorAll(".traitUndo").length === 0,
+		{ timeout: 15000 },
+	);
+	check(
+		(await page.evaluate(
+			() =>
+				document
+					.querySelectorAll(".traitRow")[9]
+					.querySelector(".traitTags .traitBurned") !== null,
+		)) === true,
+		"burn mark did not return after undo",
 	);
 
 	console.log("errors:", errors.length ? errors : "none");

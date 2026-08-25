@@ -100,3 +100,24 @@ export function kindLabel(tokenId, kind) {
 	}
 	return "Prime";
 }
+
+/// A small flame glyph for burned-trait marks. Fills with
+/// currentColor so the CSS --burned token is the ONE definition of
+/// the ember orange (containers set `color: var(--burned)`).
+export function flameIcon() {
+	const svg = document.createElementNS(SVG_NS, "svg");
+	svg.setAttribute("class", "rarityIcon flameIcon");
+	svg.setAttribute("viewBox", "0 0 16 16");
+	svg.setAttribute("aria-label", "Burned");
+	const path = document.createElementNS(SVG_NS, "path");
+	path.setAttribute(
+		"d",
+		"M8 1.5c.4 2.2-.6 3.4-1.7 4.6C5.2 7.3 4 8.6 4 10.7 4 13.1 5.8 15 8 " +
+			"15s4-1.9 4-4.3c0-1.9-.9-3.2-1.8-4.3-.3.7-.7 1.2-1.3 1.6.3-2.4-.3" +
+			"-4.8-.9-6.5zM8 13.4c-1 0-1.9-.9-1.9-2 0-.9.5-1.5 1-2.1.3.5.8.9 " +
+			"1.4 1.1.2.3.4.6.4 1 0 1.1-.4 2-.9 2z",
+	);
+	path.setAttribute("fill", "currentColor");
+	svg.appendChild(path);
+	return svg;
+}

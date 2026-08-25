@@ -149,7 +149,8 @@ Frozen TADs and generated/vendored trees are excluded on purpose.
 `./deploy.sh` local-only → `~/Sites`; `-w` also serves at
 127.0.0.1:8000; `-s` stage; `-p` promote stage→prod + CloudFront
 invalidation. deploy.sh must copy any new runtime asset (it ships
-`Lib SVG favicon Traits Tools/data/hashes.json` and `ub.json`).
+`Lib SVG favicon Traits Tools/data/hashes.json`, `ub.json`, and
+`burned.json`).
 
 ## Shared rules across all project agents
 

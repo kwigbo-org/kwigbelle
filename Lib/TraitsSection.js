@@ -1,4 +1,9 @@
-import { rarityIcon, tierForScore, kindLabel } from "./RarityIcons.js";
+import {
+	rarityIcon,
+	tierForScore,
+	kindLabel,
+	flameIcon,
+} from "./RarityIcons.js";
 
 /// The Traits section of the side panel: one card per trait with
 /// visibility checkboxes for drawn layers, plus the trait swap
@@ -8,10 +13,15 @@ import { rarityIcon, tierForScore, kindLabel } from "./RarityIcons.js";
 /// state, so recomposition and the load machinery are untouched.
 export default class TraitsSection {
 	/// - Parameter callbacks: { onEdit(gene), onUndo(gene),
-	///		onResetAll(), ubFor(tokenId) -> Promise } - wired to the
-	///		scene's override state and the frozen Unique-By table
+	///		onResetAll(), ubFor(tokenId) -> Promise,
+	///		burnedFor(tokenId) -> Promise } - wired to the scene's
+	///		override state and the frozen Unique-By / burned tables
 	constructor(callbacks) {
 		this.callbacks = callbacks || {};
+		// The loaded token's burned-trait mask
+		// (docs/tads/burned-traits.md): null until the async lookup
+		// lands (or for replicants, which have no burn concept)
+		this.burnedMask = null;
 		this.hiddenLayers = new Set();
 		this.isBackdropHidden = false;
 		// 3D mode shows traits as read-only information: the model
@@ -56,7 +66,26 @@ export default class TraitsSection {
 		this.baseline = avastar.traits || null;
 		this.overrides = new Map();
 		this.avastar = avastar;
+		// Burn marks are token facts from the frozen table: reset,
+		// then re-render once the mask lands (a token swap while the
+		// lookup is in flight must not stamp the old token's mask)
+		this.burnedMask = null;
+		if (this.callbacks.burnedFor && avastar.tokenId != null) {
+			const tokenAtStart = avastar.tokenId;
+			this.callbacks.burnedFor(tokenAtStart).then((mask) => {
+				if (this.currentTokenId !== tokenAtStart || mask === null) {
+					return;
+				}
+				this.burnedMask = mask;
+				this.rebuildRows();
+			});
+		}
 		this.rebuildRows();
+	}
+
+	/// Whether the token's minted trait at a gene was burned
+	isBurned(gene) {
+		return this.burnedMask !== null && ((this.burnedMask >> gene) & 1) === 1;
 	}
 
 	/// Re-render after an override change on the SAME token. The
@@ -209,6 +238,15 @@ export default class TraitsSection {
 			series.innerText = `Gen 1 · Series ${avastar.series}`;
 			chips.appendChild(series);
 		}
+		// A prime that never lent a trait to a replicant is in mint
+		// condition — the collection's own vocabulary (metadata
+		// attribute). Burned primes get a count line further down.
+		if (this.burnedMask === 0) {
+			const mint = document.createElement("span");
+			mint.setAttribute("class", "identityChip mintChip");
+			mint.innerText = "Mint condition";
+			chips.appendChild(mint);
+		}
 		if (chips.childNodes.length > 0) {
 			card.appendChild(chips);
 		}
@@ -241,6 +279,21 @@ export default class TraitsSection {
 			});
 			card.appendChild(dist);
 		}
+		if (this.burnedMask !== null && this.burnedMask !== 0) {
+			let burnedCount = 0;
+			for (let gene = 0; gene < 12; gene++) {
+				if (this.isBurned(gene)) {
+					burnedCount++;
+				}
+			}
+			const burned = document.createElement("div");
+			burned.setAttribute("class", "identityBurned");
+			burned.appendChild(flameIcon());
+			const text = document.createElement("span");
+			text.innerText = `${burnedCount} of 12 traits burned`;
+			burned.appendChild(text);
+			card.appendChild(burned);
+		}
 		// Unique-By line: lottery primes only (the table has no
 		// entry for founders/exclusives/replicants - they didn't
 		// play the mint lottery). Fills in async from the frozen
@@ -264,12 +317,16 @@ export default class TraitsSection {
 		return card;
 	}
 
-	/// A trait card: the gene as a bold title with the trait value
-	/// below it and the rarity tag on the right. Layer traits get a
-	/// visibility checkbox (options.onToggle); the color genes get a
-	/// swatch of their primary tone (options.color) instead. Every
-	/// card gets an Edit button; overridden cards additionally show
-	/// "was: <original>" with an undo control.
+	/// A trait card (layout per docs/tads/burned-traits.md Decision
+	/// 6): top line = gene name (small, muted) with the rarity tier
+	/// and any burned mark right-aligned; below it the trait VALUE,
+	/// prominent. Layer traits get a visibility checkbox
+	/// (options.onToggle); the color genes get a swatch of their
+	/// primary tone (options.color) instead. Every card gets a
+	/// labeled Edit pill; overridden cards additionally show
+	/// "was: <original>" with an undo control (and the burn mark
+	/// moves there — the burn belongs to the MINTED trait, not the
+	/// previewed art).
 	///
 	/// - Parameters:
 	///		- info: A trait record ({ geneName, name, rarityName })
@@ -277,7 +334,11 @@ export default class TraitsSection {
 	///		- options: { onToggle, checked } or { color }
 	card(info, gene, options) {
 		const isToggle = typeof options.onToggle === "function";
-		const row = document.createElement(isToggle ? "label" : "div");
+		const isEditable = this.callbacks.onEdit && !this.isReadOnly;
+		// Always a div (never a <label>): the WHOLE CARD is the edit
+		// tap target, so the checkbox must be its own island — a
+		// label would toggle visibility on every card tap
+		const row = document.createElement("div");
 		row.setAttribute("class", isToggle ? "traitRow" : "traitRow info");
 		if (isToggle) {
 			const checkbox = document.createElement("input");
@@ -286,6 +347,8 @@ export default class TraitsSection {
 			checkbox.addEventListener("change", () =>
 				options.onToggle(checkbox.checked),
 			);
+			// A visibility tap must not also open the editor
+			checkbox.addEventListener("click", (event) => event.stopPropagation());
 			row.appendChild(checkbox);
 		} else if (!options.plain) {
 			const swatch = document.createElement("span");
@@ -295,33 +358,69 @@ export default class TraitsSection {
 			}
 			row.appendChild(swatch);
 		}
-		const text = document.createElement("span");
-		text.setAttribute("class", "traitText");
-		const geneTitle = document.createElement("span");
-		geneTitle.setAttribute("class", "traitGene");
-		geneTitle.innerText = info.geneName;
-		text.appendChild(geneTitle);
-		const value = document.createElement("span");
-		value.setAttribute("class", "traitValue");
-		value.innerText = info.name;
-		text.appendChild(value);
-		const original =
+		const isOverridden =
 			!this.isReadOnly &&
 			this.overrides.has(gene) &&
 			this.baseline &&
 			this.baseline[gene];
-		if (original) {
+		const text = document.createElement("span");
+		text.setAttribute("class", "traitText");
+		// Line 1: gene name, with the edit chip borrowing the empty
+		// space at the end of the line instead of owning a column
+		const top = document.createElement("span");
+		top.setAttribute("class", "traitTop");
+		const geneTitle = document.createElement("span");
+		geneTitle.setAttribute("class", "traitGene");
+		geneTitle.innerText = info.geneName;
+		top.appendChild(geneTitle);
+		if (isEditable) {
+			const edit = document.createElement("span");
+			edit.setAttribute("class", "traitEdit");
+			edit.innerText = "✎ Edit";
+			edit.addEventListener("click", (event) => {
+				event.stopPropagation();
+				this.callbacks.onEdit(gene);
+			});
+			top.appendChild(edit);
+		}
+		text.appendChild(top);
+		// Line 2: the trait's name, the card's main line
+		const value = document.createElement("span");
+		value.setAttribute("class", "traitValue");
+		value.innerText = info.name;
+		text.appendChild(value);
+		// Line 3: tags on their own full-width line — tier and burn
+		// mark sit side by side and never crowd anything
+		const tags = document.createElement("span");
+		tags.setAttribute("class", "traitTags");
+		const tag = document.createElement("span");
+		tag.setAttribute("class", "traitRarity");
+		if (typeof info.rarity === "number") {
+			tag.appendChild(rarityIcon(info.rarity));
+		}
+		const tagName = document.createElement("span");
+		tagName.innerText = info.rarityName || "";
+		tag.appendChild(tagName);
+		tags.appendChild(tag);
+		// The burn mark sits with the tags while the card shows the
+		// minted trait; an override moves it to the "was" line below
+		if (this.isBurned(gene) && !isOverridden) {
+			tags.appendChild(this.burnedTag());
+		}
+		text.appendChild(tags);
+		if (isOverridden) {
 			const was = document.createElement("span");
 			was.setAttribute("class", "traitWas");
 			const wasText = document.createElement("span");
-			wasText.innerText = `was: ${original.name}`;
+			wasText.innerText = `was: ${this.baseline[gene].name}`;
 			was.appendChild(wasText);
+			if (this.isBurned(gene)) {
+				was.appendChild(this.burnedTag());
+			}
 			const undo = document.createElement("span");
 			undo.setAttribute("class", "traitUndo");
 			undo.innerText = "↺ undo";
 			undo.addEventListener("click", (event) => {
-				// The card may be a <label>: don't toggle visibility
-				event.preventDefault();
 				event.stopPropagation();
 				if (this.callbacks.onUndo) {
 					this.callbacks.onUndo(gene);
@@ -331,29 +430,22 @@ export default class TraitsSection {
 			text.appendChild(was);
 		}
 		row.appendChild(text);
-		const side = document.createElement("span");
-		side.setAttribute("class", "traitSide");
-		const tag = document.createElement("span");
-		tag.setAttribute("class", "traitRarity");
-		if (typeof info.rarity === "number") {
-			tag.appendChild(rarityIcon(info.rarity));
+		if (isEditable) {
+			// The whole card opens the editor (the chip is the hint)
+			row.classList.add("editable");
+			row.addEventListener("click", () => this.callbacks.onEdit(gene));
 		}
-		const tagName = document.createElement("span");
-		tagName.innerText = info.rarityName || "";
-		tag.appendChild(tagName);
-		side.appendChild(tag);
-		if (this.callbacks.onEdit && !this.isReadOnly) {
-			const edit = document.createElement("span");
-			edit.setAttribute("class", "traitEdit");
-			edit.innerText = "✎";
-			edit.addEventListener("click", (event) => {
-				event.preventDefault();
-				event.stopPropagation();
-				this.callbacks.onEdit(gene);
-			});
-			side.appendChild(edit);
-		}
-		row.appendChild(side);
 		return row;
+	}
+
+	/// A small flame + BURNED tag
+	burnedTag() {
+		const burned = document.createElement("span");
+		burned.setAttribute("class", "traitBurned");
+		burned.appendChild(flameIcon());
+		const label = document.createElement("span");
+		label.innerText = "Burned";
+		burned.appendChild(label);
+		return burned;
 	}
 }

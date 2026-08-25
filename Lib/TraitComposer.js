@@ -85,6 +85,30 @@ export default class TraitComposer {
 		return table ? table[id] || null : null;
 	}
 
+	/// Burned-trait mask for a PRIME (docs/tads/burned-traits.md):
+	/// bit g set = the trait at gene g was burned minting a
+	/// replicant. The contract is locked, so the frozen table
+	/// (Tools/fetch-burned.js) is the whole truth; it is sparse -
+	/// absent primes have zero burns. Fetched lazily on first ask
+	/// and cached, like the Unique-By table.
+	///
+	/// - Parameter tokenId: A token id
+	/// - Returns: The 12-bit mask (0 = mint condition), or null for
+	///		replicants / unknown tokens / table unavailable
+	async burnedFor(tokenId) {
+		const id = Number(tokenId);
+		if (!(id >= 0 && id < 25200)) {
+			return null;
+		}
+		if (this.burnedPromise === undefined) {
+			this.burnedPromise = fetch("./Tools/data/burned.json")
+				.then((r) => (r.ok ? r.json() : null))
+				.catch(() => null);
+		}
+		const table = await this.burnedPromise;
+		return table ? table[id] || 0 : null;
+	}
+
 	/// Identity facts for a token straight from the hash corpus -
 	/// no composition needed, so the static-fallback path can use
 	/// it too (docs/tads/design-cues.md)

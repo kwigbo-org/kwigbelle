@@ -36,13 +36,18 @@ export default class SidePanel {
 	/// - Parameters:
 	///		- id: The drawer's name (open/close/badge address it)
 	///		- handleContent: The tab face — a string or an element
-	///		- options: { handleId, columnId, onOpen } — explicit DOM
-	///			ids where other code or tests rely on them, and an
-	///			open hook (e.g. lazy thumbnail loading)
+	///		- options: { handleId, columnId, onOpen, statusDot } —
+	///			explicit DOM ids where other code or tests rely on
+	///			them, an open hook (e.g. lazy thumbnail loading), and
+	///			whether the handle carries an always-visible status
+	///			dot (grey until setBadge lights it green)
 	/// - Returns: The content column element
 	addDrawer(id, handleContent, options = {}) {
 		const handle = document.createElement("div");
 		handle.setAttribute("class", "panelHandle");
+		if (options.statusDot) {
+			handle.classList.add("statusDot");
+		}
 		handle.setAttribute("id", options.handleId || `${id}Handle`);
 		if (typeof handleContent === "string") {
 			handle.innerText = handleContent;
