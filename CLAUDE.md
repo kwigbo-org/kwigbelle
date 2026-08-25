@@ -115,8 +115,9 @@ docs/tads/                 frozen TADs (design history)
 feedback/                  gitignored operator progress log
 ```
 
-URL flags: `?tokenid=N` (any token); `?testharness=1` (tests only —
-exposes `window.kwigbelleScene` for physics assertions).
+URL flags: `?tokenid=N` (any token); `?testharness` (tests only —
+a PRESENCE check, any value activates: exposes
+`window.kwigbelleScene` for physics assertions).
 
 ## Ground rules learned the hard way
 

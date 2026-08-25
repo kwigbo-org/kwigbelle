@@ -156,7 +156,8 @@ None.
   `window.kwigbelleScene` for the harness — effects-test asserts
   on spring state (velocities/offsets) because the underdamped
   rig decays asymptotically and pixel-equality flakes on subpixel
-  motion (gated behind `?testharness=1` per review).
+  motion (gated behind the `?testharness` presence flag per
+  review — any value activates).
 - 2026-08-24 — PR #20 review rounds 1–4 (merged as `87b0cf7`):
   round 1 was 0/4 with genuine mobile catches — a touch tap's
   synthetic mouse replay double-fired the poke (and a touch drag
