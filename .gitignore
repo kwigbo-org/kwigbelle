@@ -10,3 +10,5 @@
 
 # Test fixture cache (auto-downloaded VRM model, ~9.3MB)
 /Tests/fixtures/
+/Tools/data/vrm-tmp.part
+/Tools/data/vrm-manifest.json.tmp

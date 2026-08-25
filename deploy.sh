@@ -136,16 +136,21 @@ find "$WEB_PATH" -mindepth 1 -delete
 # which would silently fail to publish things like .well-known/ (ACME, SSL).
 cp -R . "$WEB_PATH"/
 
+# The VRM mirror (docs/tads/vrm-mirror.md) lives under vrm/ in the
+# production bucket, uploaded by Tools/mirror-vrms.js - NEVER by
+# this script. Both syncs below use --delete, so without these
+# excludes the first deploy after the capture would erase the
+# ~285GB backup.
 if [ $DEPLOY_STAGE -eq 1 ] || [ $DEPLOY_ALL -eq 1 ]
 then
    echo "Push to Stage"
-   aws s3 sync . s3://kwigbelle-stage --delete
+   aws s3 sync . s3://kwigbelle-stage --delete --exclude "vrm/*"
 fi
 
 if [ $DEPLOY_PROD -eq 1 ] || [ $DEPLOY_ALL -eq 1 ]
 then
    echo "Push to Production"
-   aws s3 sync s3://kwigbelle-stage s3://kwigbelle --delete
+   aws s3 sync s3://kwigbelle-stage s3://kwigbelle --delete --exclude "vrm/*"
    aws cloudfront create-invalidation --distribution-id EMDM091I7VR9X --paths "/*"
 fi
 

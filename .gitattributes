@@ -10,3 +10,4 @@
 # Vendored third-party libraries (never edited in-repo): diffs are
 # noise and large enough to crash panel reviewers.
 /Lib/vendor/** -diff
+/Tools/data/vrm-manifest.json -diff
