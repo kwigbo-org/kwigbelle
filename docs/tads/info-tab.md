@@ -108,3 +108,22 @@ None.
 - 2026-08-25 — Drafted after live probes (tooling + four public
   RPCs refuse full-range getLogs; wallet-provider path chosen).
   PR opened for panel review.
+- 2026-08-25 — TAD merged (PR #22, three lite rounds; round-3
+  Codex catch scoped Decision 4's locks to the spring-backed
+  genes 5–11).
+- 2026-08-25 — PR A implemented (Decisions 1–3, 6–7): info drawer
+  with `SidePanel.addSection(title, element, drawerId)`, Traits
+  moved, `Lib/InfoSections.js` rarity explainer, 3D `--bg` swap
+  (with a resize-during-3D guard in refreshPreview), and the
+  backdrop fix — which needed one step more than the TAD's
+  slice-only prescription: a 100%-sized raster would still be
+  stretched by drawImage, so the backdrop now rasterizes AT the
+  display size with slice (layers keep meet). Suite 15/15 with
+  the drawer-split re-pointing, explainer/3D-bg/mobile-backdrop
+  assertions added.
+- 2026-08-25 — Operator QA on PR A: the explainer ships collapsed
+  by default (the panel store now records the user's choice in
+  BOTH directions so an expand overrides the default), and the
+  identity card moved out of Traits into its own Overview
+  section; info-drawer order is How rarity works / Overview /
+  Traits.

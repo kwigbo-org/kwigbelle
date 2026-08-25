@@ -38,6 +38,9 @@ const { check } = require("./check.js");
 		page.evaluate(() => document.getElementById("mainCanvas").toDataURL());
 	const baselineFrame = await frame();
 
+	// The trait cards live in the info drawer (docs/tads/info-tab.md)
+	await page.click("#infoHandle");
+
 	// Open the Hair Style editor (last trait card)
 	const expected = await page.evaluate(async () => {
 		const { default: TraitComposer } = await import("./Lib/TraitComposer.js");
@@ -232,6 +235,8 @@ const { check } = require("./check.js");
 		.locator(".traitValue")
 		.first()
 		.innerText();
+	// The load input is a settings section
+	await page.click("#panelHandle");
 	await page.fill("#loadTokenInput", "12345");
 	await page.press("#loadTokenInput", "Enter");
 	await page.waitForFunction(

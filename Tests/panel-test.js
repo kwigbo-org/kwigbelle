@@ -80,6 +80,42 @@ window.ethereum = {
 	check(isOpen, "panel did not open");
 	await page.screenshot({ path: "panel-open.png" });
 
+	// Drawer stack (docs/tads/info-tab.md Decision 1): profile above
+	// info above settings, with the Traits section and the rarity
+	// explainer living in the info drawer and the controls staying
+	// in settings
+	const drawerLayout = await page.evaluate(() => ({
+		handles: [...document.querySelectorAll("#panelHandles .panelHandle")].map(
+			(h) => h.id,
+		),
+		info: [
+			...document.querySelectorAll(
+				"#infoSections .panelSectionHeader span:first-child",
+			),
+		].map((s) => s.textContent),
+		settings: [
+			...document.querySelectorAll(
+				"#panelSections .panelSectionHeader span:first-child",
+			),
+		].map((s) => s.textContent),
+	}));
+	console.log("drawer layout:", JSON.stringify(drawerLayout));
+	check(
+		JSON.stringify(drawerLayout.handles) ===
+			JSON.stringify(["profileHandle", "infoHandle", "panelHandle"]),
+		"drawer handles out of order: " + JSON.stringify(drawerLayout.handles),
+	);
+	check(
+		JSON.stringify(drawerLayout.info) ===
+			JSON.stringify(["How rarity works", "Overview", "Traits"]),
+		"info drawer sections wrong: " + JSON.stringify(drawerLayout.info),
+	);
+	check(
+		JSON.stringify(drawerLayout.settings) ===
+			JSON.stringify(["Load Avastar", "Effects", "3D model"]),
+		"settings drawer sections wrong: " + JSON.stringify(drawerLayout.settings),
+	);
+
 	// Traits: 4 info rows (color genes) + backdrop + one row per
 	// composed layer (8014 has 7); only the last 8 have checkboxes
 	const traitRows = await page.locator(".traitRow").count();
@@ -129,7 +165,9 @@ window.ethereum = {
 	check(resumed !== pausedB, "canvas did not resume after unpause");
 	console.log("pause freeze/resume verified");
 
-	// Hide every trait + backdrop: the canvas center goes empty
+	// Hide every trait + backdrop: the canvas center goes empty.
+	// The trait rows live in the info drawer now - switch to it.
+	await page.click("#infoHandle");
 	const rows = page.locator(".traitRow input");
 	const rowCount = await rows.count();
 	for (let i = 0; i < rowCount; i++) {
@@ -158,6 +196,8 @@ window.ethereum = {
 	// sections persist too (docs/tads/burned-traits.md Decision 7):
 	// collapse "3D model" before the reload and expect it back
 	// collapsed, with the untouched "Effects" still expanded.
+	// (Back to the settings drawer for the effects controls.)
+	await page.click("#panelHandle");
 	await page.getByRole("slider", { name: "Motion" }).evaluate((slider) => {
 		slider.value = "0";
 		// input applies live; change (drag release) persists
@@ -194,6 +234,17 @@ window.ethereum = {
 		(await sectionState("3D model")) === true,
 		"3D model section did not collapse",
 	);
+	// "How rarity works" defaults to collapsed (operator QA); an
+	// explicit expand must override the default across reloads
+	check(
+		(await sectionState("How rarity works")) === true,
+		"rarity explainer did not start collapsed",
+	);
+	await toggleSection("How rarity works");
+	check(
+		(await sectionState("How rarity works")) === false,
+		"rarity explainer did not expand",
+	);
 	await page.reload();
 	await page.waitForFunction(
 		() => document.getElementById("preloader")?.style.opacity === "0",
@@ -212,6 +263,14 @@ window.ethereum = {
 	);
 	check(collapsedAfter === true, "collapsed section did not survive reload");
 	check(effectsAfter === false, "untouched section came back collapsed");
+	check(
+		(await sectionState("How rarity works")) === false,
+		"expanded default-collapsed section reverted after reload",
+	);
+	check(
+		(await sectionState("Overview")) === false,
+		"Overview section came back collapsed",
+	);
 	// Expand it again (and persist that) so the later steps see the
 	// section layout they expect
 	await toggleSection("3D model");
@@ -228,6 +287,7 @@ window.ethereum = {
 		() => document.querySelectorAll("#profileGrid .profileTile").length === 3,
 		{ timeout: 15000 },
 	);
+	await page.click("#infoHandle");
 	await page.locator(".traitRow input").nth(2).uncheck();
 	const hiddenBefore = await page.evaluate(
 		() =>

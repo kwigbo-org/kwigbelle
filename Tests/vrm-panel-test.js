@@ -119,9 +119,11 @@ async function launch(withWallet) {
 			.check();
 		await page.waitForTimeout(300);
 
-		// Apply a trait override (last card = hair style)
+		// Apply a trait override (last card = hair style). The trait
+		// cards live in the info drawer (docs/tads/info-tab.md).
 		const frame = () =>
 			page.evaluate(() => document.getElementById("mainCanvas").toDataURL());
+		await page.click("#infoHandle");
 		await page.locator(".traitRow .traitEdit").last().click();
 		await page.waitForSelector("#traitModal .modalOption", { timeout: 15000 });
 		await page.locator(".modalOption:not(.current)").first().click();
@@ -132,11 +134,39 @@ async function launch(withWallet) {
 		await page.waitForTimeout(500);
 		const overriddenFrame = await frame();
 
+		// The page background before 3D is the TOKEN's SVG color;
+		// resolve the theme --bg for comparison via a probe element
+		const contentBg = () =>
+			page.evaluate(
+				() =>
+					window.getComputedStyle(document.getElementById("contentView"))
+						.backgroundColor,
+			);
+		const tokenBg = await contentBg();
+		const themeBg = await page.evaluate(() => {
+			const probe = document.createElement("div");
+			probe.style.backgroundColor = "var(--bg)";
+			document.body.appendChild(probe);
+			const resolved = window.getComputedStyle(probe).backgroundColor;
+			probe.remove();
+			return resolved;
+		});
+		check(tokenBg !== themeBg, "precondition: token bg equals theme bg");
+
 		// Enter 3D through the SECTION button (the floating toggle's
 		// twin) and verify the limited settings
+		await page.click("#panelHandle");
 		await page.locator(".vrmViewButton").click();
 		await page.waitForSelector("#vrmCanvas", { timeout: 20000 });
 		await page.waitForTimeout(500);
+
+		// The VRM floats on the theme ground, not the token's flat
+		// SVG color (docs/tads/info-tab.md Decision 6)
+		const bg3D = await contentBg();
+		check(
+			bg3D === themeBg,
+			`3D background is not the theme ground: ${bg3D} != ${themeBg}`,
+		);
 		const limits = await page.evaluate(() => {
 			const sections = [...document.querySelectorAll(".panelSection")];
 			const effects = sections.find(
@@ -189,6 +219,11 @@ async function launch(withWallet) {
 		check(restored.effectsVisible, "Effects did not return after 3D");
 		check(restored.undoButtons === 1, "override lost across the 3D round-trip");
 		check(restored.editButtons > 0, "edit buttons did not return");
+		const bgRestored = await contentBg();
+		check(
+			bgRestored === tokenBg,
+			`token background not restored after 3D: ${bgRestored} != ${tokenBg}`,
+		);
 		check(
 			(await frame()) === overriddenFrame,
 			"vector pixels changed across the 3D round-trip",

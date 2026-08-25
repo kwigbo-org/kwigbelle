@@ -14,6 +14,7 @@ import VRMSection, { progressText } from "./VRMSection.js";
 import VRMSource from "./VRMSource.js";
 import VRMViewer from "./VRMViewer.js";
 import VRMLoadingUI from "./VRMLoadingUI.js";
+import { rarityExplainer } from "./InfoSections.js";
 import { svgToImage } from "./UIHelpers.js";
 
 /// The Avastars scene: load orchestration and rendering. The
@@ -25,7 +26,7 @@ export default class MainScene extends Scene {
 	/// Overridden constructor
 	constructor(rootContainer) {
 		super(rootContainer);
-		console.log("kwigbelle build 2026-08-24.5 (burned traits, trait cards)");
+		console.log("kwigbelle build 2026-08-25.1 (info drawer)");
 		// Build the UI
 		this.buildUI();
 		// Start loading
@@ -87,8 +88,34 @@ export default class MainScene extends Scene {
 			},
 		);
 		profileColumn.appendChild(this.profileSection.build());
-		// Top section: view any Avastar by token id (walletless -
-		// composition needs only the static library)
+		// The info drawer (docs/tads/info-tab.md): information about
+		// the displayed Avastar, stacked between profile and settings.
+		// Registered before any settings section so its handle takes
+		// the middle slot (drawer stack order = registration order).
+		// Section order per operator QA: the static rarity explainer
+		// (collapsed by default), then Overview (the identity card),
+		// then the trait cards.
+		this.traitsSection = new TraitsSection({
+			onEdit: (gene) => this.openTraitEditor(gene),
+			onUndo: (gene) => this.undoOverride(gene),
+			onResetAll: () => this.resetOverrides(),
+			ubFor: (tokenId) => this.traitComposer.ubFor(tokenId),
+			burnedFor: (tokenId) => this.traitComposer.burnedFor(tokenId),
+		});
+		this.sidePanel.addSection(
+			"How rarity works",
+			rarityExplainer(),
+			"info",
+			true,
+		);
+		this.sidePanel.addSection(
+			"Overview",
+			this.traitsSection.buildOverview(),
+			"info",
+		);
+		this.sidePanel.addSection("Traits", this.traitsSection.build(), "info");
+		// Settings drawer, top section: view any Avastar by token id
+		// (walletless - composition needs only the static library)
 		this.loadSection = new LoadSection(
 			(tokenId) => this.traitComposer.hasToken(tokenId),
 			(tokenId) => this.selectAvastar(tokenId),
@@ -111,14 +138,6 @@ export default class MainScene extends Scene {
 			() => this.downloadVRM(),
 		);
 		this.sidePanel.addSection("3D model", this.vrmSection.build());
-		this.traitsSection = new TraitsSection({
-			onEdit: (gene) => this.openTraitEditor(gene),
-			onUndo: (gene) => this.undoOverride(gene),
-			onResetAll: () => this.resetOverrides(),
-			ubFor: (tokenId) => this.traitComposer.ubFor(tokenId),
-			burnedFor: (tokenId) => this.traitComposer.burnedFor(tokenId),
-		});
-		this.sidePanel.addSection("Traits", this.traitsSection.build());
 		this.traitEditModal = new TraitEditModal(this.traitComposer);
 		// Trait swap preview state (docs/tads/avastar-lab.md): the
 		// loaded token's picks plus per-gene overrides
@@ -397,8 +416,13 @@ export default class MainScene extends Scene {
 		if (generation !== this.loadGeneration) {
 			return;
 		}
+		// Same 3D guard as refreshPreview: a load can finish after a
+		// cached-VRM 3D entry (enter3D is reachable mid-load), and
+		// repainting the token color would sit behind the model —
+		// exit3D restores from this.avastar, so skipping still
+		// converges to the right color
 		const contentView = document.getElementById("contentView");
-		if (this.avastar && this.avastar.backgroundColor) {
+		if (this.avastar && this.avastar.backgroundColor && !this.is3D) {
 			contentView.style.backgroundColor = this.avastar.backgroundColor;
 		}
 		this.isLoading = false;
@@ -769,6 +793,11 @@ export default class MainScene extends Scene {
 			// through the 3D canvas's transparent background
 			const context = this.canvas.getContext("2d");
 			context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+			// The token's flat SVG background would sit behind the
+			// VRM otherwise: the model floats on the theme's dark
+			// ground while 3D shows (docs/tads/info-tab.md Decision 6)
+			document.getElementById("contentView").style.backgroundColor =
+				"var(--bg)";
 		} catch (error) {
 			if (generation !== this.vrmGeneration) {
 				return;
@@ -795,6 +824,12 @@ export default class MainScene extends Scene {
 		this.setVRMMode("vector");
 		this.effectsSectionElement.style.display = "";
 		this.traitsSection.setReadOnly(false);
+		// Give the displayed token its background back (a no-op when
+		// 3D never swapped it: this restores the color already shown)
+		document.getElementById("contentView").style.backgroundColor =
+			this.avastar && this.avastar.backgroundColor
+				? this.avastar.backgroundColor
+				: "";
 	}
 
 	/// Keep the loading overlay and the panel section in step
@@ -889,8 +924,12 @@ export default class MainScene extends Scene {
 				// Keep the loader's state honest about what is on
 				// screen (the same-token guard reads from it)
 				this.avastarLoader.currentAvastar = composed.fullSVG;
-				const contentView = document.getElementById("contentView");
-				contentView.style.backgroundColor = composed.backgroundColor;
+				// A resize while 3D shows recomposes too: leave the 3D
+				// theme ground alone (exit3D restores from the avastar)
+				if (!this.is3D) {
+					const contentView = document.getElementById("contentView");
+					contentView.style.backgroundColor = composed.backgroundColor;
+				}
 				// The layer count is constant across overrides: keep
 				// the springs so the swap doesn't snap the motion
 				if (this.layerSprings.springs.length !== composed.layers.length) {

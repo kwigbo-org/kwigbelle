@@ -5,10 +5,11 @@ step, no framework: ES modules served as-is. An Avastar renders on a
 canvas as independently-moving layers (spring physics, idle
 breathing, pointer/tilt follow, tap-to-poke, wave/trails effects),
 with a right-edge drawer stack: a profile drawer (wallet connect,
-owned-Avastars grid with composed thumbnails, logout, presence dot)
-above a settings drawer (load-any-token, effects controls, 3D model,
-trait sheet with identity card, burned-trait marks, visibility
-toggles, and a trait swap preview).
+owned-Avastars grid with composed thumbnails, logout, presence dot),
+an info drawer (rarity explainer collapsed by default, the identity
+card as its own Overview section, and the trait sheet with
+burned-trait marks, visibility toggles, and a trait swap preview),
+and a settings drawer (load-any-token, effects controls, 3D model).
 
 Project purpose (operator, 2026-08-22): jump-start interest in
 Avastars. The replicant factory is CLOSED and the contract is
@@ -19,12 +20,12 @@ by policy. Shipped directions, each frozen as a TAD in docs/tads/:
 the VRM 3D viewer (vrm-viewer.md), the avastars.io design match
 (design-cues.md), the profile drawer + composed thumbnails
 (profile-drawer.md), and burned traits + effects + trait-card
-polish (burned-traits.md). DECLARED NEXT (operator 2026-08-25):
-docs/tads/info-tab.md — info drawer between profile and settings
-(traits move there + rarity explainer + wallet-provider transfer
-history), per-layer motion locks, depth-coherent idle retune, 3D
-background fix, mobile backdrop squish fix; TAD in review at
-compact time, implementation not started. Parked: PR #1 wallet
+polish (burned-traits.md). IN PROGRESS (operator 2026-08-25):
+docs/tads/info-tab.md — PR A shipped the info drawer between
+profile and settings (traits moved there + rarity explainer), the
+3D background fix, and the mobile backdrop squish fix; remaining:
+PR B (per-layer motion locks + depth-coherent idle retune), PR C
+(wallet-provider transfer history). Parked: PR #1 wallet
 LOWs (likely mooted — WalletConnectUI was deleted in PR #16;
 re-verify against ProfileSection before resurrecting).
 
@@ -43,9 +44,11 @@ Lib/ProfileSection.js      profile drawer: wallet connect flow
                            logout) + owned-Avastars grid w/ lazy
                            library-composed thumbnails
 Lib/SidePanel.js           right-side drawer stack: stacked handle
-                           tabs (profile above settings) sharing
-                           one sliding column; settings sections
-                           register via addSection(title, element)
+                           tabs (profile / info / settings) sharing
+                           one sliding column; sections register via
+                           addSection(title, element, drawerId)
+Lib/InfoSections.js        info-drawer static content: the "How
+                           rarity works" explainer (frozen facts)
 Lib/LoadSection.js         load any Avastar by token id (walletless,
                            corpus-validated before loading)
 Lib/TraitEditModal.js      per-slot trait chooser: true thumbnails
@@ -55,11 +58,13 @@ Lib/EffectsSection.js      spring-rig controls (motion, follow,
                            pause, wave, trails, tilt follow);
                            localStorage persisted; poke (tap
                            impulse) is always on, no control
-Lib/TraitsSection.js       identity card (chips, score/tier, dist,
-                           Unique-By, mint/burned) + trait cards
-                           (whole-card tap = edit, burned marks,
-                           visibility the render loop consults each
-                           frame); goes read-only in 3D mode
+Lib/TraitsSection.js       info-drawer Overview section (identity
+                           card: chips, score/tier, dist, Unique-By,
+                           mint/burned) + Traits section (trait
+                           cards: whole-card tap = edit, burned
+                           marks, visibility the render loop
+                           consults each frame); goes read-only in
+                           3D mode
 Lib/VRMSource.js           metadata -> vrm_url -> hedged IPFS
                            gateway race (staggered starts, first
                            chunk wins, first-byte timeouts, CIDv0
