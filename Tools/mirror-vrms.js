@@ -25,6 +25,8 @@
 //   node Tools/mirror-vrms.js                 capture (resumes)
 //     [--dest s3://bucket/prefix/]            default s3://kwigbelle/vrm/
 //     [--limit N]                             stop after N captures
+//     [--parallel N]                          tokens in flight, 1-4
+//                                             (default 3)
 //   node Tools/mirror-vrms.js --dry-run [N]   plan the first N
 //                                             pending uploads, touch
 //                                             nothing (default 5)
@@ -63,6 +65,42 @@ const METADATA_TIMEOUT_MS = 30000;
 const FALLBACK_AVG_BYTES = 10700000; // sampled avg, for early ETAs
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// Exactly one capture at a time: two runs would interleave their
+// manifest snapshots and silently lose each other's records. The
+// lock names the owning pid; a dead owner's lock is stale and
+// reclaimed.
+const LOCK_FILE = path.join(DATA_DIR, "vrm-mirror.lock");
+const isAlive = (pid) => {
+	try {
+		process.kill(pid, 0);
+		return true;
+	} catch (error) {
+		return false;
+	}
+};
+const acquireLock = () => {
+	try {
+		const pid = Number(fs.readFileSync(LOCK_FILE, "utf8"));
+		if (pid && isAlive(pid)) {
+			console.error(
+				`another capture (pid ${pid}) is already running - stop it ` +
+					"first; two concurrent runs would corrupt the manifest",
+			);
+			process.exit(1);
+		}
+	} catch (error) {
+		// No lock (or unreadable): free to claim
+	}
+	fs.writeFileSync(LOCK_FILE, String(process.pid));
+	process.on("exit", () => {
+		try {
+			fs.rmSync(LOCK_FILE, { force: true });
+		} catch (error) {
+			// Best-effort cleanup; a stale lock is reclaimed anyway
+		}
+	});
+};
 
 const loadManifest = () => {
 	let text;
@@ -125,7 +163,9 @@ class Status {
 		this.runBytes = 0;
 		this.retriesThisRun = 0;
 		this.failedThisRun = [];
-		this.current = "-";
+		// workerId -> "#token file (attempt n)" for every in-flight
+		// capture (workers run in parallel)
+		this.inFlight = new Map();
 		this.manifest = manifest;
 	}
 
@@ -155,7 +195,7 @@ class Status {
 			`Captured: ${gb(totalBytes)} GB total · ${gb(this.runBytes)} GB this run`,
 			`Rate: ${(rate / 1e6).toFixed(2)} MB/s this run · ETA: ${etaHours === null ? "warming up" : "~" + etaHours.toFixed(1) + "h"}`,
 			`Retries this run: ${this.retriesThisRun} · failed this run (will retry next run): ${this.failedThisRun.length ? this.failedThisRun.join(", ") : "none"}`,
-			`Current: ${this.current}`,
+			`In flight: ${[...this.inFlight.values()].join(" · ") || "-"}`,
 			"",
 			EVENTS_HEADING,
 			...this.events,
@@ -283,7 +323,8 @@ const upload = (filePath, destURL) => {
 
 // ---- modes ----
 
-async function capture(dest, limit) {
+async function capture(dest, limit, parallel) {
+	acquireLock();
 	const manifest = loadManifest();
 	// One mirror, one destination: a dest that disagrees with the
 	// manifest's would silently split the backup (review catch)
@@ -299,28 +340,48 @@ async function capture(dest, limit) {
 	const status = new Status(manifest);
 	const done = Object.keys(manifest.entries).length;
 	status.event(
-		`run ${done > 0 ? "resumed" : "started"} at ${done.toLocaleString()} captured, dest ${dest}`,
+		`run ${done > 0 ? "resumed" : "started"} at ${done.toLocaleString()} captured, dest ${dest}, ${parallel} in flight`,
 	);
+	// A killed run can strand worker temp files
+	for (const stale of fs.readdirSync(DATA_DIR)) {
+		if (stale.startsWith(path.basename(TMP_FILE))) {
+			fs.rmSync(path.join(DATA_DIR, stale), { force: true });
+		}
+	}
 	// Filename uniqueness across tokens: a duplicate key would
 	// silently overwrite another token's mirror object (review
-	// catch)
+	// catch). mirroredFiles = completed captures; inFlightFiles
+	// reserves names claimed by concurrent workers.
 	const mirroredFiles = new Set(
 		Object.values(manifest.entries).map((entry) => entry.file),
 	);
-	// Consecutive tokens failing at the UPLOAD step smell like an
+	const inFlightFiles = new Map();
+	// Tokens failing back-to-back at the UPLOAD step smell like an
 	// AWS auth/config problem: abort loudly instead of burning the
-	// retry budget across 26k tokens (review catch)
+	// retry budget across 26k tokens (review catch). Approximate
+	// under parallelism - any success resets it.
 	let uploadFailStreak = 0;
 	let captured = 0;
-	for (let tokenId = 0; tokenId < TOKEN_COUNT; tokenId++) {
-		if (manifest.entries[tokenId] || manifest.gaps[tokenId] !== undefined) {
-			continue;
+	let claimed = 0;
+	let nextTokenId = 0;
+	const claimNext = () => {
+		if (limit && claimed >= limit) {
+			return undefined;
 		}
-		if (limit && captured >= limit) {
-			break;
+		while (nextTokenId < TOKEN_COUNT) {
+			const tokenId = nextTokenId++;
+			if (manifest.entries[tokenId] || manifest.gaps[tokenId] !== undefined) {
+				continue;
+			}
+			claimed++;
+			return tokenId;
 		}
+		return undefined;
+	};
+	const captureToken = async (tokenId, workerId, tmpFile) => {
 		let success = false;
 		let lastError = null;
+		let reserved = null;
 		for (let attempt = 0; attempt <= MAX_RETRIES && !success; attempt++) {
 			if (attempt > 0) {
 				status.retriesThisRun++;
@@ -347,10 +408,17 @@ async function capture(dest, limit) {
 					);
 					break;
 				}
-				if (mirroredFiles.has(file)) {
-					const owner = Object.keys(manifest.entries).find(
-						(id) => manifest.entries[id].file === file,
-					);
+				const inFlightOwner = inFlightFiles.get(file);
+				if (
+					mirroredFiles.has(file) ||
+					(inFlightOwner !== undefined && inFlightOwner !== tokenId)
+				) {
+					const owner =
+						inFlightOwner !== undefined && inFlightOwner !== tokenId
+							? inFlightOwner
+							: Object.keys(manifest.entries).find(
+									(id) => manifest.entries[id].file === file,
+								);
 					status.failedThisRun.push(tokenId);
 					status.event(
 						`FAILED (no retry): #${tokenId} filename ${file} collides ` +
@@ -358,18 +426,23 @@ async function capture(dest, limit) {
 					);
 					break;
 				}
-				status.current = `#${tokenId} ${file} (attempt ${attempt + 1})`;
+				inFlightFiles.set(file, tokenId);
+				reserved = file;
+				status.inFlight.set(
+					workerId,
+					`#${tokenId} ${file} (attempt ${attempt + 1})`,
+				);
 				status.write();
 				const { size, sha256 } = await downloadVerified(
 					gatewayURL(metadata.vrm_url),
-					TMP_FILE,
+					tmpFile,
 				);
 				try {
-					upload(TMP_FILE, dest + file);
+					upload(tmpFile, dest + file);
 				} catch (error) {
 					throw new Error(`upload: ${error.message}`);
 				}
-				fs.rmSync(TMP_FILE, { force: true });
+				fs.rmSync(tmpFile, { force: true });
 				manifest.entries[tokenId] = {
 					file,
 					size,
@@ -382,7 +455,7 @@ async function capture(dest, limit) {
 				uploadFailStreak = 0;
 				success = true;
 			} catch (error) {
-				fs.rmSync(TMP_FILE, { force: true });
+				fs.rmSync(tmpFile, { force: true });
 				lastError = error;
 				if (attempt === MAX_RETRIES) {
 					status.failedThisRun.push(tokenId);
@@ -392,15 +465,18 @@ async function capture(dest, limit) {
 				}
 			}
 		}
+		if (reserved !== null && inFlightFiles.get(reserved) === tokenId) {
+			inFlightFiles.delete(reserved);
+		}
 		if (!success && lastError && lastError.message.startsWith("upload:")) {
 			uploadFailStreak++;
 			if (uploadFailStreak >= 3) {
 				status.event(
-					"run ABORTED: three consecutive tokens failed at the " +
+					"run ABORTED: three back-to-back tokens failed at the " +
 						"upload step - check AWS credentials/permissions and re-run",
 				);
 				console.error(
-					"aborting: three consecutive upload failures - see " + STATUS_FILE,
+					"aborting: three back-to-back upload failures - see " + STATUS_FILE,
 				);
 				process.exit(1);
 			}
@@ -411,9 +487,27 @@ async function capture(dest, limit) {
 				status.write();
 			}
 		}
-		await sleep(TOKEN_DELAY_MS);
-	}
-	status.current = "-";
+	};
+	// The worker pool: N tokens in flight (operator directive - the
+	// sequential run's wall-clock was dominated by gateway latency
+	// and retry backoff, which parallelism hides; it cannot beat
+	// the uplink's actual bandwidth). Node is single-threaded, so
+	// the shared manifest/status mutations between awaits are safe.
+	const worker = async (workerId) => {
+		const tmpFile = `${TMP_FILE}.${workerId}`;
+		for (;;) {
+			const tokenId = claimNext();
+			if (tokenId === undefined) {
+				status.inFlight.delete(workerId);
+				return;
+			}
+			await captureToken(tokenId, workerId, tmpFile);
+			await sleep(TOKEN_DELAY_MS);
+		}
+	};
+	await Promise.all(
+		Array.from({ length: parallel }, (unused, index) => worker(index)),
+	);
 	status.event(
 		`run finished: ${captured.toLocaleString()} captured this run, ` +
 			`${Object.keys(manifest.entries).length.toLocaleString()} total, ` +
@@ -476,6 +570,8 @@ async function verify(sampleSize) {
 	// --dest default must not silently verify the wrong bucket
 	// (review catch)
 	const dest = manifest.dest || argDest();
+	// Own temp name: safe to audit while a capture is running
+	const tmpFile = `${TMP_FILE}.verify`;
 	let bad = 0;
 	for (const tokenId of sample) {
 		const entry = manifest.entries[tokenId];
@@ -484,10 +580,10 @@ async function verify(sampleSize) {
 		try {
 			execFileSync(
 				"aws",
-				["s3", "cp", dest + entry.file, TMP_FILE, "--only-show-errors"],
+				["s3", "cp", dest + entry.file, tmpFile, "--only-show-errors"],
 				{ stdio: "inherit" },
 			);
-			const bytes = fs.readFileSync(TMP_FILE);
+			const bytes = fs.readFileSync(tmpFile);
 			const sha256 = crypto.createHash("sha256").update(bytes).digest("hex");
 			const ok = bytes.length === entry.size && sha256 === entry.sha256;
 			console.log(
@@ -500,7 +596,7 @@ async function verify(sampleSize) {
 			console.log(`#${tokenId} ${entry.file}: FETCH FAILED (${error.message})`);
 			bad++;
 		}
-		fs.rmSync(TMP_FILE, { force: true });
+		fs.rmSync(tmpFile, { force: true });
 	}
 	console.log(
 		`${sample.length - bad}/${sample.length} verified against the manifest`,
@@ -512,6 +608,9 @@ async function verify(sampleSize) {
 // passes with the right size+sha, a bad magic is rejected, and a
 // truncated body (content-length disagreement) is rejected.
 async function selftest() {
+	// Own temp name: a concurrently running capture must not clobber
+	// (or be clobbered by) the fixture round-trip
+	const tmpFile = `${TMP_FILE}.selftest`;
 	const good = Buffer.concat([Buffer.from("glTF"), crypto.randomBytes(100000)]);
 	const expectedSha = crypto.createHash("sha256").update(good).digest("hex");
 	const server = http.createServer((request, response) => {
@@ -534,16 +633,16 @@ async function selftest() {
 		console.error("SELFTEST FAIL:", message);
 		process.exit(1);
 	};
-	const result = await downloadVerified(`${base}/good.vrm`, TMP_FILE);
+	const result = await downloadVerified(`${base}/good.vrm`, tmpFile);
 	if (result.size !== good.length || result.sha256 !== expectedSha) {
 		fail("good fixture round-trip mismatched size/sha");
 	}
-	if (!fs.readFileSync(TMP_FILE).equals(good)) {
+	if (!fs.readFileSync(tmpFile).equals(good)) {
 		fail("good fixture bytes corrupted on disk");
 	}
 	// Assert the rejection KIND: a generic transport failure here
 	// would otherwise pass as a false negative (review catch)
-	await downloadVerified(`${base}/badmagic.vrm`, TMP_FILE).then(
+	await downloadVerified(`${base}/badmagic.vrm`, tmpFile).then(
 		() => fail("bad magic was accepted"),
 		(error) => {
 			if (!error.message.includes("not a glb")) {
@@ -551,7 +650,7 @@ async function selftest() {
 			}
 		},
 	);
-	await downloadVerified(`${base}/truncated.vrm`, TMP_FILE).then(
+	await downloadVerified(`${base}/truncated.vrm`, tmpFile).then(
 		() => fail("truncated body was accepted"),
 		(error) => {
 			// Node's fetch (undici) enforces content-length itself and
@@ -566,7 +665,7 @@ async function selftest() {
 			}
 		},
 	);
-	fs.rmSync(TMP_FILE, { force: true });
+	fs.rmSync(tmpFile, { force: true });
 	server.close();
 	console.log(
 		"SELFTEST PASS: verified round-trip, bad-magic and truncation rejection",
@@ -606,7 +705,10 @@ function argDest() {
 	} else if (argv.includes("--verify")) {
 		await verify(argValue("--verify", 20) || 20);
 	} else {
-		await capture(argDest(), argValue("--limit", 0));
+		// 1-4 workers: enough to hide gateway latency and retry
+		// backoff, few enough to stay a polite gateway citizen
+		const parallel = Math.max(1, Math.min(4, argValue("--parallel", 3) || 3));
+		await capture(argDest(), argValue("--limit", 0), parallel);
 	}
 })().catch((error) => {
 	console.error(error);

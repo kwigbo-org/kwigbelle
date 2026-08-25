@@ -117,3 +117,15 @@ None.
   question resolved in favor of committing the tool with a
   parameterized destination so others can replicate the backup
   (Decision 3).
+- 2026-08-25 — Capture LIVE (operator-started). First-hours field
+  notes: transient TLS drops on multipart uploads (tool retries
+  recovered every token; bucket got an abort-incomplete-multipart
+  lifecycle rule so orphaned parts don't bill), and a sequential
+  rate of ~0.3 MB/s projecting ~13 days. Operator directive ("I
+  don't want this to take a week"): the capture gained a worker
+  pool (--parallel, default 3, max 4) - per-worker temp files,
+  in-flight filename reservations, a pid lockfile so two runs
+  can't interleave manifest saves, and selftest/verify moved to
+  their own temp names after the live run clobbered the shared
+  one mid-test. Parallelism hides gateway latency and backoff
+  sleeps; it cannot exceed the uplink's bandwidth.
