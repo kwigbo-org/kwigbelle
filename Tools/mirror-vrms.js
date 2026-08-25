@@ -29,6 +29,12 @@
 //                                             a few in-flight extras)
 //     [--parallel N]                          tokens in flight, 1-4
 //                                             (default 3)
+//     [--gateway <url>/ipfs/]                 fetch through another
+//                                             gateway - e.g. a local
+//                                             kubo node's
+//                                             http://127.0.0.1:8080/ipfs/
+//                                             (bitswap, no HTTP rate
+//                                             limits)
 //   node Tools/mirror-vrms.js --dry-run [N]   plan the first N
 //                                             pending uploads, touch
 //                                             nothing (default 5)
@@ -284,6 +290,30 @@ class Status {
 
 // ---- fetch helpers ----
 
+// Global gateway cooldown, shared by EVERY worker: HTTP 429 means
+// the gateway wants the whole client slowed, so per-attempt
+// backoff alone just moves the hammering between workers (field
+// data 2026-08-25: sustained 429s at --parallel 2). All gateway
+// requests wait out the window; a 429 extends it by the response's
+// Retry-After (default 60s).
+const cooldown = { until: 0, notify: null };
+const waitCooldown = async () => {
+	while (Date.now() < cooldown.until) {
+		await sleep(Math.min(cooldown.until - Date.now() + 50, 5000));
+	}
+};
+const startCooldown = (seconds, url) => {
+	const until = Date.now() + seconds * 1000;
+	if (until > cooldown.until) {
+		cooldown.until = until;
+		if (cooldown.notify) {
+			cooldown.notify(
+				`gateway 429 - all workers cooling down ${seconds}s (${url})`,
+			);
+		}
+	}
+};
+
 async function fetchMetadata(tokenId) {
 	const res = await fetch(METADATA_URL + tokenId, {
 		signal: AbortSignal.timeout(METADATA_TIMEOUT_MS),
@@ -295,13 +325,17 @@ async function fetchMetadata(tokenId) {
 }
 
 // The vrm_url is canonical-ipfs.io shaped; the mirror pulls the
-// same CID/path through the live gateway
+// same CID/path through the capture gateway. --gateway overrides
+// the default - e.g. a LOCAL kubo node's gateway
+// (http://127.0.0.1:8080/ipfs/) fetches over bitswap with no HTTP
+// rate limit at all (operator escape hatch, 2026-08-25).
+let gatewayBase = GATEWAY;
 const gatewayURL = (vrmURL) => {
 	const at = vrmURL.indexOf("/ipfs/");
 	if (at < 0) {
 		throw new Error(`unrecognized vrm_url shape: ${vrmURL}`);
 	}
-	return GATEWAY + vrmURL.slice(at + "/ipfs/".length);
+	return gatewayBase + vrmURL.slice(at + "/ipfs/".length);
 };
 
 const cidOf = (vrmURL) => {
@@ -317,6 +351,7 @@ const cidOf = (vrmURL) => {
 /// (review catch): a big file on a slow link must be allowed to
 /// finish as long as bytes keep flowing.
 async function downloadVerified(url, filePath) {
+	await waitCooldown();
 	const controller = new AbortController();
 	let idleTimer = null;
 	const armIdle = () => {
@@ -326,7 +361,28 @@ async function downloadVerified(url, filePath) {
 	armIdle();
 	try {
 		const res = await fetch(url, { signal: controller.signal });
+		if (res.status === 429) {
+			// Undrained bodies hold their pooled connection in undici -
+			// cancel before throwing (review catch), on both paths
+			res.body?.cancel();
+			// Retry-After is delta-seconds OR an HTTP-date (review
+			// catch); clamped so a bogus header can't wedge the pool
+			// for hours (review catch)
+			const header = res.headers.get("retry-after");
+			let retryAfter = Number(header);
+			if (!Number.isFinite(retryAfter) && header) {
+				retryAfter = (Date.parse(header) - Date.now()) / 1000;
+			}
+			startCooldown(
+				Number.isFinite(retryAfter) && retryAfter > 0
+					? Math.min(retryAfter, 300)
+					: 60,
+				url,
+			);
+			throw new Error(`HTTP 429 via ${url}`);
+		}
 		if (!res.ok) {
+			res.body?.cancel();
 			throw new Error(`HTTP ${res.status} via ${url}`);
 		}
 		// Node's fetch decompresses encoded bodies but the header
@@ -427,6 +483,8 @@ async function capture(dest, limit, parallel) {
 	}
 	manifest.dest = dest;
 	const status = new Status(manifest);
+	// 429 cooldowns land in the event log so throttling is visible
+	cooldown.notify = (text) => status.event(text);
 	const done = Object.keys(manifest.entries).length;
 	status.event(
 		`run ${done > 0 ? "resumed" : "started"} at ${done.toLocaleString()} captured, dest ${dest}, ${parallel} in flight`,
@@ -749,10 +807,22 @@ async function selftest() {
 	const tmpFile = `${TMP_FILE}.selftest`;
 	const good = Buffer.concat([Buffer.from("glTF"), crypto.randomBytes(100000)]);
 	const expectedSha = crypto.createHash("sha256").update(good).digest("hex");
+	let throttled = false;
 	const server = http.createServer((request, response) => {
 		if (request.url === "/good.vrm") {
 			response.writeHead(200, { "Content-Length": String(good.length) });
 			response.end(good);
+		} else if (request.url === "/throttle.vrm") {
+			// First hit rate-limits with a 1s Retry-After; the retry
+			// after the cooldown serves normally
+			if (!throttled) {
+				throttled = true;
+				response.writeHead(429, { "Retry-After": "1" });
+				response.end("slow down");
+			} else {
+				response.writeHead(200, { "Content-Length": String(good.length) });
+				response.end(good);
+			}
 		} else if (request.url === "/badmagic.vrm") {
 			const bad = Buffer.concat([Buffer.from("NOPE"), good.subarray(4)]);
 			response.writeHead(200, { "Content-Length": String(bad.length) });
@@ -801,10 +871,33 @@ async function selftest() {
 			}
 		},
 	);
+	// 429 handling: the first hit rejects AND arms the shared
+	// cooldown (Retry-After honored); the retry waits it out and
+	// succeeds
+	await downloadVerified(`${base}/throttle.vrm`, tmpFile).then(
+		() => fail("429 was accepted as success"),
+		(error) => {
+			if (!error.message.includes("HTTP 429")) {
+				fail("throttle case rejected for the wrong reason: " + error.message);
+			}
+		},
+	);
+	if (cooldown.until <= Date.now()) {
+		fail("429 did not arm the shared cooldown");
+	}
+	const throttleStart = Date.now();
+	const retried = await downloadVerified(`${base}/throttle.vrm`, tmpFile);
+	if (retried.sha256 !== expectedSha) {
+		fail("post-cooldown retry returned wrong bytes");
+	}
+	if (Date.now() - throttleStart < 900) {
+		fail("retry did not wait out the Retry-After cooldown");
+	}
 	fs.rmSync(tmpFile, { force: true });
 	server.close();
 	console.log(
-		"SELFTEST PASS: verified round-trip, bad-magic and truncation rejection",
+		"SELFTEST PASS: verified round-trip, bad-magic/truncation rejection, " +
+			"429 cooldown honored",
 	);
 }
 
@@ -834,6 +927,17 @@ function argDest() {
 
 (async () => {
 	fs.mkdirSync(DATA_DIR, { recursive: true });
+	// Parsed ahead of the mode dispatch so --dry-run previews the
+	// SAME gateway a capture would use (review catch)
+	const gatewayAt = argv.indexOf("--gateway");
+	if (gatewayAt >= 0) {
+		const override = argv[gatewayAt + 1];
+		if (!override || !/^https?:\/\/.+\/ipfs\/$/.test(override)) {
+			console.error('--gateway must be an http(s) URL ending in "/ipfs/"');
+			process.exit(1);
+		}
+		gatewayBase = override;
+	}
 	if (argv.includes("--selftest")) {
 		await selftest();
 	} else if (argv.includes("--dry-run")) {
