@@ -3,7 +3,6 @@ import {
 	tierForScore,
 	kindLabel,
 	flameIcon,
-	BURNED_COLOR,
 } from "./RarityIcons.js";
 
 /// The Traits section of the side panel: one card per trait with
@@ -292,7 +291,6 @@ export default class TraitsSection {
 			burned.appendChild(flameIcon());
 			const text = document.createElement("span");
 			text.innerText = `${burnedCount} of 12 traits burned`;
-			text.style.color = BURNED_COLOR;
 			burned.appendChild(text);
 			card.appendChild(burned);
 		}

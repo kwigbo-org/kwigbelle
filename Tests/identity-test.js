@@ -214,6 +214,15 @@ const { check } = require("./check.js");
 		!(await page.evaluate(() => !!document.querySelector(".identityUB"))),
 		"founder shows a Unique-By line (hand-picked traits, no lottery)",
 	);
+	// Unlike the lottery-only Unique-By, burn state is an on-chain
+	// fact for EVERY prime — promos included. Token 50 has zero
+	// burns, so the founder card carries the mint chip (policy
+	// pinned deliberately, per review).
+	await page.waitForSelector(".identityChip.mintChip", { timeout: 15000 });
+	check(
+		!(await page.evaluate(() => !!document.querySelector(".identityBurned"))),
+		"mint-condition founder shows a burned line",
+	);
 
 	// Burned prime: 8700's on-chain mask is 651 = genes 0,1,3,7,9
 	// (verified against the chain AND the metadata endpoint's

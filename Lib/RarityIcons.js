@@ -101,12 +101,9 @@ export function kindLabel(tokenId, kind) {
 	return "Prime";
 }
 
-/// The burned-trait color (docs/tads/burned-traits.md) - warm
-/// ember orange, distinct from every tier color
-export const BURNED_COLOR = "#FF8C42";
-
-/// A small flame glyph for burned-trait marks, inline SVG so it
-/// takes CSS color like the tier icons
+/// A small flame glyph for burned-trait marks. Fills with
+/// currentColor so the CSS --burned token is the ONE definition of
+/// the ember orange (containers set `color: var(--burned)`).
 export function flameIcon() {
 	const svg = document.createElementNS(SVG_NS, "svg");
 	svg.setAttribute("class", "rarityIcon flameIcon");
@@ -120,7 +117,7 @@ export function flameIcon() {
 			"-4.8-.9-6.5zM8 13.4c-1 0-1.9-.9-1.9-2 0-.9.5-1.5 1-2.1.3.5.8.9 " +
 			"1.4 1.1.2.3.4.6.4 1 0 1.1-.4 2-.9 2z",
 	);
-	path.setAttribute("fill", BURNED_COLOR);
+	path.setAttribute("fill", "currentColor");
 	svg.appendChild(path);
 	return svg;
 }

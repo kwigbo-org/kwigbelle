@@ -985,6 +985,9 @@
 	gap: 6px;
 	font-size: 13px;
 	font-weight: 600;
+	/* The one definition of the ember orange is --burned; the
+	   flame SVG fills with currentColor */
+	color: var(--burned);
 }
 
 .identityUB {
