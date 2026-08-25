@@ -24,7 +24,11 @@
 // Usage:
 //   node Tools/mirror-vrms.js                 capture (resumes)
 //     [--dest s3://bucket/prefix/]            default s3://kwigbelle/vrm/
-//     [--limit N]                             stop after N captures
+//     [--limit N]                             stop once N captures
+//                                             land (workers may add
+//                                             a few in-flight extras)
+//     [--parallel N]                          tokens in flight, 1-4
+//                                             (default 3)
 //   node Tools/mirror-vrms.js --dry-run [N]   plan the first N
 //                                             pending uploads, touch
 //                                             nothing (default 5)
@@ -40,7 +44,7 @@ const fs = require("fs");
 const path = require("path");
 const http = require("http");
 const crypto = require("crypto");
-const { execFileSync } = require("child_process");
+const { execFileSync, spawn } = require("child_process");
 const { pipeline } = require("stream/promises");
 const { Readable, Transform } = require("stream");
 
@@ -63,6 +67,116 @@ const METADATA_TIMEOUT_MS = 30000;
 const FALLBACK_AVG_BYTES = 10700000; // sampled avg, for early ETAs
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// Exactly one capture at a time: two runs would interleave their
+// manifest snapshots and silently lose each other's records. The
+// lock names the owning pid; a dead owner's lock is stale and
+// reclaimed.
+const LOCK_FILE = path.join(DATA_DIR, "vrm-mirror.lock");
+const isAlive = (pid) => {
+	try {
+		process.kill(pid, 0);
+		return true;
+	} catch (error) {
+		return false;
+	}
+};
+const refuseLock = (pid) => {
+	console.error(
+		`another capture (pid ${pid}) is already running - stop it ` +
+			"first; two concurrent runs would corrupt the manifest",
+	);
+	process.exit(1);
+};
+const acquireLock = () => {
+	// Atomic create ("wx") closes the read-check-write race two
+	// simultaneous starts would otherwise slip through (review
+	// catch). A dead owner's lock is reclaimed by an atomic RENAME
+	// steal - exactly one contender can win the rename; the loser
+	// loops and meets the winner's live lock instead. Deeper
+	// (3-way) interleavings can still strand a live process without
+	// its lock file, so the CAPTURE LOOP re-verifies ownership
+	// before every token and aborts if the lock changed hands -
+	// that backstop, not this dance, is the corruption guarantee
+	// (review catch).
+	let acquired = false;
+	for (let attempt = 0; attempt < 3 && !acquired; attempt++) {
+		try {
+			fs.writeFileSync(LOCK_FILE, String(process.pid), { flag: "wx" });
+			acquired = true;
+			break;
+		} catch (error) {
+			if (error.code !== "EEXIST") {
+				throw error;
+			}
+		}
+		let pid = 0;
+		try {
+			pid = Number(fs.readFileSync(LOCK_FILE, "utf8"));
+		} catch (readError) {
+			// Vanished between the create attempt and here: loop
+			continue;
+		}
+		if (pid && isAlive(pid)) {
+			refuseLock(pid);
+		}
+		const stolen = `${LOCK_FILE}.reclaim-${process.pid}`;
+		try {
+			fs.renameSync(LOCK_FILE, stolen);
+		} catch (error) {
+			// Lost the steal race: loop and re-judge the fresh lock
+			continue;
+		}
+		// Confirm the steal took the dead lock we judged - if it
+		// changed hands to a LIVE owner mid-steal, hand it back
+		let stolenPid = 0;
+		try {
+			stolenPid = Number(fs.readFileSync(stolen, "utf8"));
+		} catch (readError) {
+			// Unreadable spoils: discard below and retry
+		}
+		if (stolenPid && stolenPid !== pid && isAlive(stolenPid)) {
+			// The steal caught a lock that changed hands to a LIVE
+			// owner mid-dance. Hand it back by EXCLUSIVE create only -
+			// a rename here could atomically overwrite a THIRD
+			// contender's fresh lock (review catch). If someone else
+			// claimed the name meanwhile, their lock stands untouched
+			// and the displaced owner's per-token ownership check
+			// stops that run safely.
+			try {
+				fs.writeFileSync(LOCK_FILE, String(stolenPid), { flag: "wx" });
+			} catch (error) {
+				// A fresh lock exists: leave it standing
+			}
+			fs.rmSync(stolen, { force: true });
+			refuseLock(stolenPid);
+		}
+		fs.rmSync(stolen, { force: true });
+		// Loop: retry the atomic create
+	}
+	if (!acquired) {
+		console.error(
+			"could not acquire the capture lock - another capture is " +
+				"starting at the same time; try again in a moment",
+		);
+		process.exit(1);
+	}
+	process.on("exit", () => {
+		try {
+			// Only remove a lock this process still owns
+			if (Number(fs.readFileSync(LOCK_FILE, "utf8")) === process.pid) {
+				fs.rmSync(LOCK_FILE, { force: true });
+			}
+		} catch (error) {
+			// Best-effort cleanup; a stale lock is reclaimed anyway
+		}
+	});
+	// Signal-killed runs must still run the exit handler above, or
+	// the next start pays a confusing (if reclaimable) stale lock
+	for (const signal of ["SIGINT", "SIGTERM"]) {
+		process.on(signal, () => process.exit(130));
+	}
+};
 
 const loadManifest = () => {
 	let text;
@@ -125,7 +239,9 @@ class Status {
 		this.runBytes = 0;
 		this.retriesThisRun = 0;
 		this.failedThisRun = [];
-		this.current = "-";
+		// workerId -> "#token file (attempt n)" for every in-flight
+		// capture (workers run in parallel)
+		this.inFlight = new Map();
 		this.manifest = manifest;
 	}
 
@@ -155,7 +271,7 @@ class Status {
 			`Captured: ${gb(totalBytes)} GB total · ${gb(this.runBytes)} GB this run`,
 			`Rate: ${(rate / 1e6).toFixed(2)} MB/s this run · ETA: ${etaHours === null ? "warming up" : "~" + etaHours.toFixed(1) + "h"}`,
 			`Retries this run: ${this.retriesThisRun} · failed this run (will retry next run): ${this.failedThisRun.length ? this.failedThisRun.join(", ") : "none"}`,
-			`Current: ${this.current}`,
+			`In flight: ${[...this.inFlight.values()].join(" · ") || "-"}`,
 			"",
 			EVENTS_HEADING,
 			...this.events,
@@ -262,28 +378,42 @@ async function downloadVerified(url, filePath) {
 // (review catch). Deterministic, so failures are never retried.
 const SAFE_FILE = /^[A-Za-z0-9][A-Za-z0-9_.-]*\.vrm$/;
 
-const upload = (filePath, destURL) => {
-	execFileSync(
-		"aws",
-		[
-			"s3",
-			"cp",
-			filePath,
-			destURL,
-			"--content-type",
-			"model/gltf-binary",
-			// The corpus is frozen: mirrored objects never change
-			"--cache-control",
-			"public, max-age=31536000, immutable",
-			"--only-show-errors",
-		],
-		{ stdio: "inherit" },
-	);
-};
+// Async on purpose (review catch): a synchronous exec would freeze
+// the event loop for the whole upload, stalling every sibling
+// worker's in-flight download - the exact latency-hiding the pool
+// exists for
+const upload = (filePath, destURL) =>
+	new Promise((resolve, reject) => {
+		const child = spawn(
+			"aws",
+			[
+				"s3",
+				"cp",
+				filePath,
+				destURL,
+				"--content-type",
+				"model/gltf-binary",
+				// The corpus is frozen: mirrored objects never change
+				"--cache-control",
+				"public, max-age=31536000, immutable",
+				"--only-show-errors",
+			],
+			{ stdio: ["ignore", "inherit", "inherit"] },
+		);
+		child.on("error", reject);
+		child.on("close", (code) => {
+			if (code === 0) {
+				resolve();
+			} else {
+				reject(new Error(`aws s3 cp exited ${code}`));
+			}
+		});
+	});
 
 // ---- modes ----
 
-async function capture(dest, limit) {
+async function capture(dest, limit, parallel) {
+	acquireLock();
 	const manifest = loadManifest();
 	// One mirror, one destination: a dest that disagrees with the
 	// manifest's would silently split the backup (review catch)
@@ -299,28 +429,79 @@ async function capture(dest, limit) {
 	const status = new Status(manifest);
 	const done = Object.keys(manifest.entries).length;
 	status.event(
-		`run ${done > 0 ? "resumed" : "started"} at ${done.toLocaleString()} captured, dest ${dest}`,
+		`run ${done > 0 ? "resumed" : "started"} at ${done.toLocaleString()} captured, dest ${dest}, ${parallel} in flight`,
 	);
+	// A killed run can strand WORKER temp files (numeric suffixes
+	// only - a concurrent --verify/--selftest owns .verify and
+	// .selftest, and sweeping those would break the very audits
+	// their dedicated names exist for; review catch)
+	const workerTemp = new RegExp(
+		`^${path.basename(TMP_FILE).replace(/\./g, "\\.")}\\.\\d+$`,
+	);
+	// A crashed reclaim can also strand a .reclaim-* lock temp
+	// (review catch); a live contender's copy lives microseconds
+	// and its deletion is harmless
+	const reclaimTemp = `${path.basename(LOCK_FILE)}.reclaim-`;
+	for (const stale of fs.readdirSync(DATA_DIR)) {
+		if (workerTemp.test(stale) || stale.startsWith(reclaimTemp)) {
+			fs.rmSync(path.join(DATA_DIR, stale), { force: true });
+		}
+	}
+	// The corruption BACKSTOP for every exotic lock interleaving:
+	// a worker only proceeds while this process still owns the
+	// lock file. A displaced run aborts before it can interleave
+	// manifest snapshots with the new owner (review catch).
+	const assertLockOwned = () => {
+		let owner = 0;
+		try {
+			owner = Number(fs.readFileSync(LOCK_FILE, "utf8"));
+		} catch (error) {
+			// A missing lock counts as lost
+		}
+		if (owner !== process.pid) {
+			status.event(
+				"run ABORTED: capture lock lost to another process - " +
+					"re-run when no other capture is active",
+			);
+			console.error("aborting: capture lock lost - see " + STATUS_FILE);
+			process.exit(1);
+		}
+	};
 	// Filename uniqueness across tokens: a duplicate key would
 	// silently overwrite another token's mirror object (review
-	// catch)
+	// catch). mirroredFiles = completed captures; inFlightFiles
+	// reserves names claimed by concurrent workers.
 	const mirroredFiles = new Set(
 		Object.values(manifest.entries).map((entry) => entry.file),
 	);
-	// Consecutive tokens failing at the UPLOAD step smell like an
+	const inFlightFiles = new Map();
+	// Tokens failing back-to-back at the UPLOAD step smell like an
 	// AWS auth/config problem: abort loudly instead of burning the
-	// retry budget across 26k tokens (review catch)
+	// retry budget across 26k tokens (review catch). Approximate
+	// under parallelism - any success resets it.
 	let uploadFailStreak = 0;
 	let captured = 0;
-	for (let tokenId = 0; tokenId < TOKEN_COUNT; tokenId++) {
-		if (manifest.entries[tokenId] || manifest.gaps[tokenId] !== undefined) {
-			continue;
-		}
+	let nextTokenId = 0;
+	const claimNext = () => {
+		// Limit counts CAPTURES, not attempts (review catch - the
+		// documented "stop after N captures"); with workers in
+		// flight the run may land a few extras past N
 		if (limit && captured >= limit) {
-			break;
+			return undefined;
 		}
+		while (nextTokenId < TOKEN_COUNT) {
+			const tokenId = nextTokenId++;
+			if (manifest.entries[tokenId] || manifest.gaps[tokenId] !== undefined) {
+				continue;
+			}
+			return tokenId;
+		}
+		return undefined;
+	};
+	const captureToken = async (tokenId, workerId, tmpFile) => {
 		let success = false;
 		let lastError = null;
+		let reserved = null;
 		for (let attempt = 0; attempt <= MAX_RETRIES && !success; attempt++) {
 			if (attempt > 0) {
 				status.retriesThisRun++;
@@ -328,9 +509,20 @@ async function capture(dest, limit) {
 					Math.min(RETRY_BASE_MS * Math.pow(2, attempt - 1), RETRY_CAP_MS),
 				);
 			}
+			// A retry may resolve a DIFFERENT filename: release the
+			// previous reservation or it leaks for the whole run
+			// (review catch)
+			if (reserved !== null && inFlightFiles.get(reserved) === tokenId) {
+				inFlightFiles.delete(reserved);
+				reserved = null;
+			}
 			try {
 				const metadata = await fetchMetadata(tokenId);
 				if (!metadata.vrm_url) {
+					// Ownership re-checked at the WRITE, not just the claim:
+					// a lock lost during the fetch must not let this save
+					// overwrite a newer owner's snapshot (review catch)
+					assertLockOwned();
 					manifest.gaps[tokenId] = "no vrm_url";
 					saveManifest(manifest);
 					status.event(`GAP: #${tokenId} has no vrm_url`);
@@ -347,10 +539,17 @@ async function capture(dest, limit) {
 					);
 					break;
 				}
-				if (mirroredFiles.has(file)) {
-					const owner = Object.keys(manifest.entries).find(
-						(id) => manifest.entries[id].file === file,
-					);
+				const inFlightOwner = inFlightFiles.get(file);
+				if (
+					mirroredFiles.has(file) ||
+					(inFlightOwner !== undefined && inFlightOwner !== tokenId)
+				) {
+					const owner =
+						inFlightOwner !== undefined && inFlightOwner !== tokenId
+							? inFlightOwner
+							: Object.keys(manifest.entries).find(
+									(id) => manifest.entries[id].file === file,
+								);
 					status.failedThisRun.push(tokenId);
 					status.event(
 						`FAILED (no retry): #${tokenId} filename ${file} collides ` +
@@ -358,18 +557,27 @@ async function capture(dest, limit) {
 					);
 					break;
 				}
-				status.current = `#${tokenId} ${file} (attempt ${attempt + 1})`;
+				inFlightFiles.set(file, tokenId);
+				reserved = file;
+				status.inFlight.set(
+					workerId,
+					`#${tokenId} ${file} (attempt ${attempt + 1})`,
+				);
 				status.write();
 				const { size, sha256 } = await downloadVerified(
 					gatewayURL(metadata.vrm_url),
-					TMP_FILE,
+					tmpFile,
 				);
 				try {
-					upload(TMP_FILE, dest + file);
+					await upload(tmpFile, dest + file);
 				} catch (error) {
 					throw new Error(`upload: ${error.message}`);
 				}
-				fs.rmSync(TMP_FILE, { force: true });
+				fs.rmSync(tmpFile, { force: true });
+				// Same write-time ownership gate as the gap path: a lock
+				// lost during the long download/upload aborts here,
+				// before this save can clobber the new owner's manifest
+				assertLockOwned();
 				manifest.entries[tokenId] = {
 					file,
 					size,
@@ -382,7 +590,7 @@ async function capture(dest, limit) {
 				uploadFailStreak = 0;
 				success = true;
 			} catch (error) {
-				fs.rmSync(TMP_FILE, { force: true });
+				fs.rmSync(tmpFile, { force: true });
 				lastError = error;
 				if (attempt === MAX_RETRIES) {
 					status.failedThisRun.push(tokenId);
@@ -392,15 +600,18 @@ async function capture(dest, limit) {
 				}
 			}
 		}
+		if (reserved !== null && inFlightFiles.get(reserved) === tokenId) {
+			inFlightFiles.delete(reserved);
+		}
 		if (!success && lastError && lastError.message.startsWith("upload:")) {
 			uploadFailStreak++;
 			if (uploadFailStreak >= 3) {
 				status.event(
-					"run ABORTED: three consecutive tokens failed at the " +
+					"run ABORTED: three back-to-back tokens failed at the " +
 						"upload step - check AWS credentials/permissions and re-run",
 				);
 				console.error(
-					"aborting: three consecutive upload failures - see " + STATUS_FILE,
+					"aborting: three back-to-back upload failures - see " + STATUS_FILE,
 				);
 				process.exit(1);
 			}
@@ -411,9 +622,28 @@ async function capture(dest, limit) {
 				status.write();
 			}
 		}
-		await sleep(TOKEN_DELAY_MS);
-	}
-	status.current = "-";
+	};
+	// The worker pool: N tokens in flight (operator directive - the
+	// sequential run's wall-clock was dominated by gateway latency
+	// and retry backoff, which parallelism hides; it cannot beat
+	// the uplink's actual bandwidth). Node is single-threaded, so
+	// the shared manifest/status mutations between awaits are safe.
+	const worker = async (workerId) => {
+		const tmpFile = `${TMP_FILE}.${workerId}`;
+		for (;;) {
+			assertLockOwned();
+			const tokenId = claimNext();
+			if (tokenId === undefined) {
+				status.inFlight.delete(workerId);
+				return;
+			}
+			await captureToken(tokenId, workerId, tmpFile);
+			await sleep(TOKEN_DELAY_MS);
+		}
+	};
+	await Promise.all(
+		Array.from({ length: parallel }, (unused, index) => worker(index)),
+	);
 	status.event(
 		`run finished: ${captured.toLocaleString()} captured this run, ` +
 			`${Object.keys(manifest.entries).length.toLocaleString()} total, ` +
@@ -476,6 +706,8 @@ async function verify(sampleSize) {
 	// --dest default must not silently verify the wrong bucket
 	// (review catch)
 	const dest = manifest.dest || argDest();
+	// Own temp name: safe to audit while a capture is running
+	const tmpFile = `${TMP_FILE}.verify`;
 	let bad = 0;
 	for (const tokenId of sample) {
 		const entry = manifest.entries[tokenId];
@@ -484,10 +716,10 @@ async function verify(sampleSize) {
 		try {
 			execFileSync(
 				"aws",
-				["s3", "cp", dest + entry.file, TMP_FILE, "--only-show-errors"],
+				["s3", "cp", dest + entry.file, tmpFile, "--only-show-errors"],
 				{ stdio: "inherit" },
 			);
-			const bytes = fs.readFileSync(TMP_FILE);
+			const bytes = fs.readFileSync(tmpFile);
 			const sha256 = crypto.createHash("sha256").update(bytes).digest("hex");
 			const ok = bytes.length === entry.size && sha256 === entry.sha256;
 			console.log(
@@ -500,7 +732,7 @@ async function verify(sampleSize) {
 			console.log(`#${tokenId} ${entry.file}: FETCH FAILED (${error.message})`);
 			bad++;
 		}
-		fs.rmSync(TMP_FILE, { force: true });
+		fs.rmSync(tmpFile, { force: true });
 	}
 	console.log(
 		`${sample.length - bad}/${sample.length} verified against the manifest`,
@@ -512,6 +744,9 @@ async function verify(sampleSize) {
 // passes with the right size+sha, a bad magic is rejected, and a
 // truncated body (content-length disagreement) is rejected.
 async function selftest() {
+	// Own temp name: a concurrently running capture must not clobber
+	// (or be clobbered by) the fixture round-trip
+	const tmpFile = `${TMP_FILE}.selftest`;
 	const good = Buffer.concat([Buffer.from("glTF"), crypto.randomBytes(100000)]);
 	const expectedSha = crypto.createHash("sha256").update(good).digest("hex");
 	const server = http.createServer((request, response) => {
@@ -534,16 +769,16 @@ async function selftest() {
 		console.error("SELFTEST FAIL:", message);
 		process.exit(1);
 	};
-	const result = await downloadVerified(`${base}/good.vrm`, TMP_FILE);
+	const result = await downloadVerified(`${base}/good.vrm`, tmpFile);
 	if (result.size !== good.length || result.sha256 !== expectedSha) {
 		fail("good fixture round-trip mismatched size/sha");
 	}
-	if (!fs.readFileSync(TMP_FILE).equals(good)) {
+	if (!fs.readFileSync(tmpFile).equals(good)) {
 		fail("good fixture bytes corrupted on disk");
 	}
 	// Assert the rejection KIND: a generic transport failure here
 	// would otherwise pass as a false negative (review catch)
-	await downloadVerified(`${base}/badmagic.vrm`, TMP_FILE).then(
+	await downloadVerified(`${base}/badmagic.vrm`, tmpFile).then(
 		() => fail("bad magic was accepted"),
 		(error) => {
 			if (!error.message.includes("not a glb")) {
@@ -551,7 +786,7 @@ async function selftest() {
 			}
 		},
 	);
-	await downloadVerified(`${base}/truncated.vrm`, TMP_FILE).then(
+	await downloadVerified(`${base}/truncated.vrm`, tmpFile).then(
 		() => fail("truncated body was accepted"),
 		(error) => {
 			// Node's fetch (undici) enforces content-length itself and
@@ -566,7 +801,7 @@ async function selftest() {
 			}
 		},
 	);
-	fs.rmSync(TMP_FILE, { force: true });
+	fs.rmSync(tmpFile, { force: true });
 	server.close();
 	console.log(
 		"SELFTEST PASS: verified round-trip, bad-magic and truncation rejection",
@@ -606,7 +841,10 @@ function argDest() {
 	} else if (argv.includes("--verify")) {
 		await verify(argValue("--verify", 20) || 20);
 	} else {
-		await capture(argDest(), argValue("--limit", 0));
+		// 1-4 workers: enough to hide gateway latency and retry
+		// backoff, few enough to stay a polite gateway citizen
+		const parallel = Math.max(1, Math.min(4, argValue("--parallel", 3) || 3));
+		await capture(argDest(), argValue("--limit", 0), parallel);
 	}
 })().catch((error) => {
 	console.error(error);
