@@ -26,7 +26,7 @@ export default class MainScene extends Scene {
 	/// Overridden constructor
 	constructor(rootContainer) {
 		super(rootContainer);
-		console.log("kwigbelle build 2026-08-25.1 (info drawer)");
+		console.log("kwigbelle build 2026-08-25.2 (layer locks, motion retune)");
 		// Build the UI
 		this.buildUI();
 		// Start loading
@@ -102,6 +102,11 @@ export default class MainScene extends Scene {
 			ubFor: (tokenId) => this.traitComposer.ubFor(tokenId),
 			burnedFor: (tokenId) => this.traitComposer.burnedFor(tokenId),
 		});
+		// Layer locks (docs/tads/info-tab.md Decision 4): the trait
+		// sheet owns the per-token locked-set; the spring rig
+		// consults it every step (and poke skips locked layers)
+		this.layerSprings.lockedLookup = (index) =>
+			this.traitsSection.isLayerLocked(index);
 		this.sidePanel.addSection(
 			"How rarity works",
 			rarityExplainer(),

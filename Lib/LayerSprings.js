@@ -15,6 +15,20 @@ export default class LayerSprings {
 		this.isPaused = false;
 		this.isWaveEnabled = false;
 		this.springs = [];
+		// Layer locks (docs/tads/info-tab.md Decision 4): the scene
+		// wires this to the trait sheet's per-token locked-set. A
+		// locked layer's spring pins to center - no idle sway, no
+		// follow/tilt reach, no poke - and rejoins smoothly when
+		// unlocked because the spring keeps integrating toward
+		// whatever the target is (no snap in either direction).
+		this.lockedLookup = null;
+	}
+
+	/// Whether one layer's motion is locked
+	///
+	/// - Parameter index: The layer index
+	isLocked(index) {
+		return this.lockedLookup ? this.lockedLookup(index) : false;
 	}
 
 	/// Kick every layer's velocity away from a tap point — the Poke
@@ -28,7 +42,12 @@ export default class LayerSprings {
 		if (this.isPaused) {
 			return;
 		}
-		for (const spring of this.springs) {
+		for (let index = 0; index < this.springs.length; index++) {
+			// A locked layer takes no impulse
+			if (this.isLocked(index)) {
+				continue;
+			}
+			const spring = this.springs[index];
 			let dx = spring.x - point.x;
 			let dy = spring.y - point.y;
 			const distance = Math.hypot(dx, dy);
@@ -70,9 +89,16 @@ export default class LayerSprings {
 				depth: depth,
 				stiffness: stiffness,
 				damping: 2 * Math.sqrt(stiffness) * 0.45,
-				phase: depth * 2.4,
-				swayAmp: 1 + depth * 3.5,
-				breatheAmp: 2 + depth * 6.5,
+				// Depth-coherent idle (docs/tads/info-tab.md Decision
+				// 5): ONE shared breath with a SMALL depth lag - the
+				// face breathes as one being with parallax, instead of
+				// layers wandering on independent phases (the old lag
+				// of 2.4 rad decorrelated them). Raise for more
+				// ripple, lower for lockstep.
+				phase: depth * 0.9,
+				// Front layers breathe slightly deeper for depth
+				swayAmp: 1 + depth * 4,
+				breatheAmp: 2 + depth * 7.5,
 			});
 		}
 	}
@@ -89,25 +115,35 @@ export default class LayerSprings {
 		if (this.isPaused) {
 			return;
 		}
-		for (const spring of this.springs) {
-			// Resting target is the center, drifting on slow sine
-			// waves so the Avastar "breathes" while idle
-			let targetX =
-				center.x +
-				Math.sin(now * 0.6 + spring.phase) * spring.swayAmp * this.motionScale;
-			let targetY =
-				center.y +
-				Math.sin(now * 0.9 + spring.phase) *
+		for (let index = 0; index < this.springs.length; index++) {
+			const spring = this.springs[index];
+			// A locked layer's target IS the center: the spring keeps
+			// integrating, so locking mid-motion settles smoothly and
+			// unlocking eases back into the breath (no snap)
+			const isLocked = this.isLocked(index);
+			// Resting target is the center, drifting on slow shared
+			// sines so the Avastar "breathes" while idle (cadence and
+			// lag per the Decision 5 retune - one-line tunables)
+			let targetX = center.x;
+			let targetY = center.y;
+			if (!isLocked) {
+				targetX +=
+					Math.sin(now * 0.45 + spring.phase) *
+					spring.swayAmp *
+					this.motionScale;
+				targetY +=
+					Math.sin(now * 0.7 + spring.phase) *
 					spring.breatheAmp *
 					this.motionScale;
-			if (touchPoint) {
+			}
+			if (touchPoint && !isLocked) {
 				// Front layers overshoot toward the pointer more than
 				// back layers, separating them for a parallax feel
 				const reach = (1 + spring.depth * 0.35) * this.followScale;
 				targetX = center.x + (touchPoint.x - center.x) * reach;
 				targetY = center.y + (touchPoint.y - center.y) * reach;
 			}
-			if (this.isWaveEnabled) {
+			if (this.isWaveEnabled && !isLocked) {
 				// A traveling PULSE, not another sine: the idle
 				// breathing is already a depth-staggered sine, so a
 				// continuous wave read as "more of the same" (operator

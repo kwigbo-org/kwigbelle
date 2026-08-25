@@ -10,7 +10,9 @@
 //   Trails- fade-clearing leaves intermediate-alpha ghosts and
 //           skips the backdrop redraw
 //   Tilt  - a synthetic deviceorientation event steers the rig
-// Plus: the three toggles persist across a reload.
+// Plus: layer locks (docs/tads/info-tab.md Decision 4) pin one
+// layer against wave/poke/follow, release cleanly, and reset on a
+// token swap; and the three toggles persist across a reload.
 const { chromium } = require("playwright-core");
 const { check } = require("./check.js");
 
@@ -228,6 +230,147 @@ const { check } = require("./check.js");
 	});
 	await waitForRest("back at neutral tilt");
 	await toggle("Tilt follow").uncheck();
+
+	// LAYER LOCKS (docs/tads/info-tab.md Decision 4): a locked
+	// layer's spring pins to center - immobile under wave, poke,
+	// and follow while the others move - rejoins when unlocked,
+	// and resets on a token swap. The padlocks live on the info
+	// drawer's layer cards (one per spring-backed layer; none on
+	// the backdrop).
+	await setSlider("Follow", 0);
+	await waitForRest("before lock scenario");
+	await page.click("#infoHandle");
+	const lockCount = await page.locator(".traitLock").count();
+	const checkboxCount = await page.locator(".traitRow input").count();
+	console.log(`locks: ${lockCount}, visibility checkboxes: ${checkboxCount}`);
+	check(
+		lockCount === checkboxCount - 1,
+		`expected a lock per layer card except the backdrop (${lockCount} vs ${checkboxCount})`,
+	);
+	// Lock the FRONT layer (largest motion = strongest signal)
+	await page.locator(".traitLock").last().click();
+	check(
+		(await page.locator(".traitLock.locked").count()) === 1,
+		"lock toggle did not engage",
+	);
+	const lockedIndex = lockCount - 1;
+
+	// Immobile under WAVE while the others whip
+	await page.click("#panelHandle");
+	await toggle("Wave").check();
+	await page.waitForFunction(
+		(locked) => {
+			const springs = window.kwigbelleScene.layerSprings.springs;
+			const c = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+			const s = springs[locked];
+			const still =
+				Math.hypot(s.vx, s.vy) < 0.5 && Math.hypot(s.x - c.x, s.y - c.y) < 1;
+			const othersMove = springs.some(
+				(other, i) => i !== locked && Math.hypot(other.vx, other.vy) > 3,
+			);
+			return still && othersMove;
+		},
+		lockedIndex,
+		{ timeout: 6000 },
+	);
+	console.log(
+		"locked layer still under wave:",
+		JSON.stringify(await rigState()),
+	);
+	await toggle("Wave").uncheck();
+	await waitForRest("after locked wave");
+
+	// No POKE impulse on the locked layer
+	await page.mouse.click(260, 300);
+	await page.waitForFunction(
+		(locked) => {
+			const springs = window.kwigbelleScene.layerSprings.springs;
+			return springs.some(
+				(s, i) => i !== locked && Math.hypot(s.vx, s.vy) > 60,
+			);
+		},
+		lockedIndex,
+		{ timeout: 2000 },
+	);
+	const lockedPokeSpeed = await page.evaluate((locked) => {
+		const s = window.kwigbelleScene.layerSprings.springs[locked];
+		return Math.hypot(s.vx, s.vy);
+	}, lockedIndex);
+	console.log("locked layer speed during poke:", lockedPokeSpeed);
+	check(
+		lockedPokeSpeed < 0.5,
+		`locked layer took a poke impulse (speed ${lockedPokeSpeed})`,
+	);
+	await waitForRest("after locked poke");
+
+	// No FOLLOW reach: hold a drag; the others lean, the locked
+	// layer holds center
+	await setSlider("Follow", 1);
+	await page.mouse.move(420, 300);
+	await page.mouse.down();
+	await page.waitForFunction(
+		(locked) => {
+			const springs = window.kwigbelleScene.layerSprings.springs;
+			const c = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+			const s = springs[locked];
+			const held = Math.hypot(s.x - c.x, s.y - c.y) < 1;
+			const othersLean = springs.some(
+				(other, i) => i !== locked && other.x - c.x > 15,
+			);
+			return held && othersLean;
+		},
+		lockedIndex,
+		{ timeout: 5000 },
+	);
+	console.log("locked layer held during follow");
+	await page.mouse.up();
+	await setSlider("Follow", 0);
+	await waitForRest("after locked follow");
+
+	// REJOIN: unlock and the layer moves with the wave again
+	await page.click("#infoHandle");
+	await page.locator(".traitLock").last().click();
+	check(
+		(await page.locator(".traitLock.locked").count()) === 0,
+		"lock toggle did not release",
+	);
+	await page.click("#panelHandle");
+	await toggle("Wave").check();
+	await page.waitForFunction(
+		(locked) => {
+			const s = window.kwigbelleScene.layerSprings.springs[locked];
+			return Math.hypot(s.vx, s.vy) > 3;
+		},
+		lockedIndex,
+		{ timeout: 6000 },
+	);
+	console.log("unlocked layer rejoined the wave");
+	await toggle("Wave").uncheck();
+	await waitForRest("after rejoin");
+
+	// RESET on token swap: lock again, load another token, and both
+	// the UI and the scene state come back unlocked
+	await page.click("#infoHandle");
+	await page.locator(".traitLock").last().click();
+	await page.click("#panelHandle");
+	await page.fill("#loadTokenInput", "12345");
+	await page.press("#loadTokenInput", "Enter");
+	await page.waitForFunction(
+		() =>
+			document.querySelector(".identityTitle")?.textContent ===
+				"Avastar #12345" &&
+			document.getElementById("preloader")?.style.opacity === "0",
+		{ timeout: 15000 },
+	);
+	const afterSwap = await page.evaluate(() => ({
+		lockedDom: document.querySelectorAll(".traitLock.locked").length,
+		lockedState: window.kwigbelleScene.traitsSection.lockedLayers.size,
+	}));
+	console.log("locks after token swap:", JSON.stringify(afterSwap));
+	check(
+		afterSwap.lockedDom === 0 && afterSwap.lockedState === 0,
+		"layer locks survived a token swap",
+	);
 
 	// PERSISTENCE: set the toggles, reload, expect them restored
 	await toggle("Wave").check();

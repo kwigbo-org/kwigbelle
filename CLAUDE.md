@@ -23,9 +23,9 @@ the VRM 3D viewer (vrm-viewer.md), the avastars.io design match
 polish (burned-traits.md). IN PROGRESS (operator 2026-08-25):
 docs/tads/info-tab.md — PR A shipped the info drawer between
 profile and settings (traits moved there + rarity explainer), the
-3D background fix, and the mobile backdrop squish fix; remaining:
-PR B (per-layer motion locks + depth-coherent idle retune), PR C
-(wallet-provider transfer history). Parked: PR #1 wallet
+3D background fix, and the mobile backdrop squish fix; PR B
+shipped per-layer motion locks + the depth-coherent idle retune;
+remaining: PR C (wallet-provider transfer history). Parked: PR #1 wallet
 LOWs (likely mooted — WalletConnectUI was deleted in PR #16;
 re-verify against ProfileSection before resurrecting).
 
@@ -37,8 +37,9 @@ Lib/MainScene.js           scene: load orchestration + async-race
                            guards (the most delicate code in the
                            repo), render loop, ?param flags
 Lib/LayerSprings.js        spring physics: per-depth params +
-                           integration (idle breathing, follow,
-                           poke impulses, wave pulse)
+                           integration (depth-coherent idle breath,
+                           follow, poke impulses, wave pulse) +
+                           per-layer locks via lockedLookup
 Lib/ProfileSection.js      profile drawer: wallet connect flow
                            (multi-wallet chooser, switch/link,
                            logout) + owned-Avastars grid w/ lazy

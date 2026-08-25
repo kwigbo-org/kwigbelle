@@ -127,3 +127,17 @@ None.
   identity card moved out of Traits into its own Overview
   section; info-drawer order is How rarity works / Overview /
   Traits.
+- 2026-08-25 — PR A merged (PR #23, round 1 = 3/4 CLEAN with two
+  genuine sonnet catches fixed as a fix-push: finishLoad's bg
+  write 3D-guarded like refreshPreview, drawers keyed by their
+  own id; round 2 CLEAN 4/4).
+- 2026-08-25 — PR B implemented (Decisions 4–5): padlocks on the
+  spring-backed layer cards (inline currentColor SVG, its own
+  stopPropagation tap island; TraitsSection owns the per-token
+  locked-set, LayerSprings consults it via lockedLookup — locked
+  target pins to center so lock/unlock both ease, poke skips
+  locked layers); idle retune to one shared breath (phase lag
+  2.4→0.9 rad, sway 0.6→0.45, breathe 0.9→0.7, front amplitudes
+  +~15%; one-line tunables for QA). effects-test grew the lock
+  scenarios (immobile under wave/poke/follow while others move,
+  rejoin, token-swap reset).
