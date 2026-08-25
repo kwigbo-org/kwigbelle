@@ -81,34 +81,74 @@ const isAlive = (pid) => {
 		return false;
 	}
 };
+const refuseLock = (pid) => {
+	console.error(
+		`another capture (pid ${pid}) is already running - stop it ` +
+			"first; two concurrent runs would corrupt the manifest",
+	);
+	process.exit(1);
+};
 const acquireLock = () => {
 	// Atomic create ("wx") closes the read-check-write race two
 	// simultaneous starts would otherwise slip through (review
-	// catch); only an EEXIST falls back to the stale-owner check
-	for (let attempt = 0; attempt < 2; attempt++) {
+	// catch). A dead owner's lock is reclaimed by an atomic RENAME
+	// steal - exactly one contender can win the rename, so two
+	// processes racing over the same stale lock can never delete
+	// each other's fresh locks (review catch); the loser loops and
+	// meets the winner's live lock instead.
+	let acquired = false;
+	for (let attempt = 0; attempt < 3 && !acquired; attempt++) {
 		try {
 			fs.writeFileSync(LOCK_FILE, String(process.pid), { flag: "wx" });
+			acquired = true;
 			break;
 		} catch (error) {
-			if (error.code !== "EEXIST" || attempt === 1) {
+			if (error.code !== "EEXIST") {
 				throw error;
 			}
-			let pid = 0;
-			try {
-				pid = Number(fs.readFileSync(LOCK_FILE, "utf8"));
-			} catch (readError) {
-				// Vanished between the create attempt and here: loop
-			}
-			if (pid && isAlive(pid)) {
-				console.error(
-					`another capture (pid ${pid}) is already running - stop it ` +
-						"first; two concurrent runs would corrupt the manifest",
-				);
-				process.exit(1);
-			}
-			// Dead owner: reclaim and retry the atomic create
-			fs.rmSync(LOCK_FILE, { force: true });
 		}
+		let pid = 0;
+		try {
+			pid = Number(fs.readFileSync(LOCK_FILE, "utf8"));
+		} catch (readError) {
+			// Vanished between the create attempt and here: loop
+			continue;
+		}
+		if (pid && isAlive(pid)) {
+			refuseLock(pid);
+		}
+		const stolen = `${LOCK_FILE}.reclaim-${process.pid}`;
+		try {
+			fs.renameSync(LOCK_FILE, stolen);
+		} catch (error) {
+			// Lost the steal race: loop and re-judge the fresh lock
+			continue;
+		}
+		// Confirm the steal took the dead lock we judged - if it
+		// changed hands to a LIVE owner mid-steal, hand it back
+		let stolenPid = 0;
+		try {
+			stolenPid = Number(fs.readFileSync(stolen, "utf8"));
+		} catch (readError) {
+			// Unreadable spoils: discard below and retry
+		}
+		if (stolenPid && stolenPid !== pid && isAlive(stolenPid)) {
+			try {
+				fs.renameSync(stolen, LOCK_FILE);
+			} catch (error) {
+				fs.rmSync(stolen, { force: true });
+			}
+			refuseLock(stolenPid);
+		}
+		fs.rmSync(stolen, { force: true });
+		// Loop: retry the atomic create
+	}
+	if (!acquired) {
+		console.error(
+			"could not acquire the capture lock - another capture is " +
+				"starting at the same time; try again in a moment",
+		);
+		process.exit(1);
 	}
 	process.on("exit", () => {
 		try {
