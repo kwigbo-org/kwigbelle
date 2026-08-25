@@ -416,8 +416,13 @@ export default class MainScene extends Scene {
 		if (generation !== this.loadGeneration) {
 			return;
 		}
+		// Same 3D guard as refreshPreview: a load can finish after a
+		// cached-VRM 3D entry (enter3D is reachable mid-load), and
+		// repainting the token color would sit behind the model —
+		// exit3D restores from this.avastar, so skipping still
+		// converges to the right color
 		const contentView = document.getElementById("contentView");
-		if (this.avastar && this.avastar.backgroundColor) {
+		if (this.avastar && this.avastar.backgroundColor && !this.is3D) {
 			contentView.style.backgroundColor = this.avastar.backgroundColor;
 		}
 		this.isLoading = false;

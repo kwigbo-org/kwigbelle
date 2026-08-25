@@ -211,10 +211,14 @@ export default class SidePanel {
 					columnId: "infoSections",
 				});
 			} else {
-				this.addDrawer("settings", SidePanel.settingsIcon(), {
-					handleId: "panelHandle",
-					columnId: "panelSections",
-				});
+				// Keyed by drawerId (an unknown id must not miskey into
+				// settings — the .get below would crash); settings keeps
+				// its legacy explicit DOM ids
+				const options =
+					drawerId === "settings"
+						? { handleId: "panelHandle", columnId: "panelSections" }
+						: {};
+				this.addDrawer(drawerId, SidePanel.settingsIcon(), options);
 			}
 		}
 		const section = document.createElement("div");
