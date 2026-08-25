@@ -519,6 +519,10 @@ async function capture(dest, limit, parallel) {
 			try {
 				const metadata = await fetchMetadata(tokenId);
 				if (!metadata.vrm_url) {
+					// Ownership re-checked at the WRITE, not just the claim:
+					// a lock lost during the fetch must not let this save
+					// overwrite a newer owner's snapshot (review catch)
+					assertLockOwned();
 					manifest.gaps[tokenId] = "no vrm_url";
 					saveManifest(manifest);
 					status.event(`GAP: #${tokenId} has no vrm_url`);
@@ -570,6 +574,10 @@ async function capture(dest, limit, parallel) {
 					throw new Error(`upload: ${error.message}`);
 				}
 				fs.rmSync(tmpFile, { force: true });
+				// Same write-time ownership gate as the gap path: a lock
+				// lost during the long download/upload aborts here,
+				// before this save can clobber the new owner's manifest
+				assertLockOwned();
 				manifest.entries[tokenId] = {
 					file,
 					size,
