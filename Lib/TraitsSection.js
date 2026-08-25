@@ -495,6 +495,9 @@ export default class TraitsSection {
 		const lock = document.createElement("span");
 		lock.setAttribute("class", "traitLock");
 		lock.setAttribute("role", "button");
+		// The advertised button role must be keyboard-real: in the
+		// tab order, activated by Enter/Space
+		lock.setAttribute("tabindex", "0");
 		const svg = document.createElementNS(SVG_NS, "svg");
 		svg.setAttribute("viewBox", "0 0 24 24");
 		const path = document.createElementNS(SVG_NS, "path");
@@ -511,7 +514,7 @@ export default class TraitsSection {
 			);
 			path.setAttribute("d", isLocked ? lockedPath : unlockedPath);
 		};
-		lock.addEventListener("click", (event) => {
+		const toggle = (event) => {
 			event.stopPropagation();
 			if (this.lockedLayers.has(layerIndex)) {
 				this.lockedLayers.delete(layerIndex);
@@ -519,6 +522,14 @@ export default class TraitsSection {
 				this.lockedLayers.add(layerIndex);
 			}
 			render();
+		};
+		lock.addEventListener("click", toggle);
+		lock.addEventListener("keydown", (event) => {
+			if (event.key === "Enter" || event.key === " ") {
+				// Space must not also scroll the drawer
+				event.preventDefault();
+				toggle(event);
+			}
 		});
 		render();
 		return lock;
