@@ -1,8 +1,10 @@
 # TAD: profile drawer (wallet + owned Avastars) and composed picker thumbnails
 
 - **Status:** IMPLEMENTED (2026-08-24: TAD PR #15, drawer PR #16,
-  composed thumbnails PR #17) — frozen as historical record once
-  PR #17 merges
+  composed thumbnails PR #17) — frozen as historical record.
+  (Post-freeze note: the Decision 5 badge later became an
+  always-visible grey/green presence dot, shipped and recorded
+  under docs/tads/burned-traits.md, 2026-08-25.)
 - **Driver:** Operator (2026-08-24): "I want a second tab above
   settings on the right. It will be a profile icon. We will put the
   connect wallet button in this drawer and your avastars. Also, we

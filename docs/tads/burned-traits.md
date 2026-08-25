@@ -1,6 +1,8 @@
 # TAD: burned traits + trait-sheet polish (explode retirement, panel persistence)
 
-- **Status:** IN REVIEW
+- **Status:** IMPLEMENTED (2026-08-24/25: TAD PR #18, explode/panels
+  PR #19, effects + capture PR #20, burned display + cards PR #21)
+  — frozen as historical record
 - **Driver:** Operator (2026-08-24): "explode is legacy and the
   sliders can kinda replicate that. So ditch it. … We need to show
   burned traits. I think we can make the trait tiles a little
@@ -154,4 +156,30 @@ None.
   `window.kwigbelleScene` for the harness — effects-test asserts
   on spring state (velocities/offsets) because the underdamped
   rig decays asymptotically and pixel-equality flakes on subpixel
-  motion.
+  motion (gated behind `?testharness=1` per review).
+- 2026-08-24 — PR #20 review rounds 1–4 (merged as `87b0cf7`):
+  round 1 was 0/4 with genuine mobile catches — a touch tap's
+  synthetic mouse replay double-fired the poke (and a touch drag
+  could mis-fire one), fixed with an 800ms suppression window +
+  `touch-action:none` on the canvas + a hasTouch test asserting
+  exactly one poke; tilt permission races closed with a
+  generation counter; Wave gained the follow-target ride. Wave
+  itself became the traveling pulse after operator QA.
+- 2026-08-25 — Step 3 applied (PR B, #21, merged as `7155bc8`
+  after 5 rounds + operator QA). QA amendments to Decision 6
+  during the PR: the labeled Edit pill's dedicated column crowded
+  the 280px panel, so the WHOLE CARD is the edit tap target (rows
+  are divs, checkbox/undo are stopPropagation islands), a compact
+  edit chip rides the gene line, and the tier/burn tags own a
+  full-width line under the prominent trait name. Decision 5
+  amendments: Mint condition renders in a positive mint green
+  (`--mint` #3eb489), never the burn orange; the ember orange has
+  ONE definition (`--burned`, flame fills currentColor). Burn
+  state applies to ALL primes including promos (asserted for
+  founder #50) — unlike the lottery-only Unique-By. Also shipped
+  here as an operator-directed extension of profile-drawer TAD
+  Decision 5: the wallet badge became an always-visible presence
+  dot (grey logged out, pulsing mint when connected,
+  reduced-motion respected). Final review LOW (a test-diagnostics
+  precondition) cut off as non-load-bearing per the iteration
+  discipline. TAD frozen.
