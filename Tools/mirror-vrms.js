@@ -58,17 +58,34 @@ const TOKEN_DELAY_MS = 300; // be a polite gateway citizen
 const MAX_RETRIES = 5;
 const RETRY_BASE_MS = 2000; // 2s, 4s, 8s... capped below
 const RETRY_CAP_MS = 60000;
-const ATTEMPT_TIMEOUT_MS = 240000; // whole-file cap per attempt
+const IDLE_TIMEOUT_MS = 60000; // abort only when bytes STOP flowing
 const METADATA_TIMEOUT_MS = 30000;
 const FALLBACK_AVG_BYTES = 10700000; // sampled avg, for early ETAs
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const loadManifest = () => {
+	let text;
 	try {
-		return JSON.parse(fs.readFileSync(MANIFEST_FILE, "utf8"));
+		text = fs.readFileSync(MANIFEST_FILE, "utf8");
 	} catch (error) {
-		return { entries: {}, gaps: {} };
+		if (error.code === "ENOENT") {
+			return { entries: {}, gaps: {} };
+		}
+		throw error;
+	}
+	// A manifest that EXISTS but won't parse must fail the run, not
+	// silently reset the resume state - the next save would
+	// overwrite days of capture records (review catch)
+	try {
+		return JSON.parse(text);
+	} catch (error) {
+		console.error(
+			`${MANIFEST_FILE} exists but will not parse (${error.message}).\n` +
+				"Refusing to reset the resume state - recover the file or " +
+				"move it aside deliberately first.",
+		);
+		process.exit(1);
 	}
 };
 
@@ -180,41 +197,70 @@ const cidOf = (vrmURL) => {
 /// Rejects on bad magic (every VRM is a glb: "glTF"), on a length
 /// that disagrees with the gateway's declared content-length, and
 /// on any transport error - the mirror only ever receives bytes
-/// that already proved themselves.
+/// that already proved themselves. The abort is INACTIVITY-based
+/// (review catch): a big file on a slow link must be allowed to
+/// finish as long as bytes keep flowing.
 async function downloadVerified(url, filePath) {
-	const res = await fetch(url, {
-		signal: AbortSignal.timeout(ATTEMPT_TIMEOUT_MS),
-	});
-	if (!res.ok) {
-		throw new Error(`HTTP ${res.status} via ${url}`);
+	const controller = new AbortController();
+	let idleTimer = null;
+	const armIdle = () => {
+		clearTimeout(idleTimer);
+		idleTimer = setTimeout(() => controller.abort(), IDLE_TIMEOUT_MS);
+	};
+	armIdle();
+	try {
+		const res = await fetch(url, { signal: controller.signal });
+		if (!res.ok) {
+			throw new Error(`HTTP ${res.status} via ${url}`);
+		}
+		// Node's fetch decompresses encoded bodies but the header
+		// reflects the COMPRESSED size: only enforce the length for
+		// identity-coded responses (review catch)
+		const bodyEncoding = res.headers.get("content-encoding");
+		const declared =
+			!bodyEncoding || bodyEncoding === "identity"
+				? Number(res.headers.get("content-length") || 0)
+				: 0;
+		const hash = crypto.createHash("sha256");
+		let size = 0;
+		// Streams may deliver arbitrarily small chunks: accumulate
+		// the first four bytes before judging the magic (review
+		// catch)
+		let head = Buffer.alloc(0);
+		const inspect = new Transform({
+			transform(chunk, encoding, callback) {
+				armIdle();
+				if (head.length < 4) {
+					head = Buffer.concat([head, chunk]).subarray(0, 4);
+				}
+				hash.update(chunk);
+				size += chunk.length;
+				callback(null, chunk);
+			},
+		});
+		await pipeline(
+			Readable.fromWeb(res.body),
+			inspect,
+			fs.createWriteStream(filePath),
+		);
+		const magic = head.toString("latin1");
+		if (magic !== "glTF") {
+			throw new Error(`not a glb (magic ${JSON.stringify(magic)}) via ${url}`);
+		}
+		if (declared > 0 && size !== declared) {
+			throw new Error(`truncated: ${size} of ${declared} bytes via ${url}`);
+		}
+		return { size, sha256: hash.digest("hex") };
+	} finally {
+		clearTimeout(idleTimer);
 	}
-	const declared = Number(res.headers.get("content-length") || 0);
-	const hash = crypto.createHash("sha256");
-	let size = 0;
-	let magic = null;
-	const inspect = new Transform({
-		transform(chunk, encoding, callback) {
-			if (magic === null) {
-				magic = chunk.subarray(0, 4).toString("latin1");
-			}
-			hash.update(chunk);
-			size += chunk.length;
-			callback(null, chunk);
-		},
-	});
-	await pipeline(
-		Readable.fromWeb(res.body),
-		inspect,
-		fs.createWriteStream(filePath),
-	);
-	if (magic !== "glTF") {
-		throw new Error(`not a glb (magic ${JSON.stringify(magic)}) via ${url}`);
-	}
-	if (declared > 0 && size !== declared) {
-		throw new Error(`truncated: ${size} of ${declared} bytes via ${url}`);
-	}
-	return { size, sha256: hash.digest("hex") };
 }
+
+// The mirror key comes from remote metadata: only a plain
+// single-segment *.vrm name may pass, or a crafted filename could
+// land OUTSIDE vrm/ - beyond the deploy guardrail's protection
+// (review catch). Deterministic, so failures are never retried.
+const SAFE_FILE = /^[A-Za-z0-9][A-Za-z0-9_.-]*\.vrm$/;
 
 const upload = (filePath, destURL) => {
 	execFileSync(
@@ -239,11 +285,32 @@ const upload = (filePath, destURL) => {
 
 async function capture(dest, limit) {
 	const manifest = loadManifest();
+	// One mirror, one destination: a dest that disagrees with the
+	// manifest's would silently split the backup (review catch)
+	if (manifest.dest && manifest.dest !== dest) {
+		console.error(
+			`This manifest was captured to ${manifest.dest}; refusing to ` +
+				`continue to ${dest}. Pass --dest ${manifest.dest}, or move ` +
+				"the manifest aside to start a separate mirror.",
+		);
+		process.exit(1);
+	}
+	manifest.dest = dest;
 	const status = new Status(manifest);
 	const done = Object.keys(manifest.entries).length;
 	status.event(
 		`run ${done > 0 ? "resumed" : "started"} at ${done.toLocaleString()} captured, dest ${dest}`,
 	);
+	// Filename uniqueness across tokens: a duplicate key would
+	// silently overwrite another token's mirror object (review
+	// catch)
+	const mirroredFiles = new Set(
+		Object.values(manifest.entries).map((entry) => entry.file),
+	);
+	// Consecutive tokens failing at the UPLOAD step smell like an
+	// AWS auth/config problem: abort loudly instead of burning the
+	// retry budget across 26k tokens (review catch)
+	let uploadFailStreak = 0;
 	let captured = 0;
 	for (let tokenId = 0; tokenId < TOKEN_COUNT; tokenId++) {
 		if (manifest.entries[tokenId] || manifest.gaps[tokenId] !== undefined) {
@@ -253,6 +320,7 @@ async function capture(dest, limit) {
 			break;
 		}
 		let success = false;
+		let lastError = null;
 		for (let attempt = 0; attempt <= MAX_RETRIES && !success; attempt++) {
 			if (attempt > 0) {
 				status.retriesThisRun++;
@@ -270,13 +338,37 @@ async function capture(dest, limit) {
 					break;
 				}
 				const file = decodeURIComponent(metadata.vrm_url.split("/").pop());
+				if (!SAFE_FILE.test(file)) {
+					// Deterministic: retrying can't fix a bad name
+					status.failedThisRun.push(tokenId);
+					status.event(
+						`FAILED (no retry): #${tokenId} unsafe filename ` +
+							`${JSON.stringify(file)} in metadata - investigate upstream`,
+					);
+					break;
+				}
+				if (mirroredFiles.has(file)) {
+					const owner = Object.keys(manifest.entries).find(
+						(id) => manifest.entries[id].file === file,
+					);
+					status.failedThisRun.push(tokenId);
+					status.event(
+						`FAILED (no retry): #${tokenId} filename ${file} collides ` +
+							`with #${owner} - uploading would overwrite its object`,
+					);
+					break;
+				}
 				status.current = `#${tokenId} ${file} (attempt ${attempt + 1})`;
 				status.write();
 				const { size, sha256 } = await downloadVerified(
 					gatewayURL(metadata.vrm_url),
 					TMP_FILE,
 				);
-				upload(TMP_FILE, dest + file);
+				try {
+					upload(TMP_FILE, dest + file);
+				} catch (error) {
+					throw new Error(`upload: ${error.message}`);
+				}
 				fs.rmSync(TMP_FILE, { force: true });
 				manifest.entries[tokenId] = {
 					file,
@@ -285,16 +377,32 @@ async function capture(dest, limit) {
 					cid: cidOf(metadata.vrm_url),
 				};
 				saveManifest(manifest);
+				mirroredFiles.add(file);
 				status.runBytes += size;
+				uploadFailStreak = 0;
 				success = true;
 			} catch (error) {
 				fs.rmSync(TMP_FILE, { force: true });
+				lastError = error;
 				if (attempt === MAX_RETRIES) {
 					status.failedThisRun.push(tokenId);
 					status.event(
 						`FAILED after ${MAX_RETRIES + 1} attempts: #${tokenId} (${error.message}) - will retry next run`,
 					);
 				}
+			}
+		}
+		if (!success && lastError && lastError.message.startsWith("upload:")) {
+			uploadFailStreak++;
+			if (uploadFailStreak >= 3) {
+				status.event(
+					"run ABORTED: three consecutive tokens failed at the " +
+						"upload step - check AWS credentials/permissions and re-run",
+				);
+				console.error(
+					"aborting: three consecutive upload failures - see " + STATUS_FILE,
+				);
+				process.exit(1);
 			}
 		}
 		if (success && manifest.entries[tokenId]) {
@@ -327,17 +435,25 @@ async function dryRun(count) {
 		}
 	}
 	console.log(`planning the first ${pending.length} pending uploads:`);
+	const dest = manifest.dest || argDest();
 	for (const tokenId of pending) {
-		const metadata = await fetchMetadata(tokenId);
-		if (!metadata.vrm_url) {
-			console.log(`  #${tokenId}: GAP (no vrm_url)`);
-			continue;
+		// One failing token must not kill the whole plan (review
+		// catch - capture retries, the plan just reports)
+		try {
+			const metadata = await fetchMetadata(tokenId);
+			if (!metadata.vrm_url) {
+				console.log(`  #${tokenId}: GAP (no vrm_url)`);
+				continue;
+			}
+			const file = decodeURIComponent(metadata.vrm_url.split("/").pop());
+			const safe = SAFE_FILE.test(file) ? "" : "  [UNSAFE NAME - would skip]";
+			console.log(
+				`  #${tokenId}: ${gatewayURL(metadata.vrm_url)}\n` +
+					`      -> ${dest}${file}${safe}`,
+			);
+		} catch (error) {
+			console.log(`  #${tokenId}: plan failed (${error.message})`);
 		}
-		const file = decodeURIComponent(metadata.vrm_url.split("/").pop());
-		console.log(
-			`  #${tokenId}: ${gatewayURL(metadata.vrm_url)}\n` +
-				`      -> ${argDest()}${file}`,
-		);
 	}
 	console.log("dry run: nothing downloaded, nothing uploaded");
 }
@@ -356,12 +472,16 @@ async function verify(sampleSize) {
 			sample.push(pick);
 		}
 	}
+	// Audit the destination the manifest was CAPTURED to - a stale
+	// --dest default must not silently verify the wrong bucket
+	// (review catch)
+	const dest = manifest.dest || argDest();
 	let bad = 0;
 	for (const tokenId of sample) {
 		const entry = manifest.entries[tokenId];
 		execFileSync(
 			"aws",
-			["s3", "cp", argDest() + entry.file, TMP_FILE, "--only-show-errors"],
+			["s3", "cp", dest + entry.file, TMP_FILE, "--only-show-errors"],
 			{ stdio: "inherit" },
 		);
 		const bytes = fs.readFileSync(TMP_FILE);
@@ -414,13 +534,30 @@ async function selftest() {
 	if (!fs.readFileSync(TMP_FILE).equals(good)) {
 		fail("good fixture bytes corrupted on disk");
 	}
+	// Assert the rejection KIND: a generic transport failure here
+	// would otherwise pass as a false negative (review catch)
 	await downloadVerified(`${base}/badmagic.vrm`, TMP_FILE).then(
 		() => fail("bad magic was accepted"),
-		() => {},
+		(error) => {
+			if (!error.message.includes("not a glb")) {
+				fail("bad-magic case rejected for the wrong reason: " + error.message);
+			}
+		},
 	);
 	await downloadVerified(`${base}/truncated.vrm`, TMP_FILE).then(
 		() => fail("truncated body was accepted"),
-		() => {},
+		(error) => {
+			// Node's fetch (undici) enforces content-length itself and
+			// rejects short bodies as "terminated" before the tool's own
+			// length check; the in-tool check remains for responses the
+			// transport can't police. Either rejection kind counts.
+			if (
+				!error.message.includes("truncated") &&
+				!error.message.includes("terminated")
+			) {
+				fail("truncation case rejected for the wrong reason: " + error.message);
+			}
+		},
 	);
 	fs.rmSync(TMP_FILE, { force: true });
 	server.close();
