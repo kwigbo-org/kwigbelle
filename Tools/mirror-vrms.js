@@ -479,18 +479,25 @@ async function verify(sampleSize) {
 	let bad = 0;
 	for (const tokenId of sample) {
 		const entry = manifest.entries[tokenId];
-		execFileSync(
-			"aws",
-			["s3", "cp", dest + entry.file, TMP_FILE, "--only-show-errors"],
-			{ stdio: "inherit" },
-		);
-		const bytes = fs.readFileSync(TMP_FILE);
-		const sha256 = crypto.createHash("sha256").update(bytes).digest("hex");
-		const ok = bytes.length === entry.size && sha256 === entry.sha256;
-		console.log(
-			`#${tokenId} ${entry.file}: ${ok ? "OK" : `MISMATCH (${bytes.length} bytes, ${sha256})`}`,
-		);
-		if (!ok) {
+		// One failing download must not kill the audit: report it
+		// and keep sampling (review catch)
+		try {
+			execFileSync(
+				"aws",
+				["s3", "cp", dest + entry.file, TMP_FILE, "--only-show-errors"],
+				{ stdio: "inherit" },
+			);
+			const bytes = fs.readFileSync(TMP_FILE);
+			const sha256 = crypto.createHash("sha256").update(bytes).digest("hex");
+			const ok = bytes.length === entry.size && sha256 === entry.sha256;
+			console.log(
+				`#${tokenId} ${entry.file}: ${ok ? "OK" : `MISMATCH (${bytes.length} bytes, ${sha256})`}`,
+			);
+			if (!ok) {
+				bad++;
+			}
+		} catch (error) {
+			console.log(`#${tokenId} ${entry.file}: FETCH FAILED (${error.message})`);
 			bad++;
 		}
 		fs.rmSync(TMP_FILE, { force: true });
