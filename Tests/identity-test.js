@@ -180,12 +180,16 @@ const { check } = require("./check.js");
 		!(await page.evaluate(() => !!document.querySelector(".identityUB"))),
 		"replicant shows a Unique-By line",
 	);
-	// Replicants have no burn concept: neither chip nor line
+	// Replicants have no burn concept: neither chip nor line.
+	// (Boolean coercion IN the page: a DOM node would serialize to
+	// nothing and make this check vacuous.)
 	check(
 		!(await page.evaluate(
 			() =>
-				document.querySelector(".identityChip.mintChip") ||
-				document.querySelector(".identityBurned"),
+				!!(
+					document.querySelector(".identityChip.mintChip") ||
+					document.querySelector(".identityBurned")
+				),
 		)),
 		"replicant shows mint/burned state",
 	);
