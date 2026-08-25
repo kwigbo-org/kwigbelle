@@ -6,7 +6,8 @@ canvas as independently-moving layers (spring physics, idle
 breathing, pointer/tilt follow, tap-to-poke, wave/trails effects),
 with a right-edge drawer stack: a profile drawer (wallet connect,
 owned-Avastars grid with composed thumbnails, logout, presence dot),
-an info drawer (rarity explainer, trait sheet with identity card,
+an info drawer (rarity explainer collapsed by default, the identity
+card as its own Overview section, and the trait sheet with
 burned-trait marks, visibility toggles, and a trait swap preview),
 and a settings drawer (load-any-token, effects controls, 3D model).
 
@@ -57,12 +58,13 @@ Lib/EffectsSection.js      spring-rig controls (motion, follow,
                            pause, wave, trails, tilt follow);
                            localStorage persisted; poke (tap
                            impulse) is always on, no control
-Lib/TraitsSection.js       identity card (chips, score/tier, dist,
-                           Unique-By, mint/burned) + trait cards
-                           (whole-card tap = edit, burned marks,
-                           visibility the render loop consults each
-                           frame); lives in the info drawer; goes
-                           read-only in 3D mode
+Lib/TraitsSection.js       info-drawer Overview section (identity
+                           card: chips, score/tier, dist, Unique-By,
+                           mint/burned) + Traits section (trait
+                           cards: whole-card tap = edit, burned
+                           marks, visibility the render loop
+                           consults each frame); goes read-only in
+                           3D mode
 Lib/VRMSource.js           metadata -> vrm_url -> hedged IPFS
                            gateway race (staggered starts, first
                            chunk wins, first-byte timeouts, CIDv0

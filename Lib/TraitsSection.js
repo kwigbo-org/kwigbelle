@@ -5,7 +5,8 @@ import {
 	flameIcon,
 } from "./RarityIcons.js";
 
-/// The Traits section of the side panel: one card per trait with
+/// The Overview and Traits sections of the info drawer: the
+/// identity card in its own section, then one card per trait with
 /// visibility checkboxes for drawn layers, plus the trait swap
 /// preview affordances (Edit per card, "was" + undo on overridden
 /// cards, Reset all). The render loop consults isLayerVisible /
@@ -35,11 +36,23 @@ export default class TraitsSection {
 		this.overrides = new Map();
 		this.content = document.createElement("div");
 		this.content.setAttribute("class", "traitRows");
+		// The identity card renders into its own root so the scene
+		// can register it as a separate "Overview" panel section
+		// (operator QA on docs/tads/info-tab.md)
+		this.overview = document.createElement("div");
+		this.overview.setAttribute("class", "identityOverview");
 	}
 
-	/// The section body element (rows are rebuilt into it per token)
+	/// The Traits section body element (trait cards, rebuilt per
+	/// token)
 	build() {
 		return this.content;
+	}
+
+	/// The Overview section body element (the identity card,
+	/// rebuilt in step with the trait cards)
+	buildOverview() {
+		return this.overview;
 	}
 
 	/// - Parameter index: The layer index to test
@@ -119,10 +132,11 @@ export default class TraitsSection {
 	rebuildRows() {
 		const avastar = this.avastar;
 		this.content.innerHTML = "";
+		this.overview.innerHTML = "";
 		if (!avastar) {
 			return;
 		}
-		this.content.appendChild(this.identityCard());
+		this.overview.appendChild(this.identityCard());
 		if (!avastar.layerInfo) {
 			// The static fallback renders one unsliced image; the
 			// identity chips above are hash-derived and still true

@@ -92,7 +92,9 @@ export default class MainScene extends Scene {
 		// the displayed Avastar, stacked between profile and settings.
 		// Registered before any settings section so its handle takes
 		// the middle slot (drawer stack order = registration order).
-		this.sidePanel.addSection("How rarity works", rarityExplainer(), "info");
+		// Section order per operator QA: the static rarity explainer
+		// (collapsed by default), then Overview (the identity card),
+		// then the trait cards.
 		this.traitsSection = new TraitsSection({
 			onEdit: (gene) => this.openTraitEditor(gene),
 			onUndo: (gene) => this.undoOverride(gene),
@@ -100,6 +102,17 @@ export default class MainScene extends Scene {
 			ubFor: (tokenId) => this.traitComposer.ubFor(tokenId),
 			burnedFor: (tokenId) => this.traitComposer.burnedFor(tokenId),
 		});
+		this.sidePanel.addSection(
+			"How rarity works",
+			rarityExplainer(),
+			"info",
+			true,
+		);
+		this.sidePanel.addSection(
+			"Overview",
+			this.traitsSection.buildOverview(),
+			"info",
+		);
 		this.sidePanel.addSection("Traits", this.traitsSection.build(), "info");
 		// Settings drawer, top section: view any Avastar by token id
 		// (walletless - composition needs only the static library)

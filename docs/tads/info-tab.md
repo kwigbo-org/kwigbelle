@@ -121,3 +121,9 @@ None.
   display size with slice (layers keep meet). Suite 15/15 with
   the drawer-split re-pointing, explainer/3D-bg/mobile-backdrop
   assertions added.
+- 2026-08-25 — Operator QA on PR A: the explainer ships collapsed
+  by default (the panel store now records the user's choice in
+  BOTH directions so an expand overrides the default), and the
+  identity card moved out of Traits into its own Overview
+  section; info-drawer order is How rarity works / Overview /
+  Traits.

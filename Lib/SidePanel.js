@@ -180,11 +180,9 @@ export default class SidePanel {
 	saveCollapsed(title, isCollapsed) {
 		try {
 			const stored = this.loadCollapsed();
-			if (isCollapsed) {
-				stored[title] = true;
-			} else {
-				delete stored[title];
-			}
+			// Both states are stored explicitly: an expand must be able
+			// to override a section that DEFAULTS to collapsed
+			stored[title] = isCollapsed;
 			localStorage.setItem(SidePanel.PANELS_KEY, JSON.stringify(stored));
 		} catch (error) {
 			// Storage unavailable: collapse state just won't persist
@@ -201,9 +199,11 @@ export default class SidePanel {
 	///		- title: The section header label
 	///		- contentElement: The section body
 	///		- drawerId: Which drawer hosts the section
+	///		- startCollapsed: Collapsed until the user says otherwise
+	///			(their stored choice always wins)
 	/// - Returns: The section element, so callers can show/hide
 	///		whole sections by mode (e.g. Effects in 3D)
-	addSection(title, contentElement, drawerId = "settings") {
+	addSection(title, contentElement, drawerId = "settings", startCollapsed) {
 		if (!this.drawers.has(drawerId)) {
 			if (drawerId === "info") {
 				this.addDrawer("info", SidePanel.infoIcon(), {
@@ -219,8 +219,10 @@ export default class SidePanel {
 		}
 		const section = document.createElement("div");
 		section.setAttribute("class", "panelSection");
-		// A section the user collapsed stays collapsed across visits
-		if (this.loadCollapsed()[title]) {
+		// The user's stored choice wins in either direction; only a
+		// section they never touched falls back to its default
+		const stored = this.loadCollapsed()[title];
+		if (stored !== undefined ? stored : startCollapsed) {
 			section.classList.add("collapsed");
 		}
 

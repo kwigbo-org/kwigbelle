@@ -107,7 +107,7 @@ window.ethereum = {
 	);
 	check(
 		JSON.stringify(drawerLayout.info) ===
-			JSON.stringify(["How rarity works", "Traits"]),
+			JSON.stringify(["How rarity works", "Overview", "Traits"]),
 		"info drawer sections wrong: " + JSON.stringify(drawerLayout.info),
 	);
 	check(
@@ -234,6 +234,17 @@ window.ethereum = {
 		(await sectionState("3D model")) === true,
 		"3D model section did not collapse",
 	);
+	// "How rarity works" defaults to collapsed (operator QA); an
+	// explicit expand must override the default across reloads
+	check(
+		(await sectionState("How rarity works")) === true,
+		"rarity explainer did not start collapsed",
+	);
+	await toggleSection("How rarity works");
+	check(
+		(await sectionState("How rarity works")) === false,
+		"rarity explainer did not expand",
+	);
 	await page.reload();
 	await page.waitForFunction(
 		() => document.getElementById("preloader")?.style.opacity === "0",
@@ -252,6 +263,14 @@ window.ethereum = {
 	);
 	check(collapsedAfter === true, "collapsed section did not survive reload");
 	check(effectsAfter === false, "untouched section came back collapsed");
+	check(
+		(await sectionState("How rarity works")) === false,
+		"expanded default-collapsed section reverted after reload",
+	);
+	check(
+		(await sectionState("Overview")) === false,
+		"Overview section came back collapsed",
+	);
 	// Expand it again (and persist that) so the later steps see the
 	// section layout they expect
 	await toggleSection("3D model");

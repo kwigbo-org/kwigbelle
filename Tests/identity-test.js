@@ -46,7 +46,10 @@ const { check } = require("./check.js");
 			})),
 			icons: section.querySelectorAll(".rarityIcon").length,
 			flame: section.querySelectorAll(".flameIcon").length,
-			text: section.innerText,
+			// textContent, not innerText: the section starts collapsed
+			// (display: none body) and innerText skips unrendered text
+			text: section.textContent,
+			collapsed: section.classList.contains("collapsed"),
 		};
 	});
 	check(
@@ -75,6 +78,7 @@ const { check } = require("./check.js");
 			explainer.text.includes("mint condition"),
 		"explainer is missing frozen facts",
 	);
+	check(explainer.collapsed, "rarity explainer should start collapsed");
 
 	const readCard = () =>
 		page.evaluate(() => ({
