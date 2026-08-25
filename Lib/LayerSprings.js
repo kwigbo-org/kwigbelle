@@ -19,8 +19,9 @@ export default class LayerSprings {
 		// one set of dynamics - so the stack converges into lockstep
 		// and the Avastar moves as ONE piece under drag, tilt, idle,
 		// and poke. Springs keep their own state, so toggling eases
-		// the layers together/apart instead of snapping.
-		this.isLockedTogether = false;
+		// the layers together/apart instead of snapping. ON by
+		// default (operator QA); a stored choice wins either way.
+		this.isLockedTogether = true;
 		this.lockProfile = LayerSprings.profileFor(0.5);
 		this.springs = [];
 	}

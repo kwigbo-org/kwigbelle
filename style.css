@@ -813,6 +813,16 @@
 
 /* No browser gesture handling (and no synthetic mouse events after
    touches) on the art canvas — taps are Poke, drags are follow */
+/* The backdrop paints on its own canvas BEHIND the layers, so
+   Trails fading never erases the art and it stays up behind the
+   transparent 3D canvas (docs/tads/info-tab.md) */
+#backdropCanvas,
+#mainCanvas {
+	position: absolute;
+	left: 0;
+	top: 0;
+}
+
 #mainCanvas {
 	touch-action: none;
 }

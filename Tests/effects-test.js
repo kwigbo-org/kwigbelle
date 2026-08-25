@@ -7,8 +7,8 @@
 // any movement an assertion sees comes from the effect under test.
 //   Poke  - a quick tap moves an otherwise-static rig, then settles
 //   Wave  - animates at Motion 0 (deliberately unscaled), stops off
-//   Trails- fade-clearing leaves intermediate-alpha ghosts and
-//           skips the backdrop redraw
+//   Trails- fade-clearing leaves intermediate-alpha ghosts on the
+//           layer canvas; the backdrop canvas stays fully painted
 //   Tilt  - a synthetic deviceorientation event steers the rig
 // Plus: Lock layers (docs/tads/info-tab.md Decision 4) converges
 // a drag into moving the face as one piece where an unlocked drag
@@ -103,6 +103,13 @@ const { check } = require("./check.js");
 	const toggle = (label) =>
 		page.locator(".effectRow", { hasText: label }).locator("input");
 
+	// Lock layers ships ON (operator QA): a fresh visitor's drag
+	// moves the face as one piece until they opt out
+	check(
+		await toggle("Lock layers").isChecked(),
+		"Lock layers should default ON",
+	);
+
 	// Static baseline: Motion 0 + Follow 0 -> the rig settles to rest
 	await setSlider("Motion", 0);
 	await setSlider("Follow", 0);
@@ -152,8 +159,10 @@ const { check } = require("./check.js");
 	);
 	await waitForRest("after drag");
 
-	// TRAILS: ghosts = many intermediate-alpha pixels while moving;
-	// the backdrop stops being redrawn (corner fades from opaque)
+	// TRAILS: ghosts = many intermediate-alpha pixels on the layer
+	// canvas while moving; the backdrop lives on its OWN canvas and
+	// must stay fully visible throughout (operator QA - the old
+	// skip-the-backdrop behavior obscured the art)
 	const intermediateCount = () =>
 		page.evaluate(() => {
 			const canvas = document.getElementById("mainCanvas");
@@ -168,7 +177,7 @@ const { check } = require("./check.js");
 		});
 	const cornerAlpha = () =>
 		page.evaluate(() => {
-			const canvas = document.getElementById("mainCanvas");
+			const canvas = document.getElementById("backdropCanvas");
 			return canvas.getContext("2d").getImageData(10, 10, 1, 1).data[3];
 		});
 	// Motion source is a poke (deterministic burst — Wave is a
@@ -191,13 +200,10 @@ const { check } = require("./check.js");
 		trailsCount > cleanCount * 2 && trailsCount > 5000,
 		`trails left no ghosts (${cleanCount} -> ${trailsCount})`,
 	);
-	check(cornerAfter < 32, "backdrop still painted while Trails on");
+	check(cornerAfter === 255, "backdrop obscured while Trails on");
 	await toggle("Trails").uncheck();
 	await page.waitForTimeout(600);
-	check(
-		(await cornerAlpha()) === 255,
-		"backdrop did not return after Trails off",
-	);
+	check((await cornerAlpha()) === 255, "backdrop did not survive Trails off");
 	await waitForRest("after trails scene");
 
 	// TILT: enable, feed a baseline then a tilted reading; the rig
@@ -248,7 +254,26 @@ const { check } = require("./check.js");
 			};
 		};
 	});
-	// Unlocked drag-hold far left: the stack spreads while it leans
+	// Locked drag-hold far left (the DEFAULT state): the layers
+	// stay in lockstep while following the pointer
+	await page.mouse.move(200, 300);
+	await page.mouse.down();
+	await page.waitForFunction(
+		() => {
+			const { spread, meanDx } = window.__stackSpread();
+			return spread < 2 && meanDx < -100;
+		},
+		{ timeout: 8000 },
+	);
+	console.log(
+		"locked (default) drag moves the face as one piece:",
+		JSON.stringify(await page.evaluate(() => window.__stackSpread())),
+	);
+	await page.mouse.up();
+	await waitForRest("after locked drag");
+
+	// Opt out and hold the same drag: the stack spreads by depth
+	await toggle("Lock layers").uncheck();
 	await page.mouse.move(200, 300);
 	await page.mouse.down();
 	await page.waitForFunction(
@@ -264,26 +289,6 @@ const { check } = require("./check.js");
 	);
 	await page.mouse.up();
 	await waitForRest("after unlocked drag");
-
-	// Locked drag-hold at the same point: the layers converge into
-	// lockstep while still following the pointer
-	await toggle("Lock layers").check();
-	await page.mouse.move(200, 300);
-	await page.mouse.down();
-	await page.waitForFunction(
-		() => {
-			const { spread, meanDx } = window.__stackSpread();
-			return spread < 2 && meanDx < -100;
-		},
-		{ timeout: 8000 },
-	);
-	console.log(
-		"locked drag moves the face as one piece:",
-		JSON.stringify(await page.evaluate(() => window.__stackSpread())),
-	);
-	await page.mouse.up();
-	await toggle("Lock layers").uncheck();
-	await waitForRest("after locked drag");
 	await setSlider("Follow", 0);
 
 	// PERSISTENCE: set the toggles, reload, expect them restored

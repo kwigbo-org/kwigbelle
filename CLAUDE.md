@@ -24,11 +24,12 @@ polish (burned-traits.md). IN PROGRESS (operator 2026-08-25):
 docs/tads/info-tab.md — PR A shipped the info drawer between
 profile and settings (traits moved there + rarity explainer), the
 3D background fix, and the mobile backdrop squish fix; PR B
-shipped the Lock-layers effect (drag moves the face as one piece)
-+ the depth-coherent idle retune; remaining: PR C
-(wallet-provider transfer history). Parked: PR #1 wallet
-LOWs (likely mooted — WalletConnectUI was deleted in PR #16;
-re-verify against ProfileSection before resurrecting).
+shipped the Lock-layers effect (default on: drag moves the face
+as one piece), the depth-coherent idle retune, and the backdrop's
+own canvas (visible through Trails and behind the 3D view);
+remaining: PR C (wallet-provider transfer history). Parked: PR #1
+wallet LOWs (likely mooted — WalletConnectUI was deleted in PR
+#16; re-verify against ProfileSection before resurrecting).
 
 ## Architecture
 

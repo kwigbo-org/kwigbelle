@@ -21,7 +21,10 @@ export default class EffectsSection {
 		if (stored) {
 			this.layerSprings.isPaused = !!stored.paused;
 			this.layerSprings.isWaveEnabled = !!stored.wave;
-			this.layerSprings.isLockedTogether = !!stored.lockLayers;
+			// Explicit stored choice wins in both directions; absent
+			// (older stored settings) falls back to the ON default
+			this.layerSprings.isLockedTogether =
+				stored.lockLayers !== undefined ? !!stored.lockLayers : true;
 			this.trailsEnabled = !!stored.trails;
 			this.tiltEnabled = !!stored.tilt;
 			// Clamp to the sliders' ranges so a stale or hand-edited

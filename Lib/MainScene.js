@@ -26,7 +26,7 @@ export default class MainScene extends Scene {
 	/// Overridden constructor
 	constructor(rootContainer) {
 		super(rootContainer);
-		console.log("kwigbelle build 2026-08-25.3 (lock layers, motion retune)");
+		console.log("kwigbelle build 2026-08-25.4 (lock layers, motion retune)");
 		// Build the UI
 		this.buildUI();
 		// Start loading
@@ -416,13 +416,10 @@ export default class MainScene extends Scene {
 		if (generation !== this.loadGeneration) {
 			return;
 		}
-		// Same 3D guard as refreshPreview: a load can finish after a
-		// cached-VRM 3D entry (enter3D is reachable mid-load), and
-		// repainting the token color would sit behind the model —
-		// exit3D restores from this.avastar, so skipping still
-		// converges to the right color
+		// 3D shares the vector view's background (Decision 6 revised),
+		// so the token color applies in either mode
 		const contentView = document.getElementById("contentView");
-		if (this.avastar && this.avastar.backgroundColor && !this.is3D) {
+		if (this.avastar && this.avastar.backgroundColor) {
 			contentView.style.backgroundColor = this.avastar.backgroundColor;
 		}
 		this.isLoading = false;
@@ -620,6 +617,8 @@ export default class MainScene extends Scene {
 	resize() {
 		this.canvas.width = window.innerWidth;
 		this.canvas.height = window.innerHeight;
+		this.backdropCanvas.width = window.innerWidth;
+		this.backdropCanvas.height = window.innerHeight;
 		if (!this.avastar) {
 			return;
 		}
@@ -789,15 +788,14 @@ export default class MainScene extends Scene {
 			// no spring controls, traits as read-only information
 			this.effectsSectionElement.style.display = "none";
 			this.traitsSection.setReadOnly(true);
-			// The 2D canvas would otherwise show its last frame
-			// through the 3D canvas's transparent background
+			// The 2D canvas would otherwise show its last LAYER frame
+			// through the 3D canvas's transparent background. The
+			// backdrop canvas is deliberately NOT cleared: the token's
+			// backdrop art stays up behind the model, so 3D keeps the
+			// same background as the vector view (docs/tads/info-tab.md
+			// Decision 6, revised by operator QA).
 			const context = this.canvas.getContext("2d");
 			context.clearRect(0, 0, this.canvas.width, this.canvas.height);
-			// The token's flat SVG background would sit behind the
-			// VRM otherwise: the model floats on the theme's dark
-			// ground while 3D shows (docs/tads/info-tab.md Decision 6)
-			document.getElementById("contentView").style.backgroundColor =
-				"var(--bg)";
 		} catch (error) {
 			if (generation !== this.vrmGeneration) {
 				return;
@@ -824,12 +822,6 @@ export default class MainScene extends Scene {
 		this.setVRMMode("vector");
 		this.effectsSectionElement.style.display = "";
 		this.traitsSection.setReadOnly(false);
-		// Give the displayed token its background back (a no-op when
-		// 3D never swapped it: this restores the color already shown)
-		document.getElementById("contentView").style.backgroundColor =
-			this.avastar && this.avastar.backgroundColor
-				? this.avastar.backgroundColor
-				: "";
 	}
 
 	/// Keep the loading overlay and the panel section in step
@@ -924,12 +916,8 @@ export default class MainScene extends Scene {
 				// Keep the loader's state honest about what is on
 				// screen (the same-token guard reads from it)
 				this.avastarLoader.currentAvastar = composed.fullSVG;
-				// A resize while 3D shows recomposes too: leave the 3D
-				// theme ground alone (exit3D restores from the avastar)
-				if (!this.is3D) {
-					const contentView = document.getElementById("contentView");
-					contentView.style.backgroundColor = composed.backgroundColor;
-				}
+				const contentView = document.getElementById("contentView");
+				contentView.style.backgroundColor = composed.backgroundColor;
 				// The layer count is constant across overrides: keep
 				// the springs so the swap doesn't snap the motion
 				if (this.layerSprings.springs.length !== composed.layers.length) {
@@ -965,6 +953,15 @@ export default class MainScene extends Scene {
 		} else {
 			context.clearRect(0, 0, this.canvas.width, this.canvas.height);
 		}
+		// The backdrop's canvas redraws fully every frame - it never
+		// fades with Trails (the ghosts float over the visible art)
+		const bgContext = this.backdropCanvas.getContext("2d");
+		bgContext.clearRect(
+			0,
+			0,
+			this.backdropCanvas.width,
+			this.backdropCanvas.height,
+		);
 		// The avastar guard covers failed loads: isLoading clears on
 		// completion even when no Avastar could be parsed
 		if (this.isLoading || !this.avastar) {
@@ -979,21 +976,19 @@ export default class MainScene extends Scene {
 		dt = Math.min(dt, 1 / 30);
 
 		// The static fallback has no separate background layer, and
-		// the traits panel can hide the backdrop. While Trails is on
-		// the backdrop is skipped too: its full-opacity redraw would
-		// cover the ghosts every frame — the themed page background
-		// is the stable ground (TAD Decision 10).
+		// the traits panel can hide the backdrop. Drawn on its OWN
+		// canvas behind the layers (docs/tads/info-tab.md): Trails
+		// ghosts float over it, and it stays behind the VRM in 3D.
 		if (
 			this.avastar.backgroundLayer &&
-			this.traitsSection.isBackdropVisible() &&
-			!isTrails
+			this.traitsSection.isBackdropVisible()
 		) {
-			context.drawImage(
+			bgContext.drawImage(
 				this.avastar.backgroundLayer,
 				0,
 				0,
-				this.canvas.width,
-				this.canvas.height,
+				this.backdropCanvas.width,
+				this.backdropCanvas.height,
 			);
 		}
 
@@ -1028,6 +1023,16 @@ export default class MainScene extends Scene {
 
 	/// Method to build the UI needed for this scene
 	buildUI() {
+		// The backdrop's own canvas, layered BEHIND the moving
+		// layers (docs/tads/info-tab.md): Trails fading on the main
+		// canvas never erases the art, and the 3D entry clears only
+		// the main canvas, so the backdrop stays up behind the
+		// transparent VRM canvas
+		this.backdropCanvas = document.createElement("canvas");
+		this.backdropCanvas.setAttribute("id", "backdropCanvas");
+		this.backdropCanvas.width = window.innerWidth;
+		this.backdropCanvas.height = window.innerHeight;
+		this.rootContainer.appendChild(this.backdropCanvas);
 		// Main canvas
 		this.canvas = document.createElement("canvas");
 		this.canvas.setAttribute("id", "mainCanvas");
