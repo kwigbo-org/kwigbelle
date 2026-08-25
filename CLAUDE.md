@@ -3,23 +3,30 @@
 Interactive Avastars display site (kwigbelle.com). Static — no build
 step, no framework: ES modules served as-is. An Avastar renders on a
 canvas as independently-moving layers (spring physics, idle
-breathing, pointer follow), with a wallet picker for owned tokens
-and a side panel: load-any-token, effects controls, trait sheet
-with visibility toggles, and a trait swap preview.
+breathing, pointer/tilt follow, tap-to-poke, wave/trails effects),
+with a right-edge drawer stack: a profile drawer (wallet connect,
+owned-Avastars grid with composed thumbnails, logout, presence dot)
+above a settings drawer (load-any-token, effects controls, 3D model,
+trait sheet with identity card, burned-trait marks, visibility
+toggles, and a trait swap preview).
 
 Project purpose (operator, 2026-08-22): jump-start interest in
 Avastars. The replicant factory is CLOSED and the contract is
 LOCKED — no new mints are possible, so the hash corpus (26,617) is
 effectively frozen (check-corpus should always report fresh) and
 everything trait-swap related is preview-only by nature, not just
-by policy. Both declared directions have SHIPPED: the VRM 3D
-viewer (docs/tads/vrm-viewer.md - vector <-> 3D toggle, limited
-3D settings, owner-only download, hedged IPFS fetch) and the
-avastars.io design match (docs/tads/design-cues.md - dark chrome
-theme, Inconsolata, rarity tier icons, identity card with
-series/score/distribution/Unique-By). No declared next direction;
-parked candidates live in the agent memory ledger (composed
-picker thumbnails; PR #1 wallet LOWs).
+by policy. Shipped directions, each frozen as a TAD in docs/tads/:
+the VRM 3D viewer (vrm-viewer.md), the avastars.io design match
+(design-cues.md), the profile drawer + composed thumbnails
+(profile-drawer.md), and burned traits + effects + trait-card
+polish (burned-traits.md). DECLARED NEXT (operator 2026-08-25):
+docs/tads/info-tab.md — info drawer between profile and settings
+(traits move there + rarity explainer + wallet-provider transfer
+history), per-layer motion locks, depth-coherent idle retune, 3D
+background fix, mobile backdrop squish fix; TAD in review at
+compact time, implementation not started. Parked: PR #1 wallet
+LOWs (likely mooted — WalletConnectUI was deleted in PR #16;
+re-verify against ProfileSection before resurrecting).
 
 ## Architecture
 
@@ -29,7 +36,8 @@ Lib/MainScene.js           scene: load orchestration + async-race
                            guards (the most delicate code in the
                            repo), render loop, ?param flags
 Lib/LayerSprings.js        spring physics: per-depth params +
-                           integration (idle breathing, follow)
+                           integration (idle breathing, follow,
+                           poke impulses, wave pulse)
 Lib/ProfileSection.js      profile drawer: wallet connect flow
                            (multi-wallet chooser, switch/link,
                            logout) + owned-Avastars grid w/ lazy
@@ -47,9 +55,11 @@ Lib/EffectsSection.js      spring-rig controls (motion, follow,
                            pause, wave, trails, tilt follow);
                            localStorage persisted; poke (tap
                            impulse) is always on, no control
-Lib/TraitsSection.js       per-layer trait rows + visibility the
-                           render loop consults each frame; goes
-                           read-only in 3D mode
+Lib/TraitsSection.js       identity card (chips, score/tier, dist,
+                           Unique-By, mint/burned) + trait cards
+                           (whole-card tap = edit, burned marks,
+                           visibility the render loop consults each
+                           frame); goes read-only in 3D mode
 Lib/VRMSource.js           metadata -> vrm_url -> hedged IPFS
                            gateway race (staggered starts, first
                            chunk wins, first-byte timeouts, CIDv0
@@ -90,6 +100,10 @@ Tools/validate-composition.js  held-out byte-parity vs renderAvastar;
                            --absorb feeds failures back as evidence
 Tools/compute-ub.js        frozen Unique-By combo counts for the
                            lottery primes -> Tools/data/ub.json
+Tools/fetch-burned.js      every prime's burned-trait flags (the
+                           locked contract's bool[12], bit=gene) ->
+                           Tools/data/burned.json (sparse masks);
+                           --verify cross-checks chain + metadata
 Tools/check-corpus.js      totalSupply vs hashes.json staleness;
                            --update refreshes; deploy.sh runs it
                            warn-only when AVASTARS_RPC_URL is set
@@ -101,7 +115,9 @@ docs/tads/                 frozen TADs (design history)
 feedback/                  gitignored operator progress log
 ```
 
-URL flags: `?tokenid=N` (any token).
+URL flags: `?tokenid=N` (any token); `?testharness` (tests only —
+a PRESENCE check, any value activates: exposes
+`window.kwigbelleScene` for physics assertions).
 
 ## Ground rules learned the hard way
 
