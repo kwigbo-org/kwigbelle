@@ -21,6 +21,7 @@ export default class EffectsSection {
 		if (stored) {
 			this.layerSprings.isPaused = !!stored.paused;
 			this.layerSprings.isWaveEnabled = !!stored.wave;
+			this.layerSprings.isLockedTogether = !!stored.lockLayers;
 			this.trailsEnabled = !!stored.trails;
 			this.tiltEnabled = !!stored.tilt;
 			// Clamp to the sliders' ranges so a stale or hand-edited
@@ -58,6 +59,7 @@ export default class EffectsSection {
 					paused: this.layerSprings.isPaused,
 					motion: this.layerSprings.motionScale,
 					follow: this.layerSprings.followScale,
+					lockLayers: this.layerSprings.isLockedTogether,
 					wave: this.layerSprings.isWaveEnabled,
 					trails: this.trailsEnabled,
 					tilt: this.tiltEnabled,
@@ -87,6 +89,19 @@ export default class EffectsSection {
 			this.sliderRow("Follow", 0, 2, this.layerSprings.followScale, (value) => {
 				this.layerSprings.followScale = value;
 			}),
+		);
+		content.appendChild(
+			// Lock layers (docs/tads/info-tab.md Decision 4): the
+			// whole face moves as one piece - dragging carries every
+			// layer together instead of separating them by depth
+			this.toggleRow(
+				"Lock layers",
+				this.layerSprings.isLockedTogether,
+				(on) => {
+					this.layerSprings.isLockedTogether = on;
+					this.saveSettings();
+				},
+			),
 		);
 		content.appendChild(
 			this.toggleRow("Wave", this.layerSprings.isWaveEnabled, (on) => {

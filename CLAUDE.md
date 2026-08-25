@@ -24,8 +24,9 @@ polish (burned-traits.md). IN PROGRESS (operator 2026-08-25):
 docs/tads/info-tab.md — PR A shipped the info drawer between
 profile and settings (traits moved there + rarity explainer), the
 3D background fix, and the mobile backdrop squish fix; PR B
-shipped per-layer motion locks + the depth-coherent idle retune;
-remaining: PR C (wallet-provider transfer history). Parked: PR #1 wallet
+shipped the Lock-layers effect (drag moves the face as one piece)
++ the depth-coherent idle retune; remaining: PR C
+(wallet-provider transfer history). Parked: PR #1 wallet
 LOWs (likely mooted — WalletConnectUI was deleted in PR #16;
 re-verify against ProfileSection before resurrecting).
 
@@ -38,8 +39,9 @@ Lib/MainScene.js           scene: load orchestration + async-race
                            repo), render loop, ?param flags
 Lib/LayerSprings.js        spring physics: per-depth params +
                            integration (depth-coherent idle breath,
-                           follow, poke impulses, wave pulse) +
-                           per-layer locks via lockedLookup
+                           follow, poke impulses, wave pulse);
+                           lock-layers mode = shared mid-depth
+                           profile, the stack moves as one
 Lib/ProfileSection.js      profile drawer: wallet connect flow
                            (multi-wallet chooser, switch/link,
                            logout) + owned-Avastars grid w/ lazy
@@ -56,9 +58,9 @@ Lib/TraitEditModal.js      per-slot trait chooser: true thumbnails
                            styled by the current colors, gender
                            filter; drives the swap preview
 Lib/EffectsSection.js      spring-rig controls (motion, follow,
-                           pause, wave, trails, tilt follow);
-                           localStorage persisted; poke (tap
-                           impulse) is always on, no control
+                           lock layers, pause, wave, trails, tilt
+                           follow); localStorage persisted; poke
+                           (tap impulse) is always on, no control
 Lib/TraitsSection.js       info-drawer Overview section (identity
                            card: chips, score/tier, dist, Unique-By,
                            mint/burned) + Traits section (trait

@@ -344,28 +344,6 @@
 	color: var(--burned);
 }
 
-/* Layer motion lock (docs/tads/info-tab.md Decision 4): muted
-   open padlock, accent when engaged */
-.traitLock {
-	flex-shrink: 0;
-	width: 16px;
-	height: 16px;
-	margin-top: 1px;
-	cursor: pointer;
-	color: var(--muted);
-	-webkit-tap-highlight-color: transparent;
-}
-
-.traitLock svg {
-	width: 100%;
-	height: 100%;
-	display: block;
-}
-
-.traitLock.locked {
-	color: var(--accent);
-}
-
 .panelSection {
 	border: 1px solid var(--border);
 	border-radius: 16px;

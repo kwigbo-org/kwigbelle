@@ -53,7 +53,7 @@
 | 1 | A third drawer, **info**, stacks between profile and settings (registration order in MainScene). Handle icon: inline currentColor SVG "i-in-circle", same 30px `handleIcon` size. `SidePanel.addSection` gains an optional drawer-id argument (default "settings", back-compat); the info drawer hosts collapsible sections exactly like settings. | Operator directive; the drawer stack and section machinery already generalize. |
 | 2 | The **Traits** section (identity card + trait cards) moves to the info drawer wholesale — same section object, same callbacks, same DOM ids/classes, registered under info instead of settings. Settings keeps Load Avastar / Effects / 3D model. | Traits are information; the operator's split is info vs controls. |
 | 3 | New **"How rarity works"** section at the top of the info drawer: a static, collapsible explainer of the frozen facts — the 1–100 score (on-chain ranking from the 12 traits' rarities), the five tier bands with their icons and thresholds, per-trait tiers, the distribution row, Unique-By (what it counts and the Series 1-5 lottery-primes population), and burned/mint condition. Pure static DOM from the tokens in RarityIcons; zero data fetches. | Operator: "details of how rarity is calculated"; every fact is already frozen and verified in the design-cues/burned-traits TADs. |
-| 4 | **Layer locks**: SPRING-BACKED layer cards (genes 5–11 — the entries of `avastar.layers` that ride LayerSprings) gain a padlock toggle beside the visibility checkbox. A locked layer's spring is pinned — no idle sway, no follow/tilt reach, no poke impulse; it re-joins the motion smoothly when unlocked (spring target returns, no snap). Lock state is per-token scene state like visibility (reset on token swap), consulted by LayerSprings via a locked-set the section maintains. Color genes (0–3) have no layer, and the gene-4 backdrop is drawn separately WITHOUT a spring (it never moves), so neither gets a lock — visibility remains the backdrop's only toggle. | Operator directive; mirrors the visibility pattern the render loop already consults. Gene 4 exclusion per review: a motion lock on the motionless backdrop would be a lie. |
+| 4 | **Lock layers** (REVISED, operator 2026-08-25 during PR B QA): a single toggle in the EFFECTS section — persisted like Wave/Trails — that makes the whole Avastar move as ONE piece. When on, every spring runs the same mid-depth profile (target, idle phase and amplitude, follow reach, wave offset, poke strength, stiffness/damping), so the stack converges into lockstep: dragging carries the face together instead of separating the layers by depth. Springs keep their own state, so toggling eases the layers together/apart rather than snapping. *(Supersedes the original per-layer padlocks on trait cards — implemented once, then removed at operator QA: not what was meant.)* | Operator: "lock layers together in effects. So, If I am dragging the avastar around the layers move together." |
 | 5 | **Purposeful motion retune** (operator QA gates the feel): idle breathing becomes depth-COHERENT — one shared slow breath phase with a small depth lag, instead of fully independent per-layer phases — at a slower cadence (sway ~0.6→0.45 Hz-ish, breathe ~0.9→0.7) with slightly deeper front-layer amplitude. The face then breathes as one being with parallax depth, rather than layers wandering independently. Poke/Wave/follow are untouched. | "More purposeful" interpreted as coherent-not-random; parameters are one-line tunables for QA. |
 | 6 | **3D background fix**: entering 3D swaps `contentView`'s background to the theme `--bg` (the dark chrome), and exit3D restores the token's color. The VRM floats on a neutral studio ground instead of the token's flat SVG color. | Operator flags the token color behind the VRM; a neutral dark ground is the standard 3D-viewer treatment and keeps the ART AREA exemption intact in 2D. |
 | 7 | **Backdrop squish fix**: the backdrop rasterizes with `preserveAspectRatio="xMidYMid slice"` (cover: fill and crop, never distort). The 2D draw keeps filling the canvas; the art stays square-true on any viewport. | Root cause is stretch-to-fit of square art; slice is the one-token fix at the rasterization layer. |
@@ -69,12 +69,13 @@ Lib/InfoSections.js      (new) rarityExplainer() -> element;
                          onExpand -> lazy load via avastarLoader
 Lib/AvastarLoader.js     transferHistory(tokenId) -> Promise<[{from,
                          to, block, date}]> via the wallet provider
-Lib/TraitsSection.js     lock toggles on layer cards; isLayerLocked()
-Lib/LayerSprings.js      step() consults a locked-set: pinned target
-                         = center, impulses skipped; coherent-breath
-                         idle retune
+Lib/EffectsSection.js    "Lock layers" toggle (persisted key
+                         lockLayers)
+Lib/LayerSprings.js      isLockedTogether + profileFor(depth): the
+                         lock runs every spring on the mid-depth
+                         profile; coherent-breath idle retune
 Lib/MainScene.js         info drawer registration; 3D bg swap;
-                         backdrop slice; poke respects locks
+                         backdrop slice
 ```
 
 ## Steps
@@ -86,9 +87,10 @@ Lib/MainScene.js         info drawer registration; 3D bg swap;
    a mobile-viewport test asserts the backdrop's drawn aspect.
    Rollback: revert squash.
 2. **PR B — locks + motion.** Action: Decisions 4–5. Validate:
-   effects-test grows lock scenarios (locked layer immobile under
-   wave/poke/follow while others move; smooth rejoin; reset on
-   token swap); operator QA gates the retuned feel. Rollback:
+   effects-test grows lock scenarios (an unlocked drag-hold
+   spreads the stack by depth; the same drag with Lock layers on
+   converges it into lockstep while still following; the toggle
+   persists); operator QA gates the retuned feel. Rollback:
    revert squash — PR A stands.
 3. **PR C — transfer history.** Action: Decision 8. Validate: a
    mocked provider serves getLogs/getBlock fixtures — mint-labeled
@@ -141,3 +143,13 @@ None.
   +~15%; one-line tunables for QA). effects-test grew the lock
   scenarios (immobile under wave/poke/follow while others move,
   rejoin, token-swap reset).
+- 2026-08-25 — Operator QA on PR B REDEFINED Decision 4: the
+  per-layer padlocks were not the intent — "lock layers together
+  in effects... dragging the avastar around the layers move
+  together". Padlocks removed end-to-end; replaced with the
+  Effects "Lock layers" toggle: LayerSprings.isLockedTogether
+  runs every spring on the shared mid-depth profile
+  (profileFor(0.5)) so the stack converges into lockstep under
+  drag/idle/wave/poke and eases apart when released. Harness
+  evidence: unlocked drag-hold spread ~44px across the stack;
+  locked drag-hold spread ~0.07px at the same lean.

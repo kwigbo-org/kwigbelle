@@ -24,12 +24,6 @@ export default class TraitsSection {
 		// lands (or for replicants, which have no burn concept)
 		this.burnedMask = null;
 		this.hiddenLayers = new Set();
-		// Locked layer indices (docs/tads/info-tab.md Decision 4):
-		// per-token scene state like visibility; the spring rig
-		// consults isLayerLocked through the scene's wiring. Only the
-		// spring-backed genes 5-11 get locks - the backdrop never
-		// moves, so a motion lock on it would be a lie.
-		this.lockedLayers = new Set();
 		this.isBackdropHidden = false;
 		// 3D mode shows traits as read-only information: the model
 		// can't change traits, so edit/undo/visibility are hidden and
@@ -66,14 +60,6 @@ export default class TraitsSection {
 		return !this.hiddenLayers.has(index);
 	}
 
-	/// Whether a layer's MOTION is locked (the spring rig consults
-	/// this each step through the scene's wiring)
-	///
-	/// - Parameter index: The layer index to test
-	isLayerLocked(index) {
-		return this.lockedLayers.has(index);
-	}
-
 	isBackdropVisible() {
 		return !this.isBackdropHidden;
 	}
@@ -89,7 +75,6 @@ export default class TraitsSection {
 		}
 		this.currentTokenId = avastar.tokenId;
 		this.hiddenLayers = new Set();
-		this.lockedLayers = new Set();
 		this.isBackdropHidden = false;
 		this.baseline = avastar.traits || null;
 		this.overrides = new Map();
@@ -227,9 +212,6 @@ export default class TraitsSection {
 							this.hiddenLayers.add(index);
 						}
 					},
-					// Spring-backed layers only: the padlock pins this
-					// layer's motion (the backdrop card above gets none)
-					lockIndex: index,
 				}),
 			);
 		});
@@ -363,8 +345,7 @@ export default class TraitsSection {
 	/// - Parameters:
 	///		- info: A trait record ({ geneName, name, rarityName })
 	///		- gene: The gene slot (0-11) this card represents
-	///		- options: { onToggle, checked, lockIndex } or { color }
-	///			(lockIndex only on spring-backed layer cards)
+	///		- options: { onToggle, checked } or { color }
 	card(info, gene, options) {
 		const isToggle = typeof options.onToggle === "function";
 		const isEditable = this.callbacks.onEdit && !this.isReadOnly;
@@ -383,9 +364,6 @@ export default class TraitsSection {
 			// A visibility tap must not also open the editor
 			checkbox.addEventListener("click", (event) => event.stopPropagation());
 			row.appendChild(checkbox);
-			if (options.lockIndex !== undefined && !this.isReadOnly) {
-				row.appendChild(this.lockTag(options.lockIndex));
-			}
 		} else if (!options.plain) {
 			const swatch = document.createElement("span");
 			swatch.setAttribute("class", "traitSwatch");
@@ -472,67 +450,6 @@ export default class TraitsSection {
 			row.addEventListener("click", () => this.callbacks.onEdit(gene));
 		}
 		return row;
-	}
-
-	/// The padlock toggle beside a layer card's visibility checkbox
-	/// (docs/tads/info-tab.md Decision 4): inline currentColor SVG -
-	/// like the handle icons, a text glyph would render as a color
-	/// emoji on mobile. Its own tap island: a lock tap must not open
-	/// the editor.
-	///
-	/// - Parameter layerIndex: The layer whose motion it locks
-	lockTag(layerIndex) {
-		const SVG_NS = "http://www.w3.org/2000/svg";
-		// Closed vs open shackle over the same lock body
-		const lockedPath =
-			"M18 8h-1V6a5 5 0 0 0-10 0v2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12" +
-			"a2 2 0 0 0 2-2V10a2 2 0 0 0-2-2zm-6 9a2 2 0 1 1 0-4 2 2 0 0 1 0 " +
-			"4zM9 8V6a3 3 0 0 1 6 0v2H9z";
-		const unlockedPath =
-			"M18 8H9V6a3 3 0 0 1 5.91-.74l1.93-.52A5 5 0 0 0 7 6v2H6a2 2 0 0 " +
-			"0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V10a2 2 0 0 0-2-2zm-6 9a2 " +
-			"2 0 1 1 0-4 2 2 0 0 1 0 4z";
-		const lock = document.createElement("span");
-		lock.setAttribute("class", "traitLock");
-		lock.setAttribute("role", "button");
-		// The advertised button role must be keyboard-real: in the
-		// tab order, activated by Enter/Space
-		lock.setAttribute("tabindex", "0");
-		const svg = document.createElementNS(SVG_NS, "svg");
-		svg.setAttribute("viewBox", "0 0 24 24");
-		const path = document.createElementNS(SVG_NS, "path");
-		path.setAttribute("fill", "currentColor");
-		svg.appendChild(path);
-		lock.appendChild(svg);
-		const render = () => {
-			const isLocked = this.lockedLayers.has(layerIndex);
-			lock.classList.toggle("locked", isLocked);
-			lock.setAttribute("aria-pressed", String(isLocked));
-			lock.setAttribute(
-				"aria-label",
-				isLocked ? "Unlock layer motion" : "Lock layer motion",
-			);
-			path.setAttribute("d", isLocked ? lockedPath : unlockedPath);
-		};
-		const toggle = (event) => {
-			event.stopPropagation();
-			if (this.lockedLayers.has(layerIndex)) {
-				this.lockedLayers.delete(layerIndex);
-			} else {
-				this.lockedLayers.add(layerIndex);
-			}
-			render();
-		};
-		lock.addEventListener("click", toggle);
-		lock.addEventListener("keydown", (event) => {
-			if (event.key === "Enter" || event.key === " ") {
-				// Space must not also scroll the drawer
-				event.preventDefault();
-				toggle(event);
-			}
-		});
-		render();
-		return lock;
 	}
 
 	/// A small flame + BURNED tag
