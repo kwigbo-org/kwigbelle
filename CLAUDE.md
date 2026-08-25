@@ -29,9 +29,16 @@ as one piece), the depth-coherent idle retune, and the backdrop's
 own canvas (visible through Trails and behind the 3D view);
 remaining: PR C (wallet-provider transfer history). ALSO IN
 PROGRESS: docs/tads/vrm-mirror.md — back up all ~26.6k VRMs
-(~285GB, one live gateway left) to s3://kwigbelle/vrm/ and serve
-mirror-first; PR A = deploy guardrail + capture tool, then an
-operator-run multi-day capture, then PR B = serving lane. Parked:
+(~285GB, one live browser gateway left) to s3://kwigbelle/vrm/
+and serve mirror-first. Capture tooling shipped (PRs #26/#27/#29:
+guardrail, parallel workers + run lock, shared 429 cooldown,
+--gateway override); the capture runs on the operator's Lightsail
+instance and is mid-flight — pinata throttles datacenter IPs, so
+the lane (local kubo node vs alternative gateway vs cooldown
+pacing) awaits the operator's probe results. PR B (mirror-first
+serving) is implemented and PRESERVED at 0c103a3 (PR #28 closed
+to unblock the hotfix); it reopens once the capture completes,
+--verify passes, and the operator runs the CORS ops step. Parked:
 PR #1 wallet LOWs (likely mooted — WalletConnectUI was deleted in
 PR #16; re-verify against ProfileSection before resurrecting).
 
@@ -121,10 +128,13 @@ Tools/check-corpus.js      totalSupply vs hashes.json staleness;
                            --update refreshes; deploy.sh runs it
                            warn-only when AVASTARS_RPC_URL is set
 Tools/mirror-vrms.js       resumable stream-through VRM backup ->
-                           s3://kwigbelle/vrm/ (parameterized);
-                           sha256 manifest vrm-manifest.json; live
-                           status in feedback/VRM-MIRROR.md;
-                           --dry-run / --verify / --selftest
+                           s3://kwigbelle/vrm/ (--dest); parallel
+                           workers + pid run-lock w/ ownership
+                           gates; shared 429 cooldown; --gateway
+                           (e.g. local kubo node); sha256 manifest
+                           vrm-manifest.json; live status in
+                           feedback/VRM-MIRROR.md; --dry-run /
+                           --verify / --selftest
 Tests/                     headless-Chrome harness (see Tests/README.md)
 SVG/                       8 bundled fallback Avastars (pretty-printed
                            saves; chain output is minified - compare
