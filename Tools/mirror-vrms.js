@@ -362,14 +362,27 @@ async function downloadVerified(url, filePath) {
 	try {
 		const res = await fetch(url, { signal: controller.signal });
 		if (res.status === 429) {
-			const retryAfter = Number(res.headers.get("retry-after"));
+			// Undrained bodies hold their pooled connection in undici -
+			// cancel before throwing (review catch), on both paths
+			res.body?.cancel();
+			// Retry-After is delta-seconds OR an HTTP-date (review
+			// catch); clamped so a bogus header can't wedge the pool
+			// for hours (review catch)
+			const header = res.headers.get("retry-after");
+			let retryAfter = Number(header);
+			if (!Number.isFinite(retryAfter) && header) {
+				retryAfter = (Date.parse(header) - Date.now()) / 1000;
+			}
 			startCooldown(
-				Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter : 60,
+				Number.isFinite(retryAfter) && retryAfter > 0
+					? Math.min(retryAfter, 300)
+					: 60,
 				url,
 			);
 			throw new Error(`HTTP 429 via ${url}`);
 		}
 		if (!res.ok) {
+			res.body?.cancel();
 			throw new Error(`HTTP ${res.status} via ${url}`);
 		}
 		// Node's fetch decompresses encoded bodies but the header
@@ -914,6 +927,17 @@ function argDest() {
 
 (async () => {
 	fs.mkdirSync(DATA_DIR, { recursive: true });
+	// Parsed ahead of the mode dispatch so --dry-run previews the
+	// SAME gateway a capture would use (review catch)
+	const gatewayAt = argv.indexOf("--gateway");
+	if (gatewayAt >= 0) {
+		const override = argv[gatewayAt + 1];
+		if (!override || !/^https?:\/\/.+\/ipfs\/$/.test(override)) {
+			console.error('--gateway must be an http(s) URL ending in "/ipfs/"');
+			process.exit(1);
+		}
+		gatewayBase = override;
+	}
 	if (argv.includes("--selftest")) {
 		await selftest();
 	} else if (argv.includes("--dry-run")) {
@@ -923,15 +947,6 @@ function argDest() {
 	} else {
 		// 1-4 workers: enough to hide gateway latency and retry
 		// backoff, few enough to stay a polite gateway citizen
-		const gatewayAt = argv.indexOf("--gateway");
-		if (gatewayAt >= 0) {
-			const override = argv[gatewayAt + 1];
-			if (!override || !/^https?:\/\/.+\/ipfs\/$/.test(override)) {
-				console.error('--gateway must be an http(s) URL ending in "/ipfs/"');
-				process.exit(1);
-			}
-			gatewayBase = override;
-		}
 		const parallel = Math.max(1, Math.min(4, argValue("--parallel", 3) || 3));
 		await capture(argDest(), argValue("--limit", 0), parallel);
 	}
