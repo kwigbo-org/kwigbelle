@@ -27,9 +27,13 @@ profile and settings (traits moved there + rarity explainer), the
 shipped the Lock-layers effect (default on: drag moves the face
 as one piece), the depth-coherent idle retune, and the backdrop's
 own canvas (visible through Trails and behind the 3D view);
-remaining: PR C (wallet-provider transfer history). Parked: PR #1
-wallet LOWs (likely mooted — WalletConnectUI was deleted in PR
-#16; re-verify against ProfileSection before resurrecting).
+remaining: PR C (wallet-provider transfer history). ALSO IN
+PROGRESS: docs/tads/vrm-mirror.md — back up all ~26.6k VRMs
+(~285GB, one live gateway left) to s3://kwigbelle/vrm/ and serve
+mirror-first; PR A = deploy guardrail + capture tool, then an
+operator-run multi-day capture, then PR B = serving lane. Parked:
+PR #1 wallet LOWs (likely mooted — WalletConnectUI was deleted in
+PR #16; re-verify against ProfileSection before resurrecting).
 
 ## Architecture
 
@@ -116,6 +120,11 @@ Tools/fetch-burned.js      every prime's burned-trait flags (the
 Tools/check-corpus.js      totalSupply vs hashes.json staleness;
                            --update refreshes; deploy.sh runs it
                            warn-only when AVASTARS_RPC_URL is set
+Tools/mirror-vrms.js       resumable stream-through VRM backup ->
+                           s3://kwigbelle/vrm/ (parameterized);
+                           sha256 manifest vrm-manifest.json; live
+                           status in feedback/VRM-MIRROR.md;
+                           --dry-run / --verify / --selftest
 Tests/                     headless-Chrome harness (see Tests/README.md)
 SVG/                       8 bundled fallback Avastars (pretty-printed
                            saves; chain output is minified - compare
@@ -175,7 +184,10 @@ Frozen TADs and generated/vendored trees are excluded on purpose.
 127.0.0.1:8000; `-s` stage; `-p` promote stage→prod + CloudFront
 invalidation. deploy.sh must copy any new runtime asset (it ships
 `Lib SVG favicon Traits Tools/data/hashes.json`, `ub.json`, and
-`burned.json`).
+`burned.json`). Both bucket syncs `--exclude "vrm/*"` — the VRM
+mirror (docs/tads/vrm-mirror.md) lives in the prod bucket outside
+the deploy pipeline; removing that exclude would let a `--delete`
+sync erase the ~285GB backup.
 
 ## Shared rules across all project agents
 
