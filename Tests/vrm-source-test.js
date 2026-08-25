@@ -19,6 +19,9 @@ const { check } = require("./check.js");
 	}
 	const cors = { "access-control-allow-origin": "*" };
 	let mode = "happy";
+	// "failonce": 504 this many requests, then serve - exercises
+	// the automatic re-race after a fully failed round
+	let failOnceRemaining = 0;
 	const hits = { metadata: 0, pinata: 0, ipfsio: 0, dweb: 0 };
 
 	await page.route("**://avastars.io/metadata/**", (route) => {
@@ -55,7 +58,9 @@ const { check } = require("./check.js");
 			return;
 		}
 		const failThis =
-			mode === "allfail" || (mode === "fallback" && host.includes("pinata"));
+			mode === "allfail" ||
+			(mode === "failonce" && failOnceRemaining-- > 0) ||
+			(mode === "fallback" && host.includes("pinata"));
 		if (failThis) {
 			route.fulfill({ status: 504, headers: cors, body: "gateway timeout" });
 			return;
@@ -141,11 +146,13 @@ const { check } = require("./check.js");
 		"504 did not advance to the next gateway: " + JSON.stringify(hits),
 	);
 
-	// All gateways fail: the pipeline rejects with the last error
+	// All gateways fail: one automatic re-race, then the pipeline
+	// rejects with the last error (TWO full rounds of hits)
 	mode = "allfail";
 	const failure = await page.evaluate(async () => {
 		const { default: VRMSource } = await import("../Lib/VRMSource.js");
 		const source = new VRMSource();
+		source.retryDelayMs = 100;
 		try {
 			await source.fetchVRM(8014);
 			return null;
@@ -159,8 +166,26 @@ const { check } = require("./check.js");
 		"all-gateway failure did not reject with the HTTP error",
 	);
 	check(
-		hits.pinata === 3 && hits.ipfsio === 2 && hits.dweb === 1,
-		"all-fail did not try every gateway: " + JSON.stringify(hits),
+		hits.pinata === 4 && hits.ipfsio === 3 && hits.dweb === 2,
+		"all-fail did not run two full rounds: " + JSON.stringify(hits),
+	);
+
+	// A fully failed FIRST round with healthy gateways by the
+	// re-race: the retry rescues the fetch (the live failure mode -
+	// probed 2026-08-25, one live gateway hiccuping transiently)
+	mode = "failonce";
+	failOnceRemaining = 3;
+	const rescued = await page.evaluate(async () => {
+		const { default: VRMSource } = await import("../Lib/VRMSource.js");
+		const source = new VRMSource();
+		source.retryDelayMs = 100;
+		const buffer = await source.fetchVRM(8014);
+		return buffer.byteLength;
+	});
+	check(rescued === 131072, "re-race did not rescue a transient failure");
+	check(
+		hits.pinata === 6 && hits.ipfsio === 4 && hits.dweb === 3,
+		"rescue round hit an unexpected lane set: " + JSON.stringify(hits),
 	);
 
 	// Abort: rejects with AbortError and does NOT advance gateways
@@ -181,10 +206,10 @@ const { check } = require("./check.js");
 	// signal covers the metadata phase too, so NO endpoint (metadata
 	// or gateway) may see a request
 	check(
-		hits.metadata === 3 &&
-			hits.pinata === 3 &&
-			hits.ipfsio === 2 &&
-			hits.dweb === 1,
+		hits.metadata === 4 &&
+			hits.pinata === 6 &&
+			hits.ipfsio === 4 &&
+			hits.dweb === 3,
 		"abort still issued a request: " + JSON.stringify(hits),
 	);
 
@@ -212,7 +237,7 @@ const { check } = require("./check.js");
 		"hedge did not rescue a hung gateway in time: " + hung.elapsed,
 	);
 	check(
-		hits.pinata === 4 && hits.ipfsio === 3,
+		hits.pinata === 7 && hits.ipfsio === 5,
 		"hedge should have raced pinata (hung) and ipfs.io: " +
 			JSON.stringify(hits),
 	);
@@ -333,6 +358,7 @@ const { check } = require("./check.js");
 		const source = new VRMSource();
 		source.gateways = ["http://localhost:8799/hang/"];
 		source.firstByteMs = 300;
+		source.retryDelayMs = 100;
 		try {
 			await source.fetchVRM(8014);
 			return null;
@@ -348,7 +374,8 @@ const { check } = require("./check.js");
 		"timeout rejection masquerades as a cancel: " +
 			JSON.stringify(timeoutFailure),
 	);
-	check(serverHits.hang === 1, "hang lane not exercised");
+	// Two hits: the timeout round and its automatic re-race
+	check(serverHits.hang === 2, "hang lane not exercised in both rounds");
 
 	for (const response of hangingResponses) {
 		response.destroy();
