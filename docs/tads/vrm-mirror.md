@@ -129,3 +129,12 @@ None.
   their own temp names after the live run clobbered the shared
   one mid-test. Parallelism hides gateway latency and backoff
   sleeps; it cannot exceed the uplink's bandwidth.
+- 2026-08-25 — Instance capture running (operator's Lightsail box:
+  ~3.2 MB/s, ETA ~1.2 days vs the laptop's uplink-bound ~10). PR B
+  implemented ahead of population: VRMSource mirror lane (opt-in
+  via a scene-wired kind lookup, so with it unwired behavior is
+  byte-identical - the existing suite pinned that), degraded
+  vrmInfo keeps Download filenames without avastars.io, and the
+  3D harness routes the mirror everywhere so no test touches the
+  real network. Merge holds for the populated+verified mirror and
+  the CORS ops step (operator-run).

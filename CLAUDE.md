@@ -73,10 +73,13 @@ Lib/TraitsSection.js       info-drawer Overview section (identity
                            marks, visibility the render loop
                            consults each frame); goes read-only in
                            3D mode
-Lib/VRMSource.js           metadata -> vrm_url -> hedged IPFS
-                           gateway race (staggered starts, first
-                           chunk wins, first-byte timeouts, CIDv0
-                           -> v1 rewrite, progress, LRU cache)
+Lib/VRMSource.js           mirror-first (kwigbelle.com/vrm/,
+                           corpus-derived filename, no metadata
+                           call) -> fallback: metadata -> vrm_url
+                           -> hedged IPFS gateway race (staggered
+                           starts, first chunk wins, first-byte
+                           timeouts, CIDv0 -> v1 rewrite, one
+                           automatic re-race, progress, LRU cache)
 Lib/VRMViewer.js           own-canvas three.js VRM display (orbit
                            controls, spring-bones, full disposal)
 Lib/VRMSection.js          "3D model" panel section: view toggle +

@@ -1,3 +1,5 @@
+import { kindLabel } from "./RarityIcons.js";
+
 // CIDv0 -> CIDv1 conversion: founder and replicant models are
 // published under Qm... (CIDv0, base58) CIDs, whose mixed case
 // breaks the subdomain redirect several public gateways answer
@@ -63,14 +65,28 @@ export function cidV0toV1(cid) {
 	return "b" + base32Encode([0x01, 0x70, ...multihash]);
 }
 
-/// Where a token's 3D model comes from (docs/tads/vrm-viewer.md):
-/// the avastars.io metadata endpoint names the .vrm on IPFS, and
-/// the bytes stream through a gateway fallback list with progress
-/// reporting and a small in-memory cache (~9.3MB per model, so
-/// nothing is fetched until asked).
+/// Where a token's 3D model comes from: the operator-owned MIRROR
+/// first (docs/tads/vrm-mirror.md - filename derived from the hash
+/// corpus, so the happy path makes no avastars.io call and
+/// outlives it), falling back to the original pipeline
+/// (docs/tads/vrm-viewer.md: metadata -> vrm_url -> hedged IPFS
+/// gateway race). Progress reporting and a small in-memory cache
+/// (~9.3MB per model, so nothing is fetched until asked).
 export default class VRMSource {
 	constructor() {
 		this.metadataURL = "https://avastars.io/metadata/";
+		// The mirror (docs/tads/vrm-mirror.md Decision 5): every
+		// model backed up under one absolute prefix behind the
+		// site's CloudFront. Absolute on purpose - ONE copy,
+		// addressable from prod, stage, and local dev alike.
+		this.mirrorBase = "https://kwigbelle.com/vrm/";
+		// The scene wires this to the hash corpus:
+		// (tokenId) -> Promise<"prime"|"replicant"|null>. Without it
+		// the mirror lane stays off and behavior is unchanged.
+		this.kindFor = null;
+		// First-byte cap on the single mirror attempt - a hung CDN
+		// must fall back to the gateway race, not wedge the view
+		this.mirrorFirstByteMs = 8000;
 		// Observed-reliable gateway first: on the discovery probe
 		// gateway.pinata.cloud served content the canonical ipfs.io
 		// URL 504'd on, and a 504 only arrives after the gateway's
@@ -94,9 +110,36 @@ export default class VRMSource {
 		this.retryDelayMs = 1500;
 	}
 
+	/// The mirror URL for a token, or null when the kind lookup is
+	/// absent or doesn't know the token. Filenames are derivable
+	/// facts: `Avastar_{Kind}_{id}.vrm`, exactly the vocabulary
+	/// kindLabel computes from the hash corpus - verified against
+	/// live vrm_url basenames across all four kinds (TAD context).
+	///
+	/// - Parameter tokenId: The token to address
+	async mirrorURL(tokenId) {
+		if (!this.kindFor) {
+			return null;
+		}
+		let kind = null;
+		try {
+			kind = await this.kindFor(tokenId);
+		} catch (error) {
+			return null;
+		}
+		if (!kind) {
+			return null;
+		}
+		return `${this.mirrorBase}Avastar_${kindLabel(tokenId, kind)}_${tokenId}.vrm`;
+	}
+
 	/// The model URL and original filename for a token, from the
 	/// metadata endpoint (cached per token; the endpoint echoes the
-	/// requesting origin, so the browser can call it directly)
+	/// requesting origin, so the browser can call it directly).
+	/// When the metadata endpoint is unreachable but the mirror can
+	/// derive the filename, a degraded info (url: null - no gateway
+	/// source) is returned UNCACHED so downloads keep their proper
+	/// filename even if avastars.io is gone.
 	///
 	/// - Parameters:
 	///		- tokenId: The token to look up
@@ -107,13 +150,25 @@ export default class VRMSource {
 		if (this.infoCache.has(key)) {
 			return this.infoCache.get(key);
 		}
-		const response = await fetch(this.metadataURL + key, { signal });
-		if (!response.ok) {
-			throw new Error(`metadata request failed (HTTP ${response.status})`);
-		}
-		const metadata = await response.json();
-		if (!metadata.vrm_url) {
-			throw new Error("metadata has no vrm_url");
+		let metadata;
+		try {
+			const response = await fetch(this.metadataURL + key, { signal });
+			if (!response.ok) {
+				throw new Error(`metadata request failed (HTTP ${response.status})`);
+			}
+			metadata = await response.json();
+			if (!metadata.vrm_url) {
+				throw new Error("metadata has no vrm_url");
+			}
+		} catch (error) {
+			if (error && error.name === "AbortError") {
+				throw error;
+			}
+			const mirror = await this.mirrorURL(tokenId);
+			if (!mirror) {
+				throw error;
+			}
+			return { url: null, filename: mirror.split("/").pop() };
 		}
 		const info = {
 			url: metadata.vrm_url,
@@ -148,10 +203,45 @@ export default class VRMSource {
 		return this.gateways.map((gateway) => gateway + cid + rest);
 	}
 
-	/// The model bytes for a token, via the hedged gateway race
-	/// below - re-raced ONCE automatically when the whole race
-	/// fails. An abort rethrows immediately - the user cancelled,
-	/// so nothing is retried.
+	/// One download attempt with its own first-byte cap, linked to
+	/// the caller's signal - the mirror lane's single try (the
+	/// hedged race below manages its own timers).
+	async timedDownload(url, onProgress, signal, firstByteMs) {
+		const controller = new AbortController();
+		let timedOut = false;
+		const timer = setTimeout(() => {
+			timedOut = true;
+			controller.abort();
+		}, firstByteMs);
+		const onAbort = () => controller.abort();
+		if (signal) {
+			signal.addEventListener("abort", onAbort, { once: true });
+		}
+		try {
+			return await this.download(url, onProgress, controller.signal, () => {
+				clearTimeout(timer);
+				return true;
+			});
+		} catch (error) {
+			if (timedOut && (!signal || !signal.aborted)) {
+				// A timeout's raw AbortError would read as a user
+				// cancel upstream - surface it as the failure it is
+				throw new Error(`first-byte timeout via ${url}`);
+			}
+			throw error;
+		} finally {
+			clearTimeout(timer);
+			if (signal) {
+				signal.removeEventListener("abort", onAbort);
+			}
+		}
+	}
+
+	/// The model bytes for a token: the MIRROR first (one direct
+	/// fetch, no metadata call), then the hedged gateway race below
+	/// - re-raced ONCE automatically when the whole race fails. An
+	/// abort rethrows immediately - the user cancelled, so nothing
+	/// is retried.
 	///
 	/// - Parameters:
 	///		- tokenId: The token whose model to fetch
@@ -167,7 +257,35 @@ export default class VRMSource {
 			this.bytesCache.set(key, bytes);
 			return bytes;
 		}
+		// Mirror lane (docs/tads/vrm-mirror.md Decision 5): any
+		// failure here falls through to the gateway race - the
+		// mirror makes the happy path fast and self-owned, the race
+		// stays the safety net
+		const mirror = await this.mirrorURL(tokenId);
+		if (mirror) {
+			if (signal && signal.aborted) {
+				throw new DOMException("aborted", "AbortError");
+			}
+			try {
+				const bytes = await this.timedDownload(
+					mirror,
+					onProgress,
+					signal,
+					this.mirrorFirstByteMs,
+				);
+				this.cacheBytes(key, bytes);
+				return bytes;
+			} catch (error) {
+				if (error && error.name === "AbortError" && signal && signal.aborted) {
+					throw error;
+				}
+				console.warn(`VRM mirror miss for ${tokenId}`, error);
+			}
+		}
 		const info = await this.vrmInfo(tokenId, signal);
+		if (!info.url) {
+			throw new Error("mirror unavailable and metadata has no vrm_url");
+		}
 		let bytes;
 		try {
 			bytes = await this.hedgedDownload(
@@ -194,12 +312,17 @@ export default class VRMSource {
 				signal,
 			);
 		}
+		this.cacheBytes(key, bytes);
+		return bytes;
+	}
+
+	/// LRU-bounded byte cache shared by both lanes
+	cacheBytes(key, bytes) {
 		this.bytesCache.set(key, bytes);
 		if (this.bytesCache.size > this.bytesCacheLimit) {
 			const oldest = this.bytesCache.keys().next().value;
 			this.bytesCache.delete(oldest);
 		}
-		return bytes;
 	}
 
 	/// Hedged gateway race (field-measured: every public gateway
