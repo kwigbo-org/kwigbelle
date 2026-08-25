@@ -134,24 +134,28 @@ async function launch(withWallet) {
 		await page.waitForTimeout(500);
 		const overriddenFrame = await frame();
 
-		// The page background before 3D is the TOKEN's SVG color;
-		// resolve the theme --bg for comparison via a probe element
+		// 3D keeps the SAME background as the vector view (Decision 6
+		// revised by operator QA): the token color on contentView and
+		// the backdrop art on its own canvas, behind the VRM
 		const contentBg = () =>
 			page.evaluate(
 				() =>
 					window.getComputedStyle(document.getElementById("contentView"))
 						.backgroundColor,
 			);
+		const backdropCorner = () =>
+			page.evaluate(
+				() =>
+					document
+						.getElementById("backdropCanvas")
+						.getContext("2d")
+						.getImageData(10, 10, 1, 1).data[3],
+			);
 		const tokenBg = await contentBg();
-		const themeBg = await page.evaluate(() => {
-			const probe = document.createElement("div");
-			probe.style.backgroundColor = "var(--bg)";
-			document.body.appendChild(probe);
-			const resolved = window.getComputedStyle(probe).backgroundColor;
-			probe.remove();
-			return resolved;
-		});
-		check(tokenBg !== themeBg, "precondition: token bg equals theme bg");
+		check(
+			(await backdropCorner()) === 255,
+			"precondition: backdrop art not painted before 3D",
+		);
 
 		// Enter 3D through the SECTION button (the floating toggle's
 		// twin) and verify the limited settings
@@ -160,13 +164,27 @@ async function launch(withWallet) {
 		await page.waitForSelector("#vrmCanvas", { timeout: 20000 });
 		await page.waitForTimeout(500);
 
-		// The VRM floats on the theme ground, not the token's flat
-		// SVG color (docs/tads/info-tab.md Decision 6)
 		const bg3D = await contentBg();
 		check(
-			bg3D === themeBg,
-			`3D background is not the theme ground: ${bg3D} != ${themeBg}`,
+			bg3D === tokenBg,
+			`3D changed the page background: ${bg3D} != ${tokenBg}`,
 		);
+		check(
+			(await backdropCorner()) === 255,
+			"backdrop art not visible behind the 3D view",
+		);
+
+		// Resize while 3D is up: assigning canvas dimensions blanks
+		// the bitmap and the paused 2D loop can't repaint - resize()
+		// must (round-4 review, all four panelists)
+		await page.setViewportSize({ width: 700, height: 520 });
+		await page.waitForTimeout(400);
+		check(
+			(await backdropCorner()) === 255,
+			"backdrop art lost after resizing during 3D",
+		);
+		await page.setViewportSize({ width: 800, height: 600 });
+		await page.waitForTimeout(400);
 		const limits = await page.evaluate(() => {
 			const sections = [...document.querySelectorAll(".panelSection")];
 			const effects = sections.find(

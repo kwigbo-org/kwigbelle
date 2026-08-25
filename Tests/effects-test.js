@@ -7,10 +7,12 @@
 // any movement an assertion sees comes from the effect under test.
 //   Poke  - a quick tap moves an otherwise-static rig, then settles
 //   Wave  - animates at Motion 0 (deliberately unscaled), stops off
-//   Trails- fade-clearing leaves intermediate-alpha ghosts and
-//           skips the backdrop redraw
+//   Trails- fade-clearing leaves intermediate-alpha ghosts on the
+//           layer canvas; the backdrop canvas stays fully painted
 //   Tilt  - a synthetic deviceorientation event steers the rig
-// Plus: the three toggles persist across a reload.
+// Plus: Lock layers (docs/tads/info-tab.md Decision 4) converges
+// a drag into moving the face as one piece where an unlocked drag
+// spreads it by depth; and the toggles persist across a reload.
 const { chromium } = require("playwright-core");
 const { check } = require("./check.js");
 
@@ -45,6 +47,7 @@ const { check } = require("./check.js");
 		"Pause motion",
 		"Motion",
 		"Follow",
+		"Lock layers",
 		"Wave",
 		"Trails",
 		"Tilt follow",
@@ -100,6 +103,13 @@ const { check } = require("./check.js");
 	const toggle = (label) =>
 		page.locator(".effectRow", { hasText: label }).locator("input");
 
+	// Lock layers ships ON (operator QA): a fresh visitor's drag
+	// moves the face as one piece until they opt out
+	check(
+		await toggle("Lock layers").isChecked(),
+		"Lock layers should default ON",
+	);
+
 	// Static baseline: Motion 0 + Follow 0 -> the rig settles to rest
 	await setSlider("Motion", 0);
 	await setSlider("Follow", 0);
@@ -149,8 +159,10 @@ const { check } = require("./check.js");
 	);
 	await waitForRest("after drag");
 
-	// TRAILS: ghosts = many intermediate-alpha pixels while moving;
-	// the backdrop stops being redrawn (corner fades from opaque)
+	// TRAILS: ghosts = many intermediate-alpha pixels on the layer
+	// canvas while moving; the backdrop lives on its OWN canvas and
+	// must stay fully visible throughout (operator QA - the old
+	// skip-the-backdrop behavior obscured the art)
 	const intermediateCount = () =>
 		page.evaluate(() => {
 			const canvas = document.getElementById("mainCanvas");
@@ -165,7 +177,7 @@ const { check } = require("./check.js");
 		});
 	const cornerAlpha = () =>
 		page.evaluate(() => {
-			const canvas = document.getElementById("mainCanvas");
+			const canvas = document.getElementById("backdropCanvas");
 			return canvas.getContext("2d").getImageData(10, 10, 1, 1).data[3];
 		});
 	// Motion source is a poke (deterministic burst — Wave is a
@@ -188,13 +200,10 @@ const { check } = require("./check.js");
 		trailsCount > cleanCount * 2 && trailsCount > 5000,
 		`trails left no ghosts (${cleanCount} -> ${trailsCount})`,
 	);
-	check(cornerAfter < 32, "backdrop still painted while Trails on");
+	check(cornerAfter === 255, "backdrop obscured while Trails on");
 	await toggle("Trails").uncheck();
 	await page.waitForTimeout(600);
-	check(
-		(await cornerAlpha()) === 255,
-		"backdrop did not return after Trails off",
-	);
+	check((await cornerAlpha()) === 255, "backdrop did not survive Trails off");
 	await waitForRest("after trails scene");
 
 	// TILT: enable, feed a baseline then a tilted reading; the rig
@@ -229,7 +238,61 @@ const { check } = require("./check.js");
 	await waitForRest("back at neutral tilt");
 	await toggle("Tilt follow").uncheck();
 
+	// LOCK LAYERS (docs/tads/info-tab.md Decision 4): dragging with
+	// the toggle off separates the layers by depth-scaled reach;
+	// with it on, every spring runs the same mid-depth profile and
+	// the face converges into moving as ONE piece.
+	// In-page helper installed once: x-spread of the stack and its
+	// mean lean from center
+	await page.evaluate(() => {
+		window.__stackSpread = () => {
+			const xs = window.kwigbelleScene.layerSprings.springs.map((s) => s.x);
+			const centerX = window.innerWidth / 2;
+			return {
+				spread: Math.max(...xs) - Math.min(...xs),
+				meanDx: xs.reduce((a, x) => a + x - centerX, 0) / xs.length,
+			};
+		};
+	});
+	// Locked drag-hold far left (the DEFAULT state): the layers
+	// stay in lockstep while following the pointer
+	await page.mouse.move(200, 300);
+	await page.mouse.down();
+	await page.waitForFunction(
+		() => {
+			const { spread, meanDx } = window.__stackSpread();
+			return spread < 2 && meanDx < -100;
+		},
+		{ timeout: 8000 },
+	);
+	console.log(
+		"locked (default) drag moves the face as one piece:",
+		JSON.stringify(await page.evaluate(() => window.__stackSpread())),
+	);
+	await page.mouse.up();
+	await waitForRest("after locked drag");
+
+	// Opt out and hold the same drag: the stack spreads by depth
+	await toggle("Lock layers").uncheck();
+	await page.mouse.move(200, 300);
+	await page.mouse.down();
+	await page.waitForFunction(
+		() => {
+			const { spread, meanDx } = window.__stackSpread();
+			return spread > 30 && meanDx < -100;
+		},
+		{ timeout: 5000 },
+	);
+	console.log(
+		"unlocked drag spreads the stack:",
+		JSON.stringify(await page.evaluate(() => window.__stackSpread())),
+	);
+	await page.mouse.up();
+	await waitForRest("after unlocked drag");
+	await setSlider("Follow", 0);
+
 	// PERSISTENCE: set the toggles, reload, expect them restored
+	await toggle("Lock layers").check();
 	await toggle("Wave").check();
 	await toggle("Trails").check();
 	await toggle("Tilt follow").check();
@@ -238,7 +301,10 @@ const { check } = require("./check.js");
 	);
 	console.log("stored effects:", JSON.stringify(stored));
 	check(
-		stored.wave === true && stored.trails === true && stored.tilt === true,
+		stored.lockLayers === true &&
+			stored.wave === true &&
+			stored.trails === true &&
+			stored.tilt === true,
 		"toggle states not persisted",
 	);
 	check(!("explode" in stored), "retired explode key still written");
@@ -257,6 +323,7 @@ const { check } = require("./check.js");
 		return state;
 	});
 	console.log("restored toggles:", JSON.stringify(restored));
+	check(restored["Lock layers"] === true, "Lock layers not restored");
 	check(restored["Wave"] === true, "Wave not restored");
 	check(restored["Trails"] === true, "Trails not restored");
 	check(restored["Tilt follow"] === true, "Tilt follow not restored");

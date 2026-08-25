@@ -89,6 +89,9 @@ export default class VRMSource {
 		// and the hard cap on any attempt reaching its first byte
 		this.staggerMs = 4000;
 		this.firstByteMs = 20000;
+		// Pause before the one automatic re-race after a full
+		// failure (see fetchVRM)
+		this.retryDelayMs = 1500;
 	}
 
 	/// The model URL and original filename for a token, from the
@@ -146,7 +149,8 @@ export default class VRMSource {
 	}
 
 	/// The model bytes for a token, via the hedged gateway race
-	/// below. An abort rethrows immediately - the user cancelled,
+	/// below - re-raced ONCE automatically when the whole race
+	/// fails. An abort rethrows immediately - the user cancelled,
 	/// so nothing is retried.
 	///
 	/// - Parameters:
@@ -164,11 +168,32 @@ export default class VRMSource {
 			return bytes;
 		}
 		const info = await this.vrmInfo(tokenId, signal);
-		const bytes = await this.hedgedDownload(
-			this.candidateURLs(info.url),
-			onProgress,
-			signal,
-		);
+		let bytes;
+		try {
+			bytes = await this.hedgedDownload(
+				this.candidateURLs(info.url),
+				onProgress,
+				signal,
+			);
+		} catch (error) {
+			// A user cancel is final. A failed RACE gets one more
+			// round after a beat: with ipfs.io CORS-dead and
+			// dweb.link's redirect broken (probed 2026-08-25), the
+			// race often rides a single live gateway, and one
+			// transient hiccup there must not fail the 3D view.
+			if (error && error.name === "AbortError") {
+				throw error;
+			}
+			await new Promise((resolve) => setTimeout(resolve, this.retryDelayMs));
+			if (signal && signal.aborted) {
+				throw new DOMException("aborted", "AbortError");
+			}
+			bytes = await this.hedgedDownload(
+				this.candidateURLs(info.url),
+				onProgress,
+				signal,
+			);
+		}
 		this.bytesCache.set(key, bytes);
 		if (this.bytesCache.size > this.bytesCacheLimit) {
 			const oldest = this.bytesCache.keys().next().value;

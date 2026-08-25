@@ -174,22 +174,28 @@ window.ethereum = {
 		await rows.nth(i).uncheck();
 	}
 	await page.waitForTimeout(300);
-	const centerAlpha = await page.evaluate(() => {
-		const c = document.getElementById("mainCanvas");
-		return c.getContext("2d").getImageData(c.width / 2, c.height / 2, 1, 1)
-			.data[3];
-	});
-	console.log("all hidden, center alpha:", centerAlpha);
-	check(centerAlpha === 0, "canvas center not empty with all traits hidden");
-	// Show one again: it comes back
+	// Layers live on #mainCanvas; the backdrop paints on its own
+	// #backdropCanvas behind them - both must go empty
+	const centerAlphas = () =>
+		page.evaluate(() =>
+			["mainCanvas", "backdropCanvas"].map((id) => {
+				const c = document.getElementById(id);
+				return c.getContext("2d").getImageData(c.width / 2, c.height / 2, 1, 1)
+					.data[3];
+			}),
+		);
+	const hiddenAlphas = await centerAlphas();
+	console.log("all hidden, center alphas:", JSON.stringify(hiddenAlphas));
+	check(
+		hiddenAlphas[0] === 0 && hiddenAlphas[1] === 0,
+		"canvases not empty with all traits hidden",
+	);
+	// Show one again: it comes back (row 0 is the backdrop, which
+	// redraws on its own canvas)
 	await rows.nth(0).check();
 	await page.waitForTimeout(300);
-	const backAlpha = await page.evaluate(() => {
-		const c = document.getElementById("mainCanvas");
-		return c.getContext("2d").getImageData(c.width / 2, c.height / 2, 1, 1)
-			.data[3];
-	});
-	check(backAlpha !== 0, "re-checked trait did not redraw");
+	const backAlphas = await centerAlphas();
+	check(backAlphas[1] !== 0, "re-checked backdrop did not redraw");
 	await page.screenshot({ path: "panel-traits.png" });
 
 	// Effects persist: set Motion to 0 and reload. Collapsed

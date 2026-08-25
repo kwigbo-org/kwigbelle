@@ -14,7 +14,40 @@ export default class LayerSprings {
 		this.followScale = 1;
 		this.isPaused = false;
 		this.isWaveEnabled = false;
+		// Lock layers (docs/tads/info-tab.md Decision 4): when on,
+		// every spring runs the same mid-depth profile - one target,
+		// one set of dynamics - so the stack converges into lockstep
+		// and the Avastar moves as ONE piece under drag, tilt, idle,
+		// and poke. Springs keep their own state, so toggling eases
+		// the layers together/apart instead of snapping. ON by
+		// default (operator QA); a stored choice wins either way.
+		this.isLockedTogether = true;
+		this.lockProfile = LayerSprings.profileFor(0.5);
 		this.springs = [];
+	}
+
+	/// The depth-tuned spring parameters. setup() hands each layer
+	/// its own depth; the lock-layers mode runs every layer on the
+	/// mid-depth profile.
+	///
+	/// Idle is depth-COHERENT (docs/tads/info-tab.md Decision 5):
+	/// ONE shared breath with a SMALL depth lag - the face breathes
+	/// as one being with parallax, instead of layers wandering on
+	/// independent phases (the old lag of 2.4 rad decorrelated
+	/// them). Raise the lag for more ripple, lower for lockstep;
+	/// front layers breathe slightly deeper for depth.
+	///
+	/// - Parameter depth: Normalized depth 0 (back) to 1 (front)
+	static profileFor(depth) {
+		const stiffness = 90 - depth * 55;
+		return {
+			depth: depth,
+			stiffness: stiffness,
+			damping: 2 * Math.sqrt(stiffness) * 0.45,
+			phase: depth * 0.9,
+			swayAmp: 1 + depth * 4,
+			breatheAmp: 2 + depth * 7.5,
+		};
 	}
 
 	/// Kick every layer's velocity away from a tap point — the Poke
@@ -29,20 +62,23 @@ export default class LayerSprings {
 			return;
 		}
 		for (const spring of this.springs) {
+			// Locked-together layers share one profile so the whole
+			// face takes the same kick and stays in lockstep
+			const profile = this.isLockedTogether ? this.lockProfile : spring;
 			let dx = spring.x - point.x;
 			let dy = spring.y - point.y;
 			const distance = Math.hypot(dx, dy);
 			if (distance < 1) {
 				// Tap dead-center on a resting layer: a stable
 				// per-layer direction instead of dividing by zero
-				const angle = spring.phase * 2.6;
+				const angle = profile.phase * 2.6;
 				dx = Math.cos(angle);
 				dy = Math.sin(angle);
 			} else {
 				dx /= distance;
 				dy /= distance;
 			}
-			const strength = 250 + spring.depth * 550;
+			const strength = 250 + profile.depth * 550;
 			spring.vx += dx * strength;
 			spring.vy += dy * strength;
 		}
@@ -61,18 +97,12 @@ export default class LayerSprings {
 			// their traits, and raw index scaling made many layered
 			// ones fly apart
 			const depth = layerCount > 1 ? index / (layerCount - 1) : 0;
-			const stiffness = 90 - depth * 55;
 			this.springs.push({
 				x: center.x,
 				y: center.y,
 				vx: 0,
 				vy: 0,
-				depth: depth,
-				stiffness: stiffness,
-				damping: 2 * Math.sqrt(stiffness) * 0.45,
-				phase: depth * 2.4,
-				swayAmp: 1 + depth * 3.5,
-				breatheAmp: 2 + depth * 6.5,
+				...LayerSprings.profileFor(depth),
 			});
 		}
 	}
@@ -90,20 +120,30 @@ export default class LayerSprings {
 			return;
 		}
 		for (const spring of this.springs) {
-			// Resting target is the center, drifting on slow sine
-			// waves so the Avastar "breathes" while idle
+			// Locked-together: every layer runs the mid-depth profile,
+			// so targets and dynamics match and the stack converges
+			// into moving as one piece
+			const profile = this.isLockedTogether ? this.lockProfile : spring;
+			// Resting target is the center, drifting on slow shared
+			// sines so the Avastar "breathes" while idle (cadence and
+			// lag per the Decision 5 retune - one-line tunables in
+			// profileFor)
 			let targetX =
 				center.x +
-				Math.sin(now * 0.6 + spring.phase) * spring.swayAmp * this.motionScale;
+				Math.sin(now * 0.45 + profile.phase) *
+					profile.swayAmp *
+					this.motionScale;
 			let targetY =
 				center.y +
-				Math.sin(now * 0.9 + spring.phase) *
-					spring.breatheAmp *
+				Math.sin(now * 0.7 + profile.phase) *
+					profile.breatheAmp *
 					this.motionScale;
 			if (touchPoint) {
 				// Front layers overshoot toward the pointer more than
-				// back layers, separating them for a parallax feel
-				const reach = (1 + spring.depth * 0.35) * this.followScale;
+				// back layers, separating them for a parallax feel -
+				// locked-together, the shared reach erases exactly that
+				// separation and the drag carries the whole face
+				const reach = (1 + profile.depth * 0.35) * this.followScale;
 				targetX = center.x + (touchPoint.x - center.x) * reach;
 				targetY = center.y + (touchPoint.y - center.y) * reach;
 			}
@@ -120,7 +160,8 @@ export default class LayerSprings {
 				// (docs/tads/burned-traits.md Decision 10).
 				const period = 3.2; // seconds between wavefronts
 				const width = 0.4; // fraction of the period a layer whips
-				let wavePhase = (now % period) / period - spring.depth * 0.35;
+				// (locked-together, the front sweeps as one shared whip)
+				let wavePhase = (now % period) / period - profile.depth * 0.35;
 				if (wavePhase < 0) {
 					wavePhase += 1;
 				}
@@ -132,9 +173,9 @@ export default class LayerSprings {
 			// Underdamped spring integration so layers overshoot
 			// and settle instead of moving linearly
 			const ax =
-				(targetX - spring.x) * spring.stiffness - spring.vx * spring.damping;
+				(targetX - spring.x) * profile.stiffness - spring.vx * profile.damping;
 			const ay =
-				(targetY - spring.y) * spring.stiffness - spring.vy * spring.damping;
+				(targetY - spring.y) * profile.stiffness - spring.vy * profile.damping;
 			spring.vx += ax * dt;
 			spring.vy += ay * dt;
 			spring.x += spring.vx * dt;
