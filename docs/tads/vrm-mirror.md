@@ -79,7 +79,7 @@ Lib/MainScene.js          wires a kind lookup (hash corpus) into
 
 ## Steps
 
-1. **PR A — guardrail + capture.** Action: Decisions 1–4, 7.
+1. **PR A — guardrail + capture.** Action: Decisions 1–4, 7, 9.
    Validate: a dry-run mode prints the first N planned uploads
    without touching S3; the verifier round-trips a small local
    fixture through the full stream-verify-hash path; deploy.sh's
