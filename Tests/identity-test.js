@@ -23,7 +23,58 @@ const { check } = require("./check.js");
 		{ timeout: 15000 },
 	);
 	await page.waitForTimeout(500);
-	await page.click("#panelHandle");
+	// The Traits section lives in the info drawer now
+	// (docs/tads/info-tab.md Decision 2)
+	await page.click("#infoHandle");
+
+	// The "How rarity works" explainer (Decision 3): static frozen
+	// facts - the five bands with icons, the lottery-prime Unique-By
+	// population, and the burned/mint-condition vocabulary
+	const explainer = await page.evaluate(() => {
+		const section = [
+			...document.querySelectorAll("#infoSections .panelSection"),
+		].find(
+			(s) =>
+				s.querySelector(".panelSectionHeader span").textContent ===
+				"How rarity works",
+		);
+		if (!section) return null;
+		return {
+			tiers: [...section.querySelectorAll(".infoTierRow")].map((row) => ({
+				name: row.querySelector(".infoTierName").textContent,
+				range: row.querySelector(".infoTierRange").textContent,
+			})),
+			icons: section.querySelectorAll(".rarityIcon").length,
+			flame: section.querySelectorAll(".flameIcon").length,
+			text: section.innerText,
+		};
+	});
+	check(
+		explainer !== null,
+		"How rarity works section missing from info drawer",
+	);
+	console.log("explainer tiers:", JSON.stringify(explainer.tiers));
+	check(
+		JSON.stringify(explainer.tiers) ===
+			JSON.stringify([
+				{ name: "Common", range: "1–32" },
+				{ name: "Uncommon", range: "33–40" },
+				{ name: "Rare", range: "41–49" },
+				{ name: "Epic", range: "50–59" },
+				{ name: "Legendary", range: "60–100" },
+			]),
+		"explainer tier bands wrong: " + JSON.stringify(explainer.tiers),
+	);
+	check(
+		explainer.icons === 6 && explainer.flame === 1,
+		"expected 5 tier icons + 1 flame in the explainer",
+	);
+	check(
+		explainer.text.includes("1 to 100") &&
+			explainer.text.includes("#200–25,199") &&
+			explainer.text.includes("mint condition"),
+		"explainer is missing frozen facts",
+	);
 
 	const readCard = () =>
 		page.evaluate(() => ({
@@ -77,7 +128,11 @@ const { check } = require("./check.js");
 	// 8014 has zero burns: the Mint condition chip fills in async
 	// from the frozen burned table, with no burned line or tags
 	// (docs/tads/burned-traits.md Decision 5)
-	await page.waitForSelector(".identityChip.mintChip", { timeout: 15000 });
+	// state: "attached" - the card may sit in a hidden drawer column
+	await page.waitForSelector(".identityChip.mintChip", {
+		state: "attached",
+		timeout: 15000,
+	});
 	const mintState = await page.evaluate(() => ({
 		chip: document.querySelector(".identityChip.mintChip")?.innerText,
 		burnedLine: !!document.querySelector(".identityBurned"),
@@ -149,7 +204,8 @@ const { check } = require("./check.js");
 	);
 
 	// Replicant: kind chip, NO series chip, own score (25500 -> 61
-	// Legendary band)
+	// Legendary band). The load input is a settings section.
+	await page.click("#panelHandle");
 	await page.fill("#loadTokenInput", "25500");
 	await page.press("#loadTokenInput", "Enter");
 	await page.waitForFunction(
@@ -222,7 +278,11 @@ const { check } = require("./check.js");
 	// fact for EVERY prime — promos included. Token 50 has zero
 	// burns, so the founder card carries the mint chip (policy
 	// pinned deliberately, per review).
-	await page.waitForSelector(".identityChip.mintChip", { timeout: 15000 });
+	// state: "attached" - the card may sit in a hidden drawer column
+	await page.waitForSelector(".identityChip.mintChip", {
+		state: "attached",
+		timeout: 15000,
+	});
 	check(
 		!(await page.evaluate(() => !!document.querySelector(".identityBurned"))),
 		"mint-condition founder shows a burned line",
@@ -239,7 +299,10 @@ const { check } = require("./check.js");
 			document.querySelector(".identityTitle")?.textContent === "Avastar #8700",
 		{ timeout: 15000 },
 	);
-	await page.waitForSelector(".identityBurned", { timeout: 15000 });
+	await page.waitForSelector(".identityBurned", {
+		state: "attached",
+		timeout: 15000,
+	});
 	const burned = await page.evaluate(() => ({
 		line: document.querySelector(".identityBurned")?.innerText || "",
 		mintChip: !!document.querySelector(".identityChip.mintChip"),
@@ -260,6 +323,8 @@ const { check } = require("./check.js");
 
 	// Preview-overriding a burned gene moves the flame to the "was"
 	// line: the burn belongs to the MINTED trait, not the preview
+	// (back to the info drawer for the trait cards)
+	await page.click("#infoHandle");
 	await page.locator(".traitRow").nth(9).locator(".traitEdit").click();
 	await page.waitForSelector("#traitModal .modalOption", { timeout: 15000 });
 	await page.locator(".modalOption:not(.current)").first().click();

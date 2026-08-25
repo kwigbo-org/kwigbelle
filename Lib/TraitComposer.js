@@ -258,8 +258,8 @@ export default class TraitComposer {
 			// stale async results against it. compose() fills it in;
 			// preview compositions have no token.
 			tokenId: null,
-			// Backdrop (gene 4) stretches to fill like the parser's
-			// background bucket did
+			// Backdrop (gene 4) covers the canvas (cropped, not
+			// stretched - see toImage)
 			backgroundLayer: this.toImage(styles + fragments[4], true, displaySize),
 			layers,
 			layerInfo,
@@ -285,17 +285,20 @@ export default class TraitComposer {
 		};
 	}
 
-	/// Build a layer Image. Headers mirror AvastarParser's
-	/// createHeader so trait composition renders identically to the
-	/// legacy slicing path.
+	/// Build a layer Image sized to the display. Trait layers
+	/// letterbox (meet) so the face stays centered; the backdrop
+	/// covers (slice) so the square art fills any viewport cropped,
+	/// never distorted (docs/tads/info-tab.md Decision 7 — the old
+	/// 100%-sized backdrop got stretched by drawImage on non-square
+	/// viewports, squishing it on tall phones).
 	toImage(content, isBackground, displaySize) {
 		const svgXMLNS = `xmlns="http://www.w3.org/2000/svg"`;
 		const xlinkXMLNS = `xmlns:xlink="http://www.w3.org/1999/xlink"`;
-		const aspect = `preserveAspectRatio="xMidYMid meet"`;
+		const aspect = isBackground
+			? `preserveAspectRatio="xMidYMid slice"`
+			: `preserveAspectRatio="xMidYMid meet"`;
 		const viewBox = `viewBox="0 0 1000 1000"`;
-		const viewPort = isBackground
-			? `width="100%" height="100%"`
-			: `width="${displaySize.width}" height="${displaySize.height}"`;
+		const viewPort = `width="${displaySize.width}" height="${displaySize.height}"`;
 		const svg =
 			`<svg ${aspect} ${svgXMLNS} ${xlinkXMLNS} version="1.1" ${viewPort} ${viewBox}>` +
 			content +

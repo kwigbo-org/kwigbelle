@@ -299,8 +299,49 @@
 
 /* Range sliders and checkboxes pick up the accent */
 #panelSections input,
+#infoSections input,
 #traitModal input {
 	accent-color: var(--accent);
+}
+
+/* The info drawer's rarity explainer (docs/tads/info-tab.md) */
+.infoText {
+	margin: 8px 0;
+	font-size: 12px;
+	line-height: 1.55;
+	color: var(--muted);
+}
+
+.infoTierList {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	margin: 10px 0;
+	padding: 8px 10px;
+	border: 1px solid var(--border-soft);
+	border-radius: 10px;
+	background: var(--surface);
+}
+
+.infoTierRow {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	font-size: 12px;
+}
+
+.infoTierName {
+	color: var(--text);
+	font-weight: 600;
+}
+
+.infoTierRange {
+	margin-left: auto;
+	color: var(--muted);
+}
+
+.infoBurnedNote .flameIcon {
+	color: var(--burned);
 }
 
 .panelSection {

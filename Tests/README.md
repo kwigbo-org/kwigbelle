@@ -25,7 +25,7 @@ python3 -m http.server 8741
 # terminal 2:
 cd Tests
 node smoke.js          # no-wallet load, spring motion, follow/release
-node compose-test.js   # trait composition: parity, layer names, forced-failure static fallback
+node compose-test.js   # trait composition: parity, layer names, mobile backdrop cover, forced-failure static fallback
 node picker-test.js    # profile drawer: grid, badge, composed thumbnails (0 RPC), pick, logout
 node chooser-test.js   # multi-wallet chooser + localStorage persistence across reload
 node switch-test.js    # wrong-network -> Switch to Mainnet button -> reload -> grid

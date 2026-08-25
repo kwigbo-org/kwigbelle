@@ -70,6 +70,91 @@ const { check } = require("./check.js");
 	check(!!state.backgroundColor, "no background color extracted");
 	check(errors.length === 0, "page errors: " + JSON.stringify(errors));
 
+	// Mobile viewport: the backdrop rasterizes AT the display size
+	// with cover semantics (docs/tads/info-tab.md Decision 7) - the
+	// old 100%-sized meet raster got stretched by drawImage,
+	// squishing the square art on tall phones. Captured SVG headers
+	// prove the aspect mode; the natural-size match proves drawImage
+	// isn't re-stretching.
+	const pageM = await browser.newPage({
+		viewport: { width: 390, height: 844 },
+	});
+	const errorsM = [];
+	pageM.on("pageerror", (e) => errorsM.push(e.message));
+	pageM.on("dialog", (d) => {
+		errorsM.push("dialog: " + d.message());
+		d.dismiss();
+	});
+	await pageM.addInitScript(() => {
+		const origCreate = URL.createObjectURL.bind(URL);
+		window.__svgHeads = [];
+		URL.createObjectURL = (blob) => {
+			if (blob && blob.type === "image/svg+xml") {
+				blob
+					.text()
+					.then((t) => window.__svgHeads.push(t.slice(0, t.indexOf(">") + 1)));
+			}
+			return origCreate(blob);
+		};
+	});
+	await pageM.goto("http://localhost:8741/index.html?tokenid=8014&testharness");
+	await pageM.waitForFunction(
+		() => document.getElementById("preloader")?.style.opacity === "0",
+		{ timeout: 15000 },
+	);
+	await pageM.waitForTimeout(800);
+	const mobile = await pageM.evaluate(() => {
+		const scene = window.kwigbelleScene;
+		const bg = scene.avastar.backgroundLayer;
+		return {
+			canvas: { w: scene.canvas.width, h: scene.canvas.height },
+			bgNatural: { w: bg.naturalWidth, h: bg.naturalHeight },
+			heads: window.__svgHeads,
+		};
+	});
+	console.log(
+		"mobile canvas:",
+		JSON.stringify(mobile.canvas),
+		"backdrop natural:",
+		JSON.stringify(mobile.bgNatural),
+	);
+	check(
+		mobile.canvas.w === 390 && mobile.canvas.h === 844,
+		"mobile canvas not viewport-sized: " + JSON.stringify(mobile.canvas),
+	);
+	check(
+		mobile.bgNatural.w === mobile.canvas.w &&
+			mobile.bgNatural.h === mobile.canvas.h,
+		"backdrop not rasterized at the display size (drawImage would stretch): " +
+			JSON.stringify(mobile.bgNatural),
+	);
+	const layerHeads = mobile.heads.filter((h) =>
+		h.includes('viewBox="0 0 1000 1000"'),
+	);
+	const sliceHeads = layerHeads.filter((h) => h.includes('"xMidYMid slice"'));
+	const meetHeads = layerHeads.filter((h) => h.includes('"xMidYMid meet"'));
+	console.log(
+		"layer headers:",
+		layerHeads.length,
+		"slice:",
+		sliceHeads.length,
+		"meet:",
+		meetHeads.length,
+	);
+	check(
+		sliceHeads.length === 1 &&
+			sliceHeads[0].includes('width="390"') &&
+			sliceHeads[0].includes('height="844"'),
+		"expected exactly the backdrop to cover (slice) at viewport size: " +
+			JSON.stringify(sliceHeads),
+	);
+	check(
+		meetHeads.length === layerHeads.length - 1,
+		"trait layers must keep letterbox (meet) semantics",
+	);
+	check(errorsM.length === 0, "mobile page errors: " + JSON.stringify(errorsM));
+	await pageM.close();
+
 	// Forced failure: library unreachable -> single static layer
 	// fallback, with the console warn as evidence
 	const page3 = await browser.newPage({

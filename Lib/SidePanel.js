@@ -118,14 +118,6 @@ export default class SidePanel {
 		}
 	}
 
-	/// Register a collapsible section in the settings drawer,
-	/// creating that drawer on first use
-	///
-	/// - Parameters:
-	///		- title: The section header label
-	///		- contentElement: The section body
-	/// - Returns: The section element, so callers can show/hide
-	///		whole sections by mode (e.g. Effects in 3D)
 	/// The settings tab's face: a gear as inline SVG. A text "⚙"
 	/// gets swapped for the platform's COLOR EMOJI on mobile;
 	/// currentColor SVG stays the chrome's white everywhere.
@@ -148,6 +140,25 @@ export default class SidePanel {
 				"2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l" +
 				"-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 " +
 				"3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z",
+		);
+		path.setAttribute("fill", "currentColor");
+		svg.appendChild(path);
+		return svg;
+	}
+
+	/// The info tab's face: an i-in-circle as inline SVG (same
+	/// currentColor treatment as the gear, for the same mobile
+	/// color-emoji reason)
+	static infoIcon() {
+		const svg = document.createElementNS(SVG_NS, "svg");
+		svg.setAttribute("viewBox", "0 0 24 24");
+		svg.setAttribute("class", "handleIcon");
+		const path = document.createElementNS(SVG_NS, "path");
+		path.setAttribute(
+			"d",
+			"M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 " +
+				"12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 " +
+				"8zm-1-11h2V7h-2v2zm0 8h2v-6h-2v6z",
 		);
 		path.setAttribute("fill", "currentColor");
 		svg.appendChild(path);
@@ -180,12 +191,31 @@ export default class SidePanel {
 		}
 	}
 
-	addSection(title, contentElement) {
-		if (!this.drawers.has("settings")) {
-			this.addDrawer("settings", SidePanel.settingsIcon(), {
-				handleId: "panelHandle",
-				columnId: "panelSections",
-			});
+	/// Register a collapsible section in a lazily-created drawer.
+	/// Known drawer ids: "settings" (default, the original surface)
+	/// and "info" (docs/tads/info-tab.md Decision 1). Drawers stack
+	/// in creation order, so callers order the tabs by registering
+	/// their first sections in stack order.
+	///
+	/// - Parameters:
+	///		- title: The section header label
+	///		- contentElement: The section body
+	///		- drawerId: Which drawer hosts the section
+	/// - Returns: The section element, so callers can show/hide
+	///		whole sections by mode (e.g. Effects in 3D)
+	addSection(title, contentElement, drawerId = "settings") {
+		if (!this.drawers.has(drawerId)) {
+			if (drawerId === "info") {
+				this.addDrawer("info", SidePanel.infoIcon(), {
+					handleId: "infoHandle",
+					columnId: "infoSections",
+				});
+			} else {
+				this.addDrawer("settings", SidePanel.settingsIcon(), {
+					handleId: "panelHandle",
+					columnId: "panelSections",
+				});
+			}
 		}
 		const section = document.createElement("div");
 		section.setAttribute("class", "panelSection");
@@ -214,7 +244,7 @@ export default class SidePanel {
 		body.appendChild(contentElement);
 		section.appendChild(body);
 
-		this.drawers.get("settings").column.appendChild(section);
+		this.drawers.get(drawerId).column.appendChild(section);
 		return section;
 	}
 }
