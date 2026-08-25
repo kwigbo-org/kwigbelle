@@ -144,7 +144,7 @@ None.
   implemented serving lane) was CLOSED and preserved at 0c103a3
   so a hotfix could take develop: PR #29 (merged 800dd73) adds a
   SHARED 429 cooldown (all workers pause together, Retry-After
-  honored in both header forms, 300s clamp, bodies drained) and
+  honored in both header forms, 300s clamp, bodies cancelled) and
   --gateway so the capture can run through a local kubo node's
   gateway (bitswap, no HTTP limits) or any alternative gateway -
   CORS-dead ones are fine server-side. First kubo probe 504'd on
