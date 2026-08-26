@@ -607,7 +607,8 @@
 
 /*Trait Edit Modal*/
 
-#traitModal {
+#traitModal,
+#mirrorModal {
 	position: fixed;
 	inset: 0;
 	z-index: 40;
@@ -875,6 +876,68 @@
 .vrmDownload:disabled {
 	opacity: 0.7;
 	cursor: default;
+}
+
+.vrmNoteRow {
+	display: flex;
+	align-items: flex-start;
+	gap: 8px;
+}
+
+.vrmNoteRow .loadNote {
+	flex: 1;
+}
+
+.vrmMirrorInfo {
+	font-size: 15px;
+	line-height: 1;
+	padding: 4px 6px;
+	border-radius: 8px;
+	color: var(--muted);
+	background: var(--surface-2);
+	cursor: pointer;
+	-webkit-tap-highlight-color: transparent;
+}
+
+/* Mirror status modal (docs/tads/vrm-mirror.md Decision 10) */
+.mirrorSheet {
+	width: min(420px, 94vw);
+}
+
+.mirrorBody {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	padding: 16px 18px 18px;
+	font-size: 13px;
+}
+
+.mirrorBar {
+	height: 10px;
+	border-radius: 5px;
+	background: var(--surface-2);
+	overflow: hidden;
+}
+
+.mirrorBarFill {
+	height: 100%;
+	border-radius: 5px;
+	background: linear-gradient(90deg, #7b5cff, #4ecdc4);
+}
+
+.mirrorHeadline {
+	font-weight: 700;
+	color: var(--heading);
+}
+
+.mirrorDetail,
+.mirrorFront {
+	color: var(--text);
+}
+
+.mirrorNote {
+	color: var(--muted);
+	font-size: 12px;
 }
 
 /* VRM loading overlay: unmistakable center-screen feedback for the

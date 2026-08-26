@@ -37,6 +37,7 @@ node lab-test.js       # trait swap preview: modal, override, undo, reset, swap-
 node vrm-source-test.js  # VRM fetch pipeline: gateways, progress, cache, abort (routed fixtures)
 node vrm-viewer-test.js  # 3D entry/exit: WebGL render, cache re-entry, overlay cancel, load-supersedes
 node vrm-panel-test.js   # 3D-mode settings limits + owner-only Download VRM
+node mirror-status-test.js # ⓘ mirror-status modal: progress render + fallback
 node identity-test.js    # identity card: chips, score bands, distribution, Unique-By, mint/burned
 node effects-test.js     # poke, wave, trails, tilt follow + toggle persistence
 ```

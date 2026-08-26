@@ -89,6 +89,10 @@ const RETRY_CAP_MS = 60000;
 let idleTimeoutMs = 60000;
 const METADATA_TIMEOUT_MS = 30000;
 const FALLBACK_AVG_BYTES = 10700000; // sampled avg, for early ETAs
+// Public progress surface: <dest>_status.json (not a *.vrm name, so
+// it can never collide with a mirrored model)
+const STATUS_KEY = "_status.json";
+const STATUS_PUBLISH_MS = 60000;
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -608,6 +612,32 @@ const upload = (filePath, destURL) =>
 		});
 	});
 
+// Quiet async AWS CLI runner for the best-effort progress surface -
+// unlike upload(), failures here must stay silent and non-fatal.
+// The watchdog bounds a hung CLI so a stuck publish can never
+// wedge the publish chain for the life of the run (review catch).
+const AWS_QUIET_TIMEOUT_MS = 30000;
+const awsQuiet = (args) =>
+	new Promise((resolve, reject) => {
+		const child = spawn("aws", args, { stdio: "ignore" });
+		const watchdog = setTimeout(() => {
+			child.kill("SIGKILL");
+			reject(new Error("aws timed out"));
+		}, AWS_QUIET_TIMEOUT_MS);
+		child.on("error", (error) => {
+			clearTimeout(watchdog);
+			reject(error);
+		});
+		child.on("close", (code) => {
+			clearTimeout(watchdog);
+			if (code === 0) {
+				resolve();
+			} else {
+				reject(new Error(`aws exited ${code}`));
+			}
+		});
+	});
+
 // ---- modes ----
 
 async function capture(dest, limit, parallel, range) {
@@ -636,6 +666,86 @@ async function capture(dest, limit, parallel, range) {
 	status.event(
 		`run ${done > 0 ? "resumed" : "started"} at ${done.toLocaleString()} captured, dest ${dest}, ${parallel} in flight${rangeNote}`,
 	);
+	// Public progress surface (TAD Decision 10): a tiny JSON at
+	// <dest>_status.json, fetched same-origin by the site's mirror
+	// status modal (the vrm/ prefix lives in the bucket the site is
+	// served from). Merge-on-write so both fronts of a --from/--until
+	// split contribute their own slot. Best-effort BY DESIGN: a
+	// failed publish never slows, retries, or aborts the capture,
+	// and it must not feed uploadFailStreak.
+	const statusTmp = `${TMP_FILE}.status`;
+	let lastPublish = 0;
+	const doPublish = async () => {
+		try {
+			let published = { fronts: {} };
+			try {
+				await awsQuiet([
+					"s3",
+					"cp",
+					dest + STATUS_KEY,
+					statusTmp,
+					"--only-show-errors",
+				]);
+				published = JSON.parse(fs.readFileSync(statusTmp, "utf8"));
+				if (!published.fronts) {
+					published.fronts = {};
+				}
+			} catch (error) {
+				// No published status yet (or unreadable): start fresh
+			}
+			// This read-modify-write has NO compare-and-swap: two fronts
+			// publishing in the same instant can momentarily revert each
+			// other's slot. DELIBERATE (review-acknowledged): it
+			// self-heals on the next publish cycle, and a coordination
+			// mechanism here would couple the fronts the --from/--until
+			// split exists to decouple.
+			published.total = TOKEN_COUNT;
+			published.updated = new Date().toISOString();
+			published.fronts[`${range.from}-${range.until}`] = {
+				from: range.from,
+				until: range.until,
+				captured: Object.keys(manifest.entries).length,
+				gaps: Object.keys(manifest.gaps).length,
+				bytes: Object.values(manifest.entries).reduce(
+					(sum, entry) => sum + entry.size,
+					0,
+				),
+				updated: published.updated,
+			};
+			fs.writeFileSync(statusTmp, JSON.stringify(published));
+			await awsQuiet([
+				"s3",
+				"cp",
+				statusTmp,
+				dest + STATUS_KEY,
+				"--content-type",
+				"application/json",
+				// Progress must never be stale-cached by CloudFront
+				"--cache-control",
+				"no-cache",
+				"--only-show-errors",
+			]);
+		} catch (error) {
+			// Best-effort: the mirror itself is unaffected
+		} finally {
+			fs.rmSync(statusTmp, { force: true });
+		}
+	};
+	// Publishes are CHAINED, not flagged: a forced publish queues
+	// behind any in-flight one and always runs - the final flush
+	// must never no-op just because a fire-and-forget publish is
+	// still landing (review catch). doPublish never rejects, so the
+	// chain cannot wedge, and awsQuiet's watchdog bounds each link.
+	let publishChain = Promise.resolve();
+	const publishStatus = (force) => {
+		if (!force && Date.now() - lastPublish < STATUS_PUBLISH_MS) {
+			return publishChain;
+		}
+		lastPublish = Date.now();
+		publishChain = publishChain.then(doPublish);
+		return publishChain;
+	};
+	publishStatus(true);
 	// A killed run can strand WORKER temp files (numeric suffixes
 	// only - a concurrent --verify/--selftest owns .verify and
 	// .selftest, and sweeping those would break the very audits
@@ -794,6 +904,9 @@ async function capture(dest, limit, parallel, range) {
 				status.runBytes += size;
 				uploadFailStreak = 0;
 				success = true;
+				// Fire-and-forget: throttled internally, never awaited
+				// on the capture path
+				publishStatus();
 			} catch (error) {
 				fs.rmSync(tmpFile, { force: true });
 				lastError = error;
@@ -855,6 +968,7 @@ async function capture(dest, limit, parallel, range) {
 			`${Object.keys(manifest.gaps).length} gaps, ` +
 			`${status.failedThisRun.length} failures pending`,
 	);
+	await publishStatus(true);
 	console.log(`done - status in ${STATUS_FILE}`);
 }
 

@@ -87,8 +87,9 @@ Lib/VRMSource.js           metadata -> vrm_url -> hedged IPFS
                            -> v1 rewrite, progress, LRU cache)
 Lib/VRMViewer.js           own-canvas three.js VRM display (orbit
                            controls, spring-bones, full disposal)
-Lib/VRMSection.js          "3D model" panel section: view toggle +
-                           owner-only Download VRM
+Lib/VRMSection.js          "3D model" panel section: view toggle,
+                           owner-only Download VRM, ⓘ mirror-status
+                           modal (same-origin vrm/_status.json)
 Lib/VRMLoadingUI.js        center-screen VRM loading overlay
                            (tap-to-cancel) + failure toast; the
                            3D entry/exit lives in VRMSection
@@ -133,7 +134,10 @@ Tools/mirror-vrms.js       resumable stream-through VRM backup ->
                            workers + pid run-lock w/ ownership
                            gates; shared 429 cooldown + stall
                            auto-rest (escalating); --gateway
-                           (e.g. local kubo node); sha256 manifest
+                           (e.g. local kubo node); --from/--until
+                           two-front split + --merge; publishes
+                           vrm/_status.json for the site's mirror
+                           modal; sha256 manifest
                            vrm-manifest.json; live status in
                            feedback/VRM-MIRROR.md; --dry-run /
                            --verify / --selftest

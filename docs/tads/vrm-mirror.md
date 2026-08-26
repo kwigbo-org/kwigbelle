@@ -60,6 +60,7 @@
 | 7 | **Trigger discipline**: the capture runs once, operator-invoked, resumable; `--verify N` re-downloads N random mirrored files and re-checks sha256 against the manifest. Re-runs skip completed tokens (progress file) so a crash or a new gap discovery costs nothing. | Same verification culture as fetch-burned/check-corpus. |
 | 8 | Ships as two PRs: **PR A** — guardrail + capture tool + manifest schema (Decisions 1–4, 7, 9); the multi-day capture run happens after PR A merges, feeding the manifest; **PR B** — serving lane + CORS ops step (5–6), landing once the mirror is populated and verified. | The backup is the urgent half and must not wait on serving design; serving without a populated mirror would 404 every fetch. |
 | 9 | **Operator-facing progress file** (operator request 2026-08-25): alongside the machine resume state, the tool maintains `feedback/VRM-MIRROR.md` (gitignored, PROGRESS.md convention) — a status block rewritten every few tokens: done/total counts, GB captured, current rate and ETA, the token in flight, and running retry/gap tallies — followed by an appended event log (gaps found, uploads retried, run started/resumed/stopped). Readable at any moment with `cat`, or watched live with `tail -f`. | A multi-day background run must be followable without chat scrollback or reading JSON resume state — same reasoning as the PROGRESS.md house rule. |
+| 10 | **Public progress surface** (operator request 2026-08-26): each capture run publishes a tiny `_status.json` next to the mirror objects (merge-on-write, one slot per `--from/--until` front; `Cache-Control: no-cache`; best-effort — a failed publish never touches the capture). The site's "3D model" section gains a small ⓘ button opening a mirror-status modal: overall bar, models-backed-up count, GB, and a freshness line per front. Same-origin fetch of `vrm/_status.json` — the mirror lives in the bucket the site is served from, so the modal needs no CORS, no AWS API, and no backend. `_status.json` is not a `*.vrm` name, so it can never collide with a mirrored model. | The operator can watch the backup from the site itself; visitors see the preservation work happening. Zero-infrastructure by construction: the only writer is the capture tool that already holds bucket creds. |
 
 ## Proposed design surface
 
@@ -167,3 +168,19 @@ None.
   any flowing bytes reset the ladder). Selftest grew a hanging
   fixture exercising the abort kind, the arming threshold, the
   escalation, and the reset.
+- 2026-08-26 — Two-front capture + public progress. The gateway
+  sweep from the instance settled the lane question for good:
+  EVERY public gateway 504s upstream on this corpus (ipfs.io,
+  dweb.link, 4everland, w3s.link; cf-ipfs dead) - pinata's two
+  peers are the sole source on the entire IPFS network. The one
+  untapped independent budget was the operator's residential IP
+  against pinata's HTTP gateway (never throttled on day 1, just
+  uplink-bound), so the tool gained --from/--until range bounds
+  (each machine owns a slice, own manifest, clean finish, zero
+  duplicated work) and --merge to fold the records into the
+  final committed manifest, refusing on any disagreement. Both
+  fronts launched 2026-08-26: instance = kubo lane, tokens
+  0-13,999; laptop = pinata HTTP, tokens 14,000-26,616.
+  Decision 10 (same day): capture publishes _status.json to the
+  mirror prefix; the site's 3D-model section gained the ⓘ
+  mirror-status modal reading it same-origin.
