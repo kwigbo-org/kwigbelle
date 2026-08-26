@@ -139,6 +139,9 @@ export default class VRMSection {
 			}
 			renderMirrorStatus(body, await res.json());
 		} catch (error) {
+			// Surfaces malformed status data in devtools instead of
+			// silently reading as "not published" (review catch)
+			console.warn("mirror status unavailable", error);
 			body.innerText =
 				"The backup status isn't published yet - the mirror " +
 				"capture hasn't reported from this site's bucket.";
@@ -157,7 +160,10 @@ function renderMirrorStatus(body, data) {
 	);
 	const gaps = fronts.reduce((sum, front) => sum + (front.gaps || 0), 0);
 	const bytes = fronts.reduce((sum, front) => sum + (front.bytes || 0), 0);
-	const percent = Math.min(100, ((captured + gaps) / total) * 100);
+	// The headline says "models backed up", so the percent and bar
+	// count ONLY captured models (review catch); gaps - tokens with
+	// no VRM to back up - get their own line below
+	const percent = Math.min(100, (captured / total) * 100);
 	body.innerText = "";
 	const bar = document.createElement("div");
 	bar.setAttribute("class", "mirrorBar");
@@ -178,6 +184,13 @@ function renderMirrorStatus(body, data) {
 			`models backed up (${percent.toFixed(1)}%)`,
 	);
 	line("mirrorDetail", `${(bytes / 1e9).toFixed(2)} GB safely mirrored`);
+	if (gaps > 0) {
+		line(
+			"mirrorDetail",
+			`${gaps.toLocaleString()} ${gaps === 1 ? "token has" : "tokens have"} ` +
+				"no VRM to back up (recorded gaps)",
+		);
+	}
 	for (const front of fronts) {
 		if (front.until === undefined) {
 			continue;

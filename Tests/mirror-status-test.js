@@ -15,7 +15,8 @@ const STATUS = {
 			from: 0,
 			until: 14000,
 			captured: 900,
-			gaps: 0,
+			// Gaps must NOT count toward "models backed up"
+			gaps: 10,
 			bytes: 9e9,
 			updated: new Date().toISOString(),
 		},
@@ -69,7 +70,9 @@ const STATUS = {
 	const modal = await page.evaluate(() => ({
 		title: document.querySelector("#mirrorModal .modalTitle").innerText,
 		headline: document.querySelector("#mirrorModal .mirrorHeadline").innerText,
-		detail: document.querySelector("#mirrorModal .mirrorDetail").innerText,
+		details: [...document.querySelectorAll("#mirrorModal .mirrorDetail")].map(
+			(element) => element.innerText,
+		),
 		fronts: [...document.querySelectorAll("#mirrorModal .mirrorFront")].map(
 			(element) => element.innerText,
 		),
@@ -78,14 +81,19 @@ const STATUS = {
 	console.log("modal:", JSON.stringify(modal, null, 1));
 	// .modalTitle renders uppercase via CSS
 	check(modal.title === "VRM BACKUP", "modal title wrong: " + modal.title);
+	// 1,000/26,617 = 3.8% - the 10 gaps must not inflate the percent
 	check(
 		modal.headline.includes("1,000 of 26,617") &&
 			modal.headline.includes("(3.8%)"),
 		"headline wrong: " + modal.headline,
 	);
 	check(
-		modal.detail === "10.00 GB safely mirrored",
-		"GB line wrong: " + modal.detail,
+		modal.details[0] === "10.00 GB safely mirrored",
+		"GB line wrong: " + modal.details[0],
+	);
+	check(
+		modal.details[1] === "10 tokens have no VRM to back up (recorded gaps)",
+		"gaps line wrong: " + modal.details[1],
 	);
 	check(modal.fronts.length === 2, "expected two front lines");
 	check(
