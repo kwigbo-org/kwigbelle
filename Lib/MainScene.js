@@ -611,6 +611,8 @@ export default class MainScene extends Scene {
 	/// the base class's bound set
 	destroy() {
 		this.setTiltEnabled(false);
+		// Releases the panel's document-level dismiss listener
+		this.sidePanel.destroy();
 		super.destroy();
 	}
 
