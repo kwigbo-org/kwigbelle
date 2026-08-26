@@ -260,7 +260,8 @@ const mergeManifests = (own, other) => {
 			if (
 				mine.file !== entry.file ||
 				mine.sha256 !== entry.sha256 ||
-				mine.size !== entry.size
+				mine.size !== entry.size ||
+				mine.cid !== entry.cid
 			) {
 				throw new Error(`#${id} disagrees between manifests`);
 			}
@@ -1138,6 +1139,10 @@ async function selftest() {
 	};
 	mustRefuse("conflicting entry", {
 		entries: { 1: { ...entryA, sha256: "zz" } },
+		gaps: {},
+	});
+	mustRefuse("cid disagreement", {
+		entries: { 1: { ...entryA, cid: "c9" } },
 		gaps: {},
 	});
 	mustRefuse("filename collision", {
