@@ -334,6 +334,37 @@ window.ethereum = {
 		swapState.unchecked + " rows unchecked after in-page token swap",
 	);
 
+	// Tap-outside dismiss (operator QA 2026-08-26): a tap on the
+	// scene closes the open drawer; a tap inside a floating modal
+	// (which lives OUTSIDE the panel element) must NOT
+	const isPanelOpen = () =>
+		page.evaluate(() =>
+			document.getElementById("sidePanel").classList.contains("open"),
+		);
+	await page.click("#panelHandle");
+	check(await isPanelOpen(), "precondition: settings drawer open");
+	await page.mouse.click(100, 100);
+	await page.waitForTimeout(200);
+	check(!(await isPanelOpen()), "outside tap did not dismiss the drawer");
+	await page.route("**/vrm/_status.json", (route) =>
+		route.fulfill({
+			status: 200,
+			contentType: "application/json",
+			body: JSON.stringify({ total: 26617, fronts: {} }),
+		}),
+	);
+	await page.click("#panelHandle");
+	await page.click(".vrmMirrorInfo");
+	await page.waitForSelector("#mirrorModal .mirrorHeadline", { timeout: 5000 });
+	await page.click("#mirrorModal .mirrorHeadline");
+	check(
+		await isPanelOpen(),
+		"a tap inside the mirror modal dismissed the drawer under it",
+	);
+	await page.evaluate(() =>
+		document.querySelector("#mirrorModal .modalClose").click(),
+	);
+
 	console.log("errors:", errors.length ? errors : "none");
 	check(errors.length === 0, "page errors: " + JSON.stringify(errors));
 	await browser.close();

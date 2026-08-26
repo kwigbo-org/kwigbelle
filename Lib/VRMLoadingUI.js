@@ -16,6 +16,9 @@ export default class VRMLoadingUI {
 		this.loading = document.createElement("div");
 		this.loading.setAttribute("id", "vrmLoading");
 		this.loading.setAttribute("class", "centeredContainer");
+		// A tap here cancels the load; it must not also dismiss the
+		// side panel underneath
+		this.loading.classList.add("panelOverlay");
 		stopSceneEvents(this.loading);
 		this.loading.addEventListener("click", () => onCancel());
 		const spinner = document.createElement("div");

@@ -26,7 +26,7 @@ export default class MainScene extends Scene {
 	/// Overridden constructor
 	constructor(rootContainer) {
 		super(rootContainer);
-		console.log("kwigbelle build 2026-08-26.1 (mirror status modal)");
+		console.log("kwigbelle build 2026-08-26.2 (panel polish)");
 		// Build the UI
 		this.buildUI();
 		// Start loading
@@ -611,6 +611,8 @@ export default class MainScene extends Scene {
 	/// the base class's bound set
 	destroy() {
 		this.setTiltEnabled(false);
+		// Releases the panel's document-level dismiss listener
+		this.sidePanel.destroy();
 		super.destroy();
 	}
 

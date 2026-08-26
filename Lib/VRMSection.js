@@ -106,6 +106,8 @@ export default class VRMSection {
 		}
 		const overlay = document.createElement("div");
 		overlay.setAttribute("id", "mirrorModal");
+		// A tap in here must not dismiss the side panel underneath
+		overlay.classList.add("panelOverlay");
 		stopSceneEvents(overlay);
 		overlay.addEventListener("click", (event) => {
 			if (event.target === overlay) {
