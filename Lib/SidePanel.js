@@ -34,28 +34,35 @@ export default class SidePanel {
 		// (operator QA 2026-08-26). Overlays that float OUTSIDE the
 		// panel element (trait/mirror modals, the VRM loading screen)
 		// don't count as outside - a tap inside them must not yank
-		// the drawer away underneath. Capture phase, so scene
-		// handlers that stop propagation can't swallow the dismiss.
-		document.addEventListener(
-			"pointerdown",
-			(event) => {
-				if (this.activeId === null) {
-					return;
-				}
-				const target = event.target;
-				if (!(target instanceof Element)) {
-					return;
-				}
-				if (
-					this.container.contains(target) ||
-					target.closest("#traitModal, #mirrorModal, #vrmLoading")
-				) {
-					return;
-				}
-				this.close();
-			},
-			true,
-		);
+		// the drawer away underneath; they opt in by carrying the
+		// panelOverlay class at their own definition site (review
+		// catch - no allowlist here to keep in sync). Capture phase,
+		// so scene handlers that stop propagation can't swallow the
+		// dismiss.
+		this.dismissListener = (event) => {
+			if (this.activeId === null) {
+				return;
+			}
+			const target = event.target;
+			if (!(target instanceof Element)) {
+				return;
+			}
+			if (
+				this.container.contains(target) ||
+				target.closest(".panelOverlay")
+			) {
+				return;
+			}
+			this.close();
+		};
+		document.addEventListener("pointerdown", this.dismissListener, true);
+	}
+
+	/// Release the document-level dismiss listener (review catch: a
+	/// second construction against the same document must not stack
+	/// stale listeners)
+	destroy() {
+		document.removeEventListener("pointerdown", this.dismissListener, true);
 	}
 
 	/// Register a drawer: a handle tab plus its own content column

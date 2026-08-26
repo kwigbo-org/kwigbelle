@@ -88,6 +88,8 @@ export default class TraitEditModal {
 	async buildOverlay(gene, currentPick, context, resolve) {
 		const overlay = document.createElement("div");
 		overlay.setAttribute("id", "traitModal");
+		// A tap in here must not dismiss the side panel underneath
+		overlay.classList.add("panelOverlay");
 		stopSceneEvents(overlay);
 		const done = (pick) => {
 			overlay.remove();
