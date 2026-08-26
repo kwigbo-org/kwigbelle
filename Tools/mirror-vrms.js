@@ -344,6 +344,17 @@ const recordStall = (url) => {
 		`gateway stalling - all workers resting ${seconds}s (${url})`,
 	);
 };
+// A download that ENDS without stalling, but had bytes flowing,
+// breaks the streak - a transfer that flows and then fails
+// validation is not a choke signal (review catch: "consecutive"
+// must mean consecutive). A stall's own early bytes do NOT break
+// its streak, or partial-then-dead transfers would disarm the
+// ladder forever. The escalation memory resets only on a CLEAN
+// verified download, so a gateway trickling broken responses
+// can't erase the ladder while still choked.
+const recordBytes = () => {
+	stall.streak = 0;
+};
 const recordFlow = () => {
 	stall.streak = 0;
 	stall.restSeconds = REST_BASE_S;
@@ -390,6 +401,7 @@ async function downloadVerified(url, filePath) {
 	const controller = new AbortController();
 	let idleTimer = null;
 	let idleFired = false;
+	let received = false;
 	const armIdle = () => {
 		clearTimeout(idleTimer);
 		idleTimer = setTimeout(() => {
@@ -443,6 +455,7 @@ async function downloadVerified(url, filePath) {
 		const inspect = new Transform({
 			transform(chunk, encoding, callback) {
 				armIdle();
+				received = true;
 				if (head.length < 4) {
 					head = Buffer.concat([head, chunk]).subarray(0, 4);
 				}
@@ -467,12 +480,18 @@ async function downloadVerified(url, filePath) {
 		return { size, sha256: hash.digest("hex") };
 	} catch (error) {
 		// An idle abort surfaces as a generic AbortError: name the
-		// real cause and feed the shared stall ladder
-		if (idleFired) {
+		// real cause and feed the shared stall ladder. The name check
+		// keeps a non-abort error that merely RACES a fired timer
+		// (e.g. a validation throw after the last byte) from being
+		// mislabeled (review catch).
+		if (idleFired && error.name === "AbortError") {
 			recordStall(url);
 			throw new Error(
 				`stalled: no bytes for ${Math.round(idleTimeoutMs / 1000)}s via ${url}`,
 			);
+		}
+		if (received) {
+			recordBytes();
 		}
 		throw error;
 	} finally {
@@ -977,14 +996,35 @@ async function selftest() {
 	if (stall.restSeconds !== REST_BASE_S * 2) {
 		fail("stall rest did not escalate for the next recurrence");
 	}
+	// A transfer that FLOWS but fails validation breaks the streak
+	// ("consecutive" means consecutive - review catch) without
+	// resetting the escalation memory. badmagic is the fixture: its
+	// body completes deterministically (truncated's early close
+	// would race the shrunken idle window)
 	cooldown.until = 0;
+	for (let hit = 0; hit < STALL_STREAK_LIMIT - 1; hit++) {
+		await downloadVerified(`${base}/stall.vrm`, tmpFile).catch(() => {});
+	}
+	if (stall.streak !== STALL_STREAK_LIMIT - 1) {
+		fail("stall streak did not accumulate for the flow-break case");
+	}
+	await downloadVerified(`${base}/badmagic.vrm`, tmpFile).catch(() => {});
+	if (stall.streak !== 0) {
+		fail("a flowing-but-invalid transfer did not break the stall streak");
+	}
+	if (stall.restSeconds !== REST_BASE_S * 2) {
+		fail("a flowing-but-invalid transfer wrongly reset the escalation memory");
+	}
+	if (cooldown.until > Date.now()) {
+		fail("a broken streak still armed the long rest");
+	}
 	idleTimeoutMs = 60000;
 	const flowed = await downloadVerified(`${base}/good.vrm`, tmpFile);
 	if (flowed.sha256 !== expectedSha) {
 		fail("post-stall good fetch returned wrong bytes");
 	}
 	if (stall.streak !== 0 || stall.restSeconds !== REST_BASE_S) {
-		fail("flowing bytes did not reset the stall ladder");
+		fail("a clean download did not reset the stall ladder");
 	}
 	fs.rmSync(tmpFile, { force: true });
 	for (const socket of sockets) {
