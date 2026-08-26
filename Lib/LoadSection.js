@@ -1,6 +1,8 @@
 /// The Load Avastar section of the side panel: view any Avastar by
 /// token id. Fully walletless - composition renders from the
 /// static library, so this works identically logged out.
+import { Strings } from "./Strings.js";
+
 export default class LoadSection {
 	/// - Parameters:
 	///		- hasToken: async (tokenId) => corpus membership; checked
@@ -19,8 +21,7 @@ export default class LoadSection {
 
 		const note = document.createElement("div");
 		note.setAttribute("class", "loadNote");
-		note.innerText =
-			"View any of the 26,617 Avastars by token id — no wallet needed.";
+		note.innerText = Strings.load.note;
 		content.appendChild(note);
 
 		const row = document.createElement("div");
@@ -29,7 +30,7 @@ export default class LoadSection {
 		this.input.setAttribute("id", "loadTokenInput");
 		this.input.type = "text";
 		this.input.inputMode = "numeric";
-		this.input.placeholder = "Token id";
+		this.input.placeholder = Strings.load.placeholder;
 		this.input.addEventListener("keydown", (event) => {
 			if (event.key === "Enter") {
 				this.submit();
@@ -38,7 +39,7 @@ export default class LoadSection {
 		row.appendChild(this.input);
 		const button = document.createElement("div");
 		button.setAttribute("class", "loadButton");
-		button.innerText = "Load";
+		button.innerText = Strings.load.button;
 		button.addEventListener("click", () => this.submit());
 		row.appendChild(button);
 		content.appendChild(row);
@@ -59,7 +60,7 @@ export default class LoadSection {
 		const tokenId = this.input.value.trim();
 		this.error.innerText = "";
 		if (!/^\d+$/.test(tokenId)) {
-			this.error.innerText = "Enter a numeric token id";
+			this.error.innerText = Strings.load.errorNotNumeric;
 			return;
 		}
 		let isKnown = false;
@@ -69,14 +70,14 @@ export default class LoadSection {
 			if (generation !== this.submitGeneration) {
 				return;
 			}
-			this.error.innerText = "Could not check that token id — try again";
+			this.error.innerText = Strings.load.errorCheckFailed;
 			return;
 		}
 		if (generation !== this.submitGeneration) {
 			return;
 		}
 		if (!isKnown) {
-			this.error.innerText = `No Avastar has token id ${tokenId}`;
+			this.error.innerText = Strings.load.errorUnknown(tokenId);
 			return;
 		}
 		this.onLoad(tokenId);

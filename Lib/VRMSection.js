@@ -1,3 +1,4 @@
+import { Strings } from "./Strings.js";
 import { stopSceneEvents } from "./UIHelpers.js";
 
 /// The "3D model" panel section (docs/tads/vrm-viewer.md): a short
@@ -24,13 +25,11 @@ export default class VRMSection {
 		noteRow.setAttribute("class", "vrmNoteRow");
 		const note = document.createElement("div");
 		note.setAttribute("class", "loadNote");
-		note.innerText =
-			"Every Avastar has an assigned 3D model (VRM), fetched from " +
-			"IPFS on demand (~9MB).";
+		note.innerText = Strings.vrm.note;
 		noteRow.appendChild(note);
 		const info = document.createElement("span");
 		info.setAttribute("class", "vrmMirrorInfo");
-		info.setAttribute("title", "VRM backup status");
+		info.setAttribute("title", Strings.vrm.mirrorInfoTooltip);
 		info.innerText = "ⓘ";
 		info.addEventListener("click", () => this.openMirrorStatus());
 		noteRow.appendChild(info);
@@ -47,7 +46,7 @@ export default class VRMSection {
 
 		this.download = document.createElement("button");
 		this.download.setAttribute("class", "loadButton vrmDownload");
-		this.download.innerText = "⬇ Download VRM";
+		this.download.innerText = Strings.vrm.download;
 		this.download.style.display = "none";
 		this.download.addEventListener("click", () => this.onDownload());
 		content.appendChild(this.download);
@@ -62,12 +61,12 @@ export default class VRMSection {
 	setMode(mode) {
 		this.mode = mode;
 		if (mode === "loading") {
-			this.viewButton.innerText = "Cancel loading";
+			this.viewButton.innerText = Strings.vrm.cancelLoading;
 			this.progress.style.display = "";
-			this.progress.innerText = "Loading model…";
+			this.progress.innerText = Strings.vrm.loadingShort;
 		} else {
 			this.viewButton.innerText =
-				mode === "3d" ? "Back to vector" : "View in 3D";
+				mode === "3d" ? Strings.vrm.backToVector : Strings.vrm.viewIn3D;
 			this.progress.style.display = "none";
 		}
 	}
@@ -77,7 +76,9 @@ export default class VRMSection {
 		if (this.mode !== "loading") {
 			return;
 		}
-		this.progress.innerText = "Loading model… " + progressText(loaded, total);
+		this.progress.innerText = Strings.vrm.loadingShortProgress(
+			progressText(loaded, total),
+		);
 	}
 
 	/// Show the download button only for an owned token
@@ -93,7 +94,8 @@ export default class VRMSection {
 	/// - Parameter text: Status text, or null when done
 	setDownloadState(text) {
 		this.download.disabled = text !== null;
-		this.download.innerText = text === null ? "⬇ Download VRM" : "⬇ " + text;
+		this.download.innerText =
+			text === null ? Strings.vrm.download : Strings.vrm.downloadState(text);
 	}
 
 	/// The mirror-status modal: fetches the capture-published
@@ -121,7 +123,7 @@ export default class VRMSection {
 		header.setAttribute("class", "modalHeader");
 		const title = document.createElement("span");
 		title.setAttribute("class", "modalTitle");
-		title.innerText = "VRM backup";
+		title.innerText = Strings.mirror.title;
 		header.appendChild(title);
 		const close = document.createElement("span");
 		close.setAttribute("class", "modalClose");
@@ -131,7 +133,7 @@ export default class VRMSection {
 		sheet.appendChild(header);
 		const body = document.createElement("div");
 		body.setAttribute("class", "mirrorBody");
-		body.innerText = "Checking the mirror…";
+		body.innerText = Strings.mirror.checking;
 		sheet.appendChild(body);
 		document.body.appendChild(overlay);
 		try {
@@ -144,9 +146,7 @@ export default class VRMSection {
 			// Surfaces malformed status data in devtools instead of
 			// silently reading as "not published" (review catch)
 			console.warn("mirror status unavailable", error);
-			body.innerText =
-				"The backup status isn't published yet - the mirror " +
-				"capture hasn't reported from this site's bucket.";
+			body.innerText = Strings.mirror.notPublished;
 		}
 	}
 }
@@ -182,15 +182,17 @@ function renderMirrorStatus(body, data) {
 	};
 	line(
 		"mirrorHeadline",
-		`${captured.toLocaleString()} of ${total.toLocaleString()} ` +
-			`models backed up (${percent.toFixed(1)}%)`,
+		Strings.mirror.headline(
+			captured.toLocaleString(),
+			total.toLocaleString(),
+			percent.toFixed(1),
+		),
 	);
-	line("mirrorDetail", `${(bytes / 1e9).toFixed(2)} GB safely mirrored`);
+	line("mirrorDetail", Strings.mirror.gbMirrored((bytes / 1e9).toFixed(2)));
 	if (gaps > 0) {
 		line(
 			"mirrorDetail",
-			`${gaps.toLocaleString()} ${gaps === 1 ? "token has" : "tokens have"} ` +
-				"no VRM to back up (recorded gaps)",
+			Strings.mirror.gapsLine(gaps.toLocaleString(), gaps === 1),
 		);
 	}
 	for (const front of fronts) {
@@ -199,31 +201,31 @@ function renderMirrorStatus(body, data) {
 		}
 		line(
 			"mirrorFront",
-			`Tokens ${front.from.toLocaleString()}–${(front.until - 1).toLocaleString()}: ` +
-				`${(front.captured || 0).toLocaleString()} captured · ${agoText(front.updated)}`,
+			Strings.mirror.frontLine(
+				front.from.toLocaleString(),
+				(front.until - 1).toLocaleString(),
+				(front.captured || 0).toLocaleString(),
+				agoText(front.updated),
+			),
 		);
 	}
-	line(
-		"mirrorNote",
-		"The models live on IPFS with a single remaining public " +
-			"source; this backup preserves every one of them.",
-	);
+	line("mirrorNote", Strings.mirror.note);
 }
 
 /// "just now" / "12m ago" / "3h ago" - defensive on bad input
 function agoText(iso) {
 	const at = Date.parse(iso);
 	if (!Number.isFinite(at)) {
-		return "updated";
+		return Strings.mirror.updatedFallback;
 	}
 	const minutes = Math.max(0, Math.floor((Date.now() - at) / 60000));
 	if (minutes < 1) {
-		return "just now";
+		return Strings.mirror.justNow;
 	}
 	if (minutes < 60) {
-		return `${minutes}m ago`;
+		return Strings.mirror.minutesAgo(minutes);
 	}
-	return `${Math.floor(minutes / 60)}h ago`;
+	return Strings.mirror.hoursAgo(Math.floor(minutes / 60));
 }
 
 /// "62%" when the size is known, a MB count otherwise

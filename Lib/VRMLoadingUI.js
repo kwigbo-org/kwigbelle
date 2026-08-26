@@ -1,3 +1,4 @@
+import { Strings } from "./Strings.js";
 import { stopSceneEvents } from "./UIHelpers.js";
 import { progressText } from "./VRMSection.js";
 
@@ -36,7 +37,7 @@ export default class VRMLoadingUI {
 		this.loading.appendChild(this.loadingBar);
 		const hint = document.createElement("div");
 		hint.setAttribute("id", "vrmLoadingHint");
-		hint.innerText = "Tap to cancel";
+		hint.innerText = Strings.vrm.tapToCancel;
 		this.loading.appendChild(hint);
 		rootContainer.appendChild(this.loading);
 
@@ -53,7 +54,7 @@ export default class VRMLoadingUI {
 		this.mode = mode;
 		this.loading.classList.toggle("visible", mode === "loading");
 		if (mode === "loading") {
-			this.loadingText.innerText = "Loading 3D model…";
+			this.loadingText.innerText = Strings.vrm.loadingFull;
 			this.loadingFill.style.width = "0%";
 			this.loadingBar.classList.add("indeterminate");
 		}
@@ -64,8 +65,9 @@ export default class VRMLoadingUI {
 		if (this.mode !== "loading") {
 			return;
 		}
-		this.loadingText.innerText =
-			"Loading 3D model… " + progressText(loaded, total);
+		this.loadingText.innerText = Strings.vrm.loadingFullProgress(
+			progressText(loaded, total),
+		);
 		if (total > 0) {
 			this.loadingBar.classList.remove("indeterminate");
 			this.loadingFill.style.width =

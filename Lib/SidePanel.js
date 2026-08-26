@@ -47,10 +47,7 @@ export default class SidePanel {
 			if (!(target instanceof Element)) {
 				return;
 			}
-			if (
-				this.container.contains(target) ||
-				target.closest(".panelOverlay")
-			) {
+			if (this.container.contains(target) || target.closest(".panelOverlay")) {
 				return;
 			}
 			this.close();

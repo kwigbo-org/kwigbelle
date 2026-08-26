@@ -1,3 +1,4 @@
+import { Strings } from "./Strings.js";
 import {
 	rarityIcon,
 	tierForScore,
@@ -142,7 +143,7 @@ export default class TraitsSection {
 			// identity chips above are hash-derived and still true
 			const note = document.createElement("div");
 			note.setAttribute("class", "traitNote");
-			note.innerText = "Trait data unavailable for this display";
+			note.innerText = Strings.traits.unavailable;
 			this.content.appendChild(note);
 			return;
 		}
@@ -151,9 +152,7 @@ export default class TraitsSection {
 			// BASELINE traits plainly, with no controls to mislead
 			const note = document.createElement("div");
 			note.setAttribute("class", "traitNote");
-			note.innerText =
-				"The 3D model shows the original on-chain Avastar. Trait " +
-				"preview and visibility apply to the vector view.";
+			note.innerText = Strings.traits.threeDNote;
 			this.content.appendChild(note);
 			const baseline = this.baseline || avastar.traits;
 			baseline.forEach((info, gene) => {
@@ -164,7 +163,7 @@ export default class TraitsSection {
 		if (this.overrides.size > 0) {
 			const reset = document.createElement("div");
 			reset.setAttribute("class", "resetAll");
-			reset.innerText = "↺ Reset all traits";
+			reset.innerText = Strings.traits.resetAll;
 			reset.addEventListener("click", () => {
 				if (this.callbacks.onResetAll) {
 					this.callbacks.onResetAll();
@@ -173,7 +172,7 @@ export default class TraitsSection {
 			this.content.appendChild(reset);
 			const note = document.createElement("div");
 			note.setAttribute("class", "traitNote");
-			note.innerText = "Preview only — nothing is changed on chain.";
+			note.innerText = Strings.traits.previewOnly;
 			this.content.appendChild(note);
 		}
 		// Genes 0-3 (skin tone, hair color, eye color, bg color) are
@@ -229,7 +228,9 @@ export default class TraitsSection {
 		const title = document.createElement("div");
 		title.setAttribute("class", "identityTitle");
 		title.innerText =
-			avastar.tokenId != null ? `Avastar #${avastar.tokenId}` : "Avastar";
+			avastar.tokenId != null
+				? Strings.traits.identityTitle(avastar.tokenId)
+				: Strings.traits.identityTitleUnknown;
 		card.appendChild(title);
 		const chips = document.createElement("div");
 		chips.setAttribute("class", "identityChips");
@@ -249,7 +250,7 @@ export default class TraitsSection {
 				"class",
 				`identityChip seriesChip series-${avastar.series}`,
 			);
-			series.innerText = `Gen 1 · Series ${avastar.series}`;
+			series.innerText = Strings.traits.series(avastar.series);
 			chips.appendChild(series);
 		}
 		// A prime that never lent a trait to a replicant is in mint
@@ -258,7 +259,7 @@ export default class TraitsSection {
 		if (this.burnedMask === 0) {
 			const mint = document.createElement("span");
 			mint.setAttribute("class", "identityChip mintChip");
-			mint.innerText = "Mint condition";
+			mint.innerText = Strings.traits.mintCondition;
 			chips.appendChild(mint);
 		}
 		if (chips.childNodes.length > 0) {
@@ -270,7 +271,7 @@ export default class TraitsSection {
 			const tier = tierForScore(avastar.ranking);
 			score.appendChild(rarityIcon(tier.rarity));
 			const text = document.createElement("span");
-			text.innerText = `Score ${avastar.ranking} · ${tier.name}`;
+			text.innerText = Strings.traits.score(avastar.ranking, tier.name);
 			text.style.color = tier.color;
 			score.appendChild(text);
 			card.appendChild(score);
@@ -304,7 +305,7 @@ export default class TraitsSection {
 			burned.setAttribute("class", "identityBurned");
 			burned.appendChild(flameIcon());
 			const text = document.createElement("span");
-			text.innerText = `${burnedCount} of 12 traits burned`;
+			text.innerText = Strings.traits.burnedCount(burnedCount);
 			burned.appendChild(text);
 			card.appendChild(burned);
 		}
@@ -320,10 +321,10 @@ export default class TraitsSection {
 				}
 				const line = document.createElement("div");
 				line.setAttribute("class", "identityUB");
-				line.innerText = `Unique-By combos: 2-trait ${ub.u2} · 3-trait ${ub.u3}`;
+				line.innerText = Strings.traits.uniqueByCombos(ub.u2, ub.u3);
 				const qualifier = document.createElement("div");
 				qualifier.setAttribute("class", "identityUBNote");
-				qualifier.innerText = "(all 12 traits, among Series 1-5 primes)";
+				qualifier.innerText = Strings.traits.uniqueByQualifier;
 				card.appendChild(line);
 				card.appendChild(qualifier);
 			});
@@ -390,7 +391,7 @@ export default class TraitsSection {
 		if (isEditable) {
 			const edit = document.createElement("span");
 			edit.setAttribute("class", "traitEdit");
-			edit.innerText = "✎ Edit";
+			edit.innerText = Strings.traits.edit;
 			edit.addEventListener("click", (event) => {
 				event.stopPropagation();
 				this.callbacks.onEdit(gene);
@@ -426,14 +427,14 @@ export default class TraitsSection {
 			const was = document.createElement("span");
 			was.setAttribute("class", "traitWas");
 			const wasText = document.createElement("span");
-			wasText.innerText = `was: ${this.baseline[gene].name}`;
+			wasText.innerText = Strings.traits.was(this.baseline[gene].name);
 			was.appendChild(wasText);
 			if (this.isBurned(gene)) {
 				was.appendChild(this.burnedTag());
 			}
 			const undo = document.createElement("span");
 			undo.setAttribute("class", "traitUndo");
-			undo.innerText = "↺ undo";
+			undo.innerText = Strings.traits.undo;
 			undo.addEventListener("click", (event) => {
 				event.stopPropagation();
 				if (this.callbacks.onUndo) {
@@ -458,7 +459,7 @@ export default class TraitsSection {
 		burned.setAttribute("class", "traitBurned");
 		burned.appendChild(flameIcon());
 		const label = document.createElement("span");
-		label.innerText = "Burned";
+		label.innerText = Strings.traits.burnedTag;
 		burned.appendChild(label);
 		return burned;
 	}

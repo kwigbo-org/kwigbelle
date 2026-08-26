@@ -1,3 +1,4 @@
+import { Strings } from "./Strings.js";
 import { TIERS, rarityIcon, flameIcon } from "./RarityIcons.js";
 
 /// Static content for the info drawer (docs/tads/info-tab.md
@@ -21,13 +22,7 @@ export function rarityExplainer() {
 	const container = document.createElement("div");
 	container.setAttribute("class", "infoExplainer");
 
-	container.appendChild(
-		paragraph(
-			"Every Avastar carries a rarity score from 1 to 100, " +
-				"assigned by the contract at mint from the rarity of its " +
-				"12 traits. The score places it in one of five tiers:",
-		),
-	);
+	container.appendChild(paragraph(Strings.info.scoreIntro));
 
 	// The five tiers with their icons and score ranges
 	const tierList = document.createElement("div");
@@ -48,22 +43,8 @@ export function rarityExplainer() {
 	});
 	container.appendChild(tierList);
 
-	container.appendChild(
-		paragraph(
-			"Each trait has its own contract-assigned tier, shown on " +
-				"its card below. The identity card's distribution row " +
-				"counts the 12 traits by tier.",
-		),
-	);
-	container.appendChild(
-		paragraph(
-			"Unique By counts trait combinations no other Avastar " +
-				"wears: a pair (or triple) of this Avastar's traits found " +
-				"on no other Series 1–5 lottery prime (#200–25,199). " +
-				"Founders, Exclusives, and Replicants didn't play the " +
-				"mint lottery, so they carry no Unique By line.",
-		),
-	);
+	container.appendChild(paragraph(Strings.info.traitTiers));
+	container.appendChild(paragraph(Strings.info.uniqueBy));
 
 	// Burned traits get their flame so the mark reads back to the
 	// trait cards; the ember color comes from --burned via
@@ -72,12 +53,7 @@ export function rarityExplainer() {
 	burnedNote.setAttribute("class", "infoText infoBurnedNote");
 	burnedNote.appendChild(flameIcon());
 	const burnedText = document.createElement("span");
-	burnedText.innerText =
-		" When a replicant was minted, each trait it borrowed was " +
-		"burned on its prime. The prime's art is unchanged, but a " +
-		"burned trait could never mint another replicant — and with " +
-		"the factory closed and the contract locked, burn marks are " +
-		"frozen forever. A prime with no burns is in mint condition.";
+	burnedText.innerText = Strings.info.burned;
 	burnedNote.appendChild(burnedText);
 	container.appendChild(burnedNote);
 

@@ -1,3 +1,4 @@
+import { Strings } from "./Strings.js";
 import Scene from "./Scene.js";
 import Size from "./Size.js";
 import Point from "./Point.js";
@@ -26,7 +27,7 @@ export default class MainScene extends Scene {
 	/// Overridden constructor
 	constructor(rootContainer) {
 		super(rootContainer);
-		console.log("kwigbelle build 2026-08-26.2 (panel polish)");
+		console.log("kwigbelle build 2026-08-26.3 (strings module)");
 		// Build the UI
 		this.buildUI();
 		// Start loading
@@ -103,24 +104,31 @@ export default class MainScene extends Scene {
 			burnedFor: (tokenId) => this.traitComposer.burnedFor(tokenId),
 		});
 		this.sidePanel.addSection(
-			"How rarity works",
+			Strings.panel.howRarityWorks,
 			rarityExplainer(),
 			"info",
 			true,
 		);
 		this.sidePanel.addSection(
-			"Overview",
+			Strings.panel.overview,
 			this.traitsSection.buildOverview(),
 			"info",
 		);
-		this.sidePanel.addSection("Traits", this.traitsSection.build(), "info");
+		this.sidePanel.addSection(
+			Strings.panel.traits,
+			this.traitsSection.build(),
+			"info",
+		);
 		// Settings drawer, top section: view any Avastar by token id
 		// (walletless - composition needs only the static library)
 		this.loadSection = new LoadSection(
 			(tokenId) => this.traitComposer.hasToken(tokenId),
 			(tokenId) => this.selectAvastar(tokenId),
 		);
-		this.sidePanel.addSection("Load Avastar", this.loadSection.build());
+		this.sidePanel.addSection(
+			Strings.panel.loadAvastar,
+			this.loadSection.build(),
+		);
 		// Tilt follow (docs/tads/burned-traits.md Decision 10): the
 		// section owns the toggle, the scene owns the sensor wiring
 		this.tiltPoint = null;
@@ -130,14 +138,14 @@ export default class MainScene extends Scene {
 		// The Effects section element is kept so 3D mode can hide it
 		// wholesale: the spring rig has no meaning for the 3D model
 		this.effectsSectionElement = this.sidePanel.addSection(
-			"Effects",
+			Strings.panel.effects,
 			this.effectsSection.build(),
 		);
 		this.vrmSection = new VRMSection(
 			() => this.toggle3D(),
 			() => this.downloadVRM(),
 		);
-		this.sidePanel.addSection("3D model", this.vrmSection.build());
+		this.sidePanel.addSection(Strings.panel.vrm, this.vrmSection.build());
 		this.traitEditModal = new TraitEditModal(this.traitComposer);
 		// Trait swap preview state (docs/tads/avastar-lab.md): the
 		// loaded token's picks plus per-gene overrides
@@ -811,7 +819,7 @@ export default class MainScene extends Scene {
 			this.setVRMMode("vector");
 			if (!error || error.name !== "AbortError") {
 				console.warn(`3D view failed for ${tokenId}`, error);
-				this.vrmLoading.showError("3D model unavailable");
+				this.vrmLoading.showError(Strings.vrm.unavailable);
 			}
 		}
 	}

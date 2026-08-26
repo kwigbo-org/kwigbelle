@@ -29,10 +29,12 @@
   and is factual, not editorial) and
   **operational text** (the console build stamp, console
   warnings, error strings only developers see).
-- The Tests/ suite asserts rendered copy literally (button labels,
-  explainer facts, modal lines). That makes it a copy SPEC: any
-  change to what the user reads fails a test until the test is
-  updated alongside.
+- The Tests/ suite asserts many key rendered strings literally
+  (button labels, explainer facts, modal lines — ~59 assertions
+  across 11 test files), though not every string on the site. For
+  the asserted set, a copy change fails a test until the test is
+  updated alongside; strings without assertions rely on review of
+  the one-file diff. (Wording per PR #35 review.)
 
 ## Decisions
 
@@ -51,3 +53,9 @@
 - 2026-08-26 — TAD drafted after the copy survey (~70 inline
   string sites across 10 modules; InfoSections' explainer is the
   largest single block). Awaiting review.
+- 2026-08-26 — TAD merged (PR #35, three lite rounds - two wording
+  corrections and the test-coverage nuance above). Extraction PR
+  implemented: Lib/Strings.js created; ~70 sites across 10 modules
+  now read from it; pure glyphs (✕ ⓘ ▾) stay inline as
+  iconography; the full 16-test suite passes UNCHANGED, proving
+  the asserted copy byte-identical.
