@@ -1,0 +1,138 @@
+// Mirror status modal (docs/tads/vrm-mirror.md Decision 10): the
+// "3D model" section's info button opens a modal that fetches the
+// capture-published vrm/_status.json (same-origin - the mirror
+// lives in the site's bucket), sums the two-front progress, and
+// renders bar + counts; an unpublished status renders the quiet
+// fallback instead. Walletless, no VRM fetch involved.
+const { chromium } = require("playwright-core");
+const { check } = require("./check.js");
+
+const STATUS = {
+	total: 26617,
+	updated: new Date().toISOString(),
+	fronts: {
+		"0-14000": {
+			from: 0,
+			until: 14000,
+			captured: 900,
+			gaps: 0,
+			bytes: 9e9,
+			updated: new Date().toISOString(),
+		},
+		"14000-26617": {
+			from: 14000,
+			until: 26617,
+			captured: 100,
+			gaps: 0,
+			bytes: 1e9,
+			updated: new Date(Date.now() - 5 * 60000).toISOString(),
+		},
+	},
+};
+
+(async () => {
+	const browser = await chromium.launch({ channel: "chrome", headless: true });
+	const page = await browser.newPage({ viewport: { width: 800, height: 600 } });
+	const errors = [];
+	page.on("pageerror", (e) => errors.push("pageerror: " + e.message));
+	page.on("dialog", (d) => {
+		errors.push("dialog: " + d.message());
+		d.dismiss();
+	});
+
+	let statusAvailable = true;
+	await page.route("**/vrm/_status.json", (route) => {
+		if (!statusAvailable) {
+			route.fulfill({ status: 404, body: "not found" });
+			return;
+		}
+		route.fulfill({
+			status: 200,
+			contentType: "application/json",
+			body: JSON.stringify(STATUS),
+		});
+	});
+
+	await page.goto("http://localhost:8741/index.html?tokenid=8014");
+	await page.waitForFunction(
+		() => document.getElementById("preloader")?.style.opacity === "0",
+		{ timeout: 15000 },
+	);
+	await page.waitForTimeout(300);
+
+	// Open settings, tap the info button, read the modal
+	await page.click("#panelHandle");
+	await page.click(".vrmMirrorInfo");
+	await page.waitForSelector("#mirrorModal .mirrorHeadline", {
+		timeout: 5000,
+	});
+	const modal = await page.evaluate(() => ({
+		title: document.querySelector("#mirrorModal .modalTitle").innerText,
+		headline: document.querySelector("#mirrorModal .mirrorHeadline").innerText,
+		detail: document.querySelector("#mirrorModal .mirrorDetail").innerText,
+		fronts: [...document.querySelectorAll("#mirrorModal .mirrorFront")].map(
+			(element) => element.innerText,
+		),
+		barWidth: document.querySelector("#mirrorModal .mirrorBarFill").style.width,
+	}));
+	console.log("modal:", JSON.stringify(modal, null, 1));
+	// .modalTitle renders uppercase via CSS
+	check(modal.title === "VRM BACKUP", "modal title wrong: " + modal.title);
+	check(
+		modal.headline.includes("1,000 of 26,617") &&
+			modal.headline.includes("(3.8%)"),
+		"headline wrong: " + modal.headline,
+	);
+	check(
+		modal.detail === "10.00 GB safely mirrored",
+		"GB line wrong: " + modal.detail,
+	);
+	check(modal.fronts.length === 2, "expected two front lines");
+	check(
+		modal.fronts[0].includes("Tokens 0–13,999") &&
+			modal.fronts[0].includes("900 captured") &&
+			modal.fronts[0].includes("just now"),
+		"front 1 line wrong: " + modal.fronts[0],
+	);
+	check(
+		modal.fronts[1].includes("Tokens 14,000–26,616") &&
+			modal.fronts[1].includes("5m ago"),
+		"front 2 line wrong: " + modal.fronts[1],
+	);
+	check(modal.barWidth === "3.8%", "bar width wrong: " + modal.barWidth);
+
+	// A second tap while open must not stack overlays
+	await page.click(".vrmMirrorInfo").catch(() => {});
+	check(
+		(await page.locator("#mirrorModal").count()) === 1,
+		"info tap stacked a second modal",
+	);
+
+	// Backdrop tap dismisses
+	await page.mouse.click(10, 10);
+	await page.waitForFunction(() => !document.getElementById("mirrorModal"), {
+		timeout: 3000,
+	});
+
+	// Unpublished status: the quiet fallback, no page errors
+	statusAvailable = false;
+	await page.click(".vrmMirrorInfo");
+	await page.waitForFunction(
+		() =>
+			document
+				.querySelector("#mirrorModal .mirrorBody")
+				?.innerText.includes("isn't published yet"),
+		{ timeout: 5000 },
+	);
+	await page.evaluate(() =>
+		document.querySelector("#mirrorModal .modalClose").click(),
+	);
+	await page.waitForFunction(() => !document.getElementById("mirrorModal"), {
+		timeout: 3000,
+	});
+
+	console.log("errors:", errors.length ? errors : "none");
+	check(errors.length === 0, "page errors: " + JSON.stringify(errors));
+	await browser.close();
+	console.log("mirror-status-test complete");
+})();
