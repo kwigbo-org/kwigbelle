@@ -10,6 +10,12 @@
 // Stream-through on purpose: the corpus is ~280-295GB and must
 // never accumulate locally.
 //
+// SELF-PACING: gateway pushback slows the run instead of failing
+// it. HTTP 429s arm a shared cooldown every worker waits out;
+// bitswap-style STALLS (bytes stop flowing) arm a long shared rest
+// that escalates while the choke persists and resets once bytes
+// flow again. The run needs no babysitting against throttling.
+//
 // RESUMABLE: the manifest (Tools/data/vrm-manifest.json) is the
 // durable record AND the resume state - a token with an entry or a
 // gap is done; anything else is retried on the next run. The run
@@ -68,7 +74,9 @@ const TOKEN_DELAY_MS = 300; // be a polite gateway citizen
 const MAX_RETRIES = 5;
 const RETRY_BASE_MS = 2000; // 2s, 4s, 8s... capped below
 const RETRY_CAP_MS = 60000;
-const IDLE_TIMEOUT_MS = 60000; // abort only when bytes STOP flowing
+// Abort only when bytes STOP flowing; mutable so the selftest can
+// exercise the stall path without minute-long waits
+let idleTimeoutMs = 60000;
 const METADATA_TIMEOUT_MS = 30000;
 const FALLBACK_AVG_BYTES = 10700000; // sampled avg, for early ETAs
 
@@ -302,16 +310,43 @@ const waitCooldown = async () => {
 		await sleep(Math.min(cooldown.until - Date.now() + 50, 5000));
 	}
 };
-const startCooldown = (seconds, url) => {
+const startCooldown = (seconds, message) => {
 	const until = Date.now() + seconds * 1000;
 	if (until > cooldown.until) {
 		cooldown.until = until;
 		if (cooldown.notify) {
-			cooldown.notify(
-				`gateway 429 - all workers cooling down ${seconds}s (${url})`,
-			);
+			cooldown.notify(message);
 		}
 	}
+};
+
+// Bitswap-side throttling shows up as STALLS, not 429s (field data
+// 2026-08-26: pinata's peers grant a transfer budget per window,
+// then let connections sit idle until the offender goes quiet). A
+// streak of idle-timeout aborts across workers means the lane is
+// choked and knocking every minute only keeps the throttle fed:
+// rest ALL workers for a long window, escalating each recurrence.
+// Flowing bytes reset the ladder.
+const STALL_STREAK_LIMIT = 3;
+const REST_BASE_S = 300;
+const REST_CAP_S = 3600;
+const stall = { streak: 0, restSeconds: REST_BASE_S };
+const recordStall = (url) => {
+	stall.streak++;
+	if (stall.streak < STALL_STREAK_LIMIT) {
+		return;
+	}
+	stall.streak = 0;
+	const seconds = stall.restSeconds;
+	stall.restSeconds = Math.min(stall.restSeconds * 2, REST_CAP_S);
+	startCooldown(
+		seconds,
+		`gateway stalling - all workers resting ${seconds}s (${url})`,
+	);
+};
+const recordFlow = () => {
+	stall.streak = 0;
+	stall.restSeconds = REST_BASE_S;
 };
 
 async function fetchMetadata(tokenId) {
@@ -354,9 +389,13 @@ async function downloadVerified(url, filePath) {
 	await waitCooldown();
 	const controller = new AbortController();
 	let idleTimer = null;
+	let idleFired = false;
 	const armIdle = () => {
 		clearTimeout(idleTimer);
-		idleTimer = setTimeout(() => controller.abort(), IDLE_TIMEOUT_MS);
+		idleTimer = setTimeout(() => {
+			idleFired = true;
+			controller.abort();
+		}, idleTimeoutMs);
 	};
 	armIdle();
 	try {
@@ -373,11 +412,13 @@ async function downloadVerified(url, filePath) {
 			if (!Number.isFinite(retryAfter) && header) {
 				retryAfter = (Date.parse(header) - Date.now()) / 1000;
 			}
-			startCooldown(
+			const seconds =
 				Number.isFinite(retryAfter) && retryAfter > 0
 					? Math.min(retryAfter, 300)
-					: 60,
-				url,
+					: 60;
+			startCooldown(
+				seconds,
+				`gateway 429 - all workers cooling down ${seconds}s (${url})`,
 			);
 			throw new Error(`HTTP 429 via ${url}`);
 		}
@@ -422,7 +463,18 @@ async function downloadVerified(url, filePath) {
 		if (declared > 0 && size !== declared) {
 			throw new Error(`truncated: ${size} of ${declared} bytes via ${url}`);
 		}
+		recordFlow();
 		return { size, sha256: hash.digest("hex") };
+	} catch (error) {
+		// An idle abort surfaces as a generic AbortError: name the
+		// real cause and feed the shared stall ladder
+		if (idleFired) {
+			recordStall(url);
+			throw new Error(
+				`stalled: no bytes for ${Math.round(idleTimeoutMs / 1000)}s via ${url}`,
+			);
+		}
+		throw error;
 	} finally {
 		clearTimeout(idleTimer);
 	}
@@ -483,7 +535,8 @@ async function capture(dest, limit, parallel) {
 	}
 	manifest.dest = dest;
 	const status = new Status(manifest);
-	// 429 cooldowns land in the event log so throttling is visible
+	// 429 cooldowns and stall rests land in the event log so
+	// throttling is visible
 	cooldown.notify = (text) => status.event(text);
 	const done = Object.keys(manifest.entries).length;
 	status.event(
@@ -823,6 +876,11 @@ async function selftest() {
 				response.writeHead(200, { "Content-Length": String(good.length) });
 				response.end(good);
 			}
+		} else if (request.url === "/stall.vrm") {
+			// Sends a few bytes, then hangs forever: the idle abort is
+			// the only way out
+			response.writeHead(200, { "Content-Length": String(good.length) });
+			response.write(good.subarray(0, 10));
 		} else if (request.url === "/badmagic.vrm") {
 			const bad = Buffer.concat([Buffer.from("NOPE"), good.subarray(4)]);
 			response.writeHead(200, { "Content-Length": String(bad.length) });
@@ -833,6 +891,10 @@ async function selftest() {
 			response.end(good);
 		}
 	});
+	// Stalled fixtures leave their sockets open on purpose; track
+	// them so the selftest can close the server at the end
+	const sockets = new Set();
+	server.on("connection", (socket) => sockets.add(socket));
 	await new Promise((resolve) => server.listen(0, resolve));
 	const base = `http://localhost:${server.address().port}`;
 	const fail = (message) => {
@@ -893,11 +955,45 @@ async function selftest() {
 	if (Date.now() - throttleStart < 900) {
 		fail("retry did not wait out the Retry-After cooldown");
 	}
+	// Stall auto-rest: an idle-timeout abort is reported as a stall,
+	// a streak of three arms a LONG shared rest, and flowing bytes
+	// reset the escalation ladder. Shrink the idle window so each
+	// stalled attempt costs milliseconds, not a minute.
+	cooldown.until = 0;
+	idleTimeoutMs = 300;
+	for (let hit = 0; hit < STALL_STREAK_LIMIT; hit++) {
+		await downloadVerified(`${base}/stall.vrm`, tmpFile).then(
+			() => fail("stalled body was accepted"),
+			(error) => {
+				if (!error.message.includes("stalled")) {
+					fail("stall case rejected for the wrong reason: " + error.message);
+				}
+			},
+		);
+	}
+	if (cooldown.until < Date.now() + (REST_BASE_S - 60) * 1000) {
+		fail("stall streak did not arm the long rest");
+	}
+	if (stall.restSeconds !== REST_BASE_S * 2) {
+		fail("stall rest did not escalate for the next recurrence");
+	}
+	cooldown.until = 0;
+	idleTimeoutMs = 60000;
+	const flowed = await downloadVerified(`${base}/good.vrm`, tmpFile);
+	if (flowed.sha256 !== expectedSha) {
+		fail("post-stall good fetch returned wrong bytes");
+	}
+	if (stall.streak !== 0 || stall.restSeconds !== REST_BASE_S) {
+		fail("flowing bytes did not reset the stall ladder");
+	}
 	fs.rmSync(tmpFile, { force: true });
+	for (const socket of sockets) {
+		socket.destroy();
+	}
 	server.close();
 	console.log(
 		"SELFTEST PASS: verified round-trip, bad-magic/truncation rejection, " +
-			"429 cooldown honored",
+			"429 cooldown honored, stall auto-rest armed and reset",
 	);
 }
 
