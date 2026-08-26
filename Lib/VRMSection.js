@@ -192,7 +192,7 @@ function renderMirrorStatus(body, data) {
 		);
 	}
 	for (const front of fronts) {
-		if (front.until === undefined) {
+		if (front.from === undefined || front.until === undefined) {
 			continue;
 		}
 		line(
