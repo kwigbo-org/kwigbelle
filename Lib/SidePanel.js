@@ -29,6 +29,33 @@ export default class SidePanel {
 		this.activeId = null;
 
 		rootContainer.appendChild(this.container);
+
+		// A tap anywhere outside the panel dismisses the open drawer
+		// (operator QA 2026-08-26). Overlays that float OUTSIDE the
+		// panel element (trait/mirror modals, the VRM loading screen)
+		// don't count as outside - a tap inside them must not yank
+		// the drawer away underneath. Capture phase, so scene
+		// handlers that stop propagation can't swallow the dismiss.
+		document.addEventListener(
+			"pointerdown",
+			(event) => {
+				if (this.activeId === null) {
+					return;
+				}
+				const target = event.target;
+				if (!(target instanceof Element)) {
+					return;
+				}
+				if (
+					this.container.contains(target) ||
+					target.closest("#traitModal, #mirrorModal, #vrmLoading")
+				) {
+					return;
+				}
+				this.close();
+			},
+			true,
+		);
 	}
 
 	/// Register a drawer: a handle tab plus its own content column
@@ -148,7 +175,10 @@ export default class SidePanel {
 
 	/// The info tab's face: an i-in-circle as inline SVG (same
 	/// currentColor treatment as the gear, for the same mobile
-	/// color-emoji reason)
+	/// color-emoji reason). A SOLID disc with the i knocked out
+	/// (evenodd holes), matching the filled visual weight of the
+	/// gear and person tabs - the outlined ring read too thin
+	/// beside them (operator QA 2026-08-26).
 	static infoIcon() {
 		const svg = document.createElementNS(SVG_NS, "svg");
 		svg.setAttribute("viewBox", "0 0 24 24");
@@ -156,11 +186,11 @@ export default class SidePanel {
 		const path = document.createElementNS(SVG_NS, "path");
 		path.setAttribute(
 			"d",
-			"M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 " +
-				"12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 " +
-				"8zm-1-11h2V7h-2v2zm0 8h2v-6h-2v6z",
+			"M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm-1 5h2v2h-2V7z" +
+				"m0 4h2v6h-2v-6z",
 		);
 		path.setAttribute("fill", "currentColor");
+		path.setAttribute("fill-rule", "evenodd");
 		svg.appendChild(path);
 		return svg;
 	}
