@@ -35,6 +35,12 @@
 //                                             a few in-flight extras)
 //     [--parallel N]                          tokens in flight, 1-4
 //                                             (default 3)
+//     [--from N] [--until N]                  capture only N <= id < N:
+//                                             split the corpus between
+//                                             two machines/lanes, each
+//                                             with its own manifest -
+//                                             fold them together at the
+//                                             end with --merge
 //     [--gateway <url>/ipfs/]                 fetch through another
 //                                             gateway - e.g. a local
 //                                             kubo node's
@@ -48,6 +54,10 @@
 //                                             mirrored files and
 //                                             re-check sha256/size
 //                                             (default 20)
+//   node Tools/mirror-vrms.js --merge <file>  fold another machine's
+//                                             manifest into this one
+//                                             (overlaps must agree
+//                                             byte-for-byte)
 //   node Tools/mirror-vrms.js --selftest      round-trip a local
 //                                             fixture through the
 //                                             stream-verify-hash
@@ -225,6 +235,53 @@ const saveManifest = (manifest) => {
 	fs.renameSync(tmp, MANIFEST_FILE);
 };
 
+// Fold another machine's manifest into this one (the two-front
+// --from/--until split captures into separate manifests). Overlaps
+// must AGREE - a token or filename the two records disagree on
+// means the combined record would be unsafe, so refuse loudly.
+const mergeManifests = (own, other) => {
+	if (own.dest && other.dest && own.dest !== other.dest) {
+		throw new Error(`dest mismatch: ${own.dest} vs ${other.dest}`);
+	}
+	const merged = {
+		dest: own.dest || other.dest,
+		entries: { ...own.entries },
+		gaps: { ...own.gaps },
+	};
+	const files = new Map(
+		Object.entries(merged.entries).map(([id, entry]) => [entry.file, id]),
+	);
+	for (const [id, entry] of Object.entries(other.entries || {})) {
+		if (merged.gaps[id] !== undefined) {
+			throw new Error(`#${id} is a gap in one manifest, captured in the other`);
+		}
+		const mine = merged.entries[id];
+		if (mine) {
+			if (
+				mine.file !== entry.file ||
+				mine.sha256 !== entry.sha256 ||
+				mine.size !== entry.size
+			) {
+				throw new Error(`#${id} disagrees between manifests`);
+			}
+			continue;
+		}
+		const owner = files.get(entry.file);
+		if (owner !== undefined) {
+			throw new Error(`filename ${entry.file} claimed by #${owner} and #${id}`);
+		}
+		merged.entries[id] = entry;
+		files.set(entry.file, id);
+	}
+	for (const [id, reason] of Object.entries(other.gaps || {})) {
+		if (merged.entries[id]) {
+			throw new Error(`#${id} is a gap in one manifest, captured in the other`);
+		}
+		merged.gaps[id] = reason;
+	}
+	return merged;
+};
+
 // ---- operator-facing status (TAD Decision 9) ----
 
 // Events survive resumes: the tail of the existing file is carried
@@ -247,7 +304,8 @@ const loadEvents = () => {
 };
 
 class Status {
-	constructor(manifest) {
+	constructor(manifest, range) {
+		this.range = range || { from: 0, until: TOKEN_COUNT };
 		this.events = loadEvents();
 		this.runStart = Date.now();
 		this.runBytes = 0;
@@ -267,7 +325,19 @@ class Status {
 	write() {
 		const done = Object.keys(this.manifest.entries).length;
 		const gaps = Object.keys(this.manifest.gaps).length;
-		const remaining = TOKEN_COUNT - done - gaps;
+		// Pending (and so the ETA) covers only THIS run's range: on a
+		// two-front split, the other machine's half is not this run's
+		// work to project
+		let remaining = 0;
+		for (let id = this.range.from; id < this.range.until; id++) {
+			if (!this.manifest.entries[id] && this.manifest.gaps[id] === undefined) {
+				remaining++;
+			}
+		}
+		const partial =
+			this.range.from > 0 || this.range.until < TOKEN_COUNT
+				? ` · range ${this.range.from}-${this.range.until - 1}`
+				: "";
 		const totalBytes = Object.values(this.manifest.entries).reduce(
 			(sum, entry) => sum + entry.size,
 			0,
@@ -281,7 +351,7 @@ class Status {
 			"# VRM mirror status",
 			"",
 			`Updated: ${new Date().toISOString()}`,
-			`Progress: ${done.toLocaleString()} / ${TOKEN_COUNT.toLocaleString()} captured (${((done / TOKEN_COUNT) * 100).toFixed(1)}%) · gaps: ${gaps} · pending: ${remaining}`,
+			`Progress: ${done.toLocaleString()} / ${TOKEN_COUNT.toLocaleString()} captured (${((done / TOKEN_COUNT) * 100).toFixed(1)}%) · gaps: ${gaps} · pending: ${remaining}${partial}`,
 			`Captured: ${gb(totalBytes)} GB total · ${gb(this.runBytes)} GB this run`,
 			`Rate: ${(rate / 1e6).toFixed(2)} MB/s this run · ETA: ${etaHours === null ? "warming up" : "~" + etaHours.toFixed(1) + "h"}`,
 			`Retries this run: ${this.retriesThisRun} · failed this run (will retry next run): ${this.failedThisRun.length ? this.failedThisRun.join(", ") : "none"}`,
@@ -539,7 +609,7 @@ const upload = (filePath, destURL) =>
 
 // ---- modes ----
 
-async function capture(dest, limit, parallel) {
+async function capture(dest, limit, parallel, range) {
 	acquireLock();
 	const manifest = loadManifest();
 	// One mirror, one destination: a dest that disagrees with the
@@ -553,13 +623,17 @@ async function capture(dest, limit, parallel) {
 		process.exit(1);
 	}
 	manifest.dest = dest;
-	const status = new Status(manifest);
+	const status = new Status(manifest, range);
 	// 429 cooldowns and stall rests land in the event log so
 	// throttling is visible
 	cooldown.notify = (text) => status.event(text);
 	const done = Object.keys(manifest.entries).length;
+	const rangeNote =
+		range.from > 0 || range.until < TOKEN_COUNT
+			? `, range ${range.from}-${range.until - 1}`
+			: "";
 	status.event(
-		`run ${done > 0 ? "resumed" : "started"} at ${done.toLocaleString()} captured, dest ${dest}, ${parallel} in flight`,
+		`run ${done > 0 ? "resumed" : "started"} at ${done.toLocaleString()} captured, dest ${dest}, ${parallel} in flight${rangeNote}`,
 	);
 	// A killed run can strand WORKER temp files (numeric suffixes
 	// only - a concurrent --verify/--selftest owns .verify and
@@ -611,7 +685,7 @@ async function capture(dest, limit, parallel) {
 	// under parallelism - any success resets it.
 	let uploadFailStreak = 0;
 	let captured = 0;
-	let nextTokenId = 0;
+	let nextTokenId = range.from;
 	const claimNext = () => {
 		// Limit counts CAPTURES, not attempts (review catch - the
 		// documented "stop after N captures"); with workers in
@@ -619,7 +693,7 @@ async function capture(dest, limit, parallel) {
 		if (limit && captured >= limit) {
 			return undefined;
 		}
-		while (nextTokenId < TOKEN_COUNT) {
+		while (nextTokenId < range.until) {
 			const tokenId = nextTokenId++;
 			if (manifest.entries[tokenId] || manifest.gaps[tokenId] !== undefined) {
 				continue;
@@ -1031,9 +1105,88 @@ async function selftest() {
 		socket.destroy();
 	}
 	server.close();
+	// Manifest merge (two-front split): disjoint records combine,
+	// identical overlaps pass through, and every disagreement -
+	// entry conflict, filename collision, entry-vs-gap, dest
+	// mismatch - refuses instead of producing a false record
+	const entryA = { file: "A_1.vrm", size: 5, sha256: "aa", cid: "c1" };
+	const entryB = { file: "A_2.vrm", size: 6, sha256: "bb", cid: "c2" };
+	const front1 = {
+		dest: "s3://x/",
+		entries: { 1: entryA },
+		gaps: { 9: "no vrm_url" },
+	};
+	const merged = mergeManifests(front1, {
+		dest: "s3://x/",
+		entries: { 2: entryB, 1: { ...entryA } },
+		gaps: { 9: "no vrm_url" },
+	});
+	if (
+		Object.keys(merged.entries).length !== 2 ||
+		Object.keys(merged.gaps).length !== 1 ||
+		merged.entries[2].sha256 !== "bb"
+	) {
+		fail("manifest merge lost or invented records");
+	}
+	const mustRefuse = (label, other) => {
+		try {
+			mergeManifests(front1, other);
+		} catch (error) {
+			return;
+		}
+		fail(`merge accepted a ${label}`);
+	};
+	mustRefuse("conflicting entry", {
+		entries: { 1: { ...entryA, sha256: "zz" } },
+		gaps: {},
+	});
+	mustRefuse("filename collision", {
+		entries: { 3: { ...entryB, file: "A_1.vrm" } },
+		gaps: {},
+	});
+	mustRefuse("entry-vs-gap disagreement", {
+		entries: { 9: entryB },
+		gaps: {},
+	});
+	mustRefuse("gap-vs-entry disagreement", {
+		entries: {},
+		gaps: { 1: "no vrm_url" },
+	});
+	mustRefuse("dest mismatch", { dest: "s3://y/", entries: {}, gaps: {} });
 	console.log(
 		"SELFTEST PASS: verified round-trip, bad-magic/truncation rejection, " +
-			"429 cooldown honored, stall auto-rest armed and reset",
+			"429 cooldown honored, stall auto-rest armed and reset, manifest " +
+			"merge safe",
+	);
+}
+
+function mergeMode(otherPath) {
+	if (!otherPath || otherPath.startsWith("--")) {
+		console.error("--merge needs a path to the other machine's manifest");
+		process.exit(1);
+	}
+	// The lock matters here too: merging while a capture is saving
+	// would interleave manifest snapshots exactly like a second run
+	acquireLock();
+	const own = loadManifest();
+	let other;
+	try {
+		other = JSON.parse(fs.readFileSync(otherPath, "utf8"));
+	} catch (error) {
+		console.error(`cannot read ${otherPath}: ${error.message}`);
+		process.exit(1);
+	}
+	let merged;
+	try {
+		merged = mergeManifests(own, other);
+	} catch (error) {
+		console.error(`refusing to merge: ${error.message}`);
+		process.exit(1);
+	}
+	saveManifest(merged);
+	console.log(
+		`merged: ${Object.keys(merged.entries).length.toLocaleString()} entries, ` +
+			`${Object.keys(merged.gaps).length} gaps -> ${MANIFEST_FILE}`,
 	);
 }
 
@@ -1080,11 +1233,33 @@ function argDest() {
 		await dryRun(argValue("--dry-run", 5) || 5);
 	} else if (argv.includes("--verify")) {
 		await verify(argValue("--verify", 20) || 20);
+	} else if (argv.includes("--merge")) {
+		mergeMode(argv[argv.indexOf("--merge") + 1]);
 	} else {
 		// 1-4 workers: enough to hide gateway latency and retry
 		// backoff, few enough to stay a polite gateway citizen
 		const parallel = Math.max(1, Math.min(4, argValue("--parallel", 3) || 3));
-		await capture(argDest(), argValue("--limit", 0), parallel);
+		// -1 doubles as the "flag present but not a number" sentinel:
+		// it always fails the validation below instead of silently
+		// capturing the wrong slice
+		const from = argValue("--from", -1) ?? 0;
+		const until = argValue("--until", -1) ?? TOKEN_COUNT;
+		if (
+			!Number.isInteger(from) ||
+			!Number.isInteger(until) ||
+			from < 0 ||
+			from >= until ||
+			until > TOKEN_COUNT
+		) {
+			console.error(
+				`--from/--until must satisfy 0 <= from < until <= ${TOKEN_COUNT}`,
+			);
+			process.exit(1);
+		}
+		await capture(argDest(), argValue("--limit", 0), parallel, {
+			from,
+			until,
+		});
 	}
 })().catch((error) => {
 	console.error(error);
