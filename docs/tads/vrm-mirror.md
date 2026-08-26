@@ -150,3 +150,20 @@ None.
   CORS-dead ones are fine server-side. First kubo probe 504'd on
   a cold DHT; provider existence and the alternative-gateway
   sweep are PENDING operator results, which pick the lane.
+- 2026-08-26 — Kubo lane chosen, then throttled by STALLS. The
+  operator's probes: providers exist on the DHT (two peers -
+  pinata's infrastructure - serve the whole corpus; tokens are
+  pinned in BATCH directories, e.g. one CID spans ~#223-346),
+  and a warm fetch through the local kubo gateway pulled 9.25MB
+  in 2.5s. The capture ran at ~2.25 MB/s, then the upstream
+  peers began letting connections sit idle: transfers die by
+  idle-timeout abort, not 429. The pattern is a transfer budget
+  per window - rest restores flow (227 tokens overnight), then
+  it chokes again at any parallelism. Manual stop/resume works
+  but can't run unattended, so the tool gained STALL AUTO-REST:
+  an idle-timeout abort is reported as "stalled" and feeds a
+  shared ladder - three consecutive stalls rest ALL workers
+  (5 min, doubling to a 60 min cap while the choke persists;
+  any flowing bytes reset the ladder). Selftest grew a hanging
+  fixture exercising the abort kind, the arming threshold, the
+  escalation, and the reset.

@@ -32,10 +32,11 @@ PROGRESS: docs/tads/vrm-mirror.md — back up all ~26.6k VRMs
 (~285GB, one live browser gateway left) to s3://kwigbelle/vrm/
 and serve mirror-first. Capture tooling shipped (PRs #26/#27/#29:
 guardrail, parallel workers + run lock, shared 429 cooldown,
---gateway override); the capture runs on the operator's Lightsail
-instance and is mid-flight — pinata throttles datacenter IPs, so
-the lane (local kubo node vs alternative gateway vs cooldown
-pacing) awaits the operator's probe results. PR B (mirror-first
+--gateway override; plus stall auto-rest — see the TAD's
+2026-08-26 entry); the capture runs on the operator's Lightsail
+instance through a local kubo node (--gateway bitswap lane) and
+is mid-flight — pinata's upstream peers grant a transfer budget
+per window then stall, so the tool rests and resumes on its own. PR B (mirror-first
 serving) is implemented and PRESERVED at 0c103a3 (PR #28 closed
 to unblock the hotfix); it reopens once the capture completes,
 --verify passes, and the operator runs the CORS ops step. Parked:
@@ -130,7 +131,8 @@ Tools/check-corpus.js      totalSupply vs hashes.json staleness;
 Tools/mirror-vrms.js       resumable stream-through VRM backup ->
                            s3://kwigbelle/vrm/ (--dest); parallel
                            workers + pid run-lock w/ ownership
-                           gates; shared 429 cooldown; --gateway
+                           gates; shared 429 cooldown + stall
+                           auto-rest (escalating); --gateway
                            (e.g. local kubo node); sha256 manifest
                            vrm-manifest.json; live status in
                            feedback/VRM-MIRROR.md; --dry-run /
