@@ -1,3 +1,5 @@
+import { Strings } from "./Strings.js";
+
 /// The Effects section of the side panel: user controls for the
 /// spring rig, persisted per browser in localStorage so a visitor's
 /// preferred feel survives reloads. Wave/Trails/Tilt are the
@@ -78,27 +80,43 @@ export default class EffectsSection {
 		const content = document.createElement("div");
 		content.setAttribute("class", "effectsControls");
 		content.appendChild(
-			this.toggleRow("Pause motion", this.layerSprings.isPaused, (on) => {
-				this.layerSprings.isPaused = on;
-				this.saveSettings();
-			}),
+			this.toggleRow(
+				Strings.effects.pauseMotion,
+				this.layerSprings.isPaused,
+				(on) => {
+					this.layerSprings.isPaused = on;
+					this.saveSettings();
+				},
+			),
 		);
 		content.appendChild(
-			this.sliderRow("Motion", 0, 3, this.layerSprings.motionScale, (value) => {
-				this.layerSprings.motionScale = value;
-			}),
+			this.sliderRow(
+				Strings.effects.motion,
+				0,
+				3,
+				this.layerSprings.motionScale,
+				(value) => {
+					this.layerSprings.motionScale = value;
+				},
+			),
 		);
 		content.appendChild(
-			this.sliderRow("Follow", 0, 2, this.layerSprings.followScale, (value) => {
-				this.layerSprings.followScale = value;
-			}),
+			this.sliderRow(
+				Strings.effects.follow,
+				0,
+				2,
+				this.layerSprings.followScale,
+				(value) => {
+					this.layerSprings.followScale = value;
+				},
+			),
 		);
 		content.appendChild(
 			// Lock layers (docs/tads/info-tab.md Decision 4): the
 			// whole face moves as one piece - dragging carries every
 			// layer together instead of separating them by depth
 			this.toggleRow(
-				"Lock layers",
+				Strings.effects.lockLayers,
 				this.layerSprings.isLockedTogether,
 				(on) => {
 					this.layerSprings.isLockedTogether = on;
@@ -107,19 +125,23 @@ export default class EffectsSection {
 			),
 		);
 		content.appendChild(
-			this.toggleRow("Wave", this.layerSprings.isWaveEnabled, (on) => {
-				this.layerSprings.isWaveEnabled = on;
-				this.saveSettings();
-			}),
+			this.toggleRow(
+				Strings.effects.wave,
+				this.layerSprings.isWaveEnabled,
+				(on) => {
+					this.layerSprings.isWaveEnabled = on;
+					this.saveSettings();
+				},
+			),
 		);
 		content.appendChild(
-			this.toggleRow("Trails", this.trailsEnabled, (on) => {
+			this.toggleRow(Strings.effects.trails, this.trailsEnabled, (on) => {
 				this.trailsEnabled = on;
 				this.saveSettings();
 			}),
 		);
 		content.appendChild(
-			this.toggleRow("Tilt follow", this.tiltEnabled, (on) => {
+			this.toggleRow(Strings.effects.tiltFollow, this.tiltEnabled, (on) => {
 				this.tiltEnabled = on;
 				if (this.callbacks.onTiltChanged) {
 					// The toggle tap is also the user gesture iOS

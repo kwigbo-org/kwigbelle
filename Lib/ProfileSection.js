@@ -1,3 +1,4 @@
+import { Strings } from "./Strings.js";
 import { svgToImage } from "./UIHelpers.js";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
@@ -78,9 +79,7 @@ export default class ProfileSection {
 		if (state === "none") {
 			const note = document.createElement("div");
 			note.setAttribute("class", "profileNote");
-			note.innerText =
-				"No Ethereum wallet detected. Install one to see your own " +
-				"Avastars here.";
+			note.innerText = Strings.profile.noWallet;
 			this.status.appendChild(note);
 			return;
 		}
@@ -90,11 +89,11 @@ export default class ProfileSection {
 			row.setAttribute("id", "profileConnectedRow");
 			const address = document.createElement("div");
 			address.setAttribute("id", "profileAddress");
-			address.innerText = "Connected";
+			address.innerText = Strings.profile.connected;
 			row.appendChild(address);
 			const logout = document.createElement("div");
 			logout.setAttribute("class", "profileLogout");
-			logout.setAttribute("title", "Log out");
+			logout.setAttribute("title", Strings.profile.logout);
 			logout.appendChild(ProfileSection.logoutIcon());
 			logout.addEventListener("click", () => this.logout());
 			row.appendChild(logout);
@@ -105,7 +104,9 @@ export default class ProfileSection {
 		const button = document.createElement("div");
 		button.setAttribute("class", "connectButton");
 		button.innerText =
-			state === "wrongNetwork" ? "🔗 Switch to Mainnet" : "🔗 Link Wallet";
+			state === "wrongNetwork"
+				? Strings.profile.switchNetwork
+				: Strings.profile.linkWallet;
 		button.addEventListener("click", this.connectWallet.bind(this));
 		this.status.appendChild(button);
 	}
@@ -147,7 +148,7 @@ export default class ProfileSection {
 		if (tokenIds.length === 0) {
 			const note = document.createElement("div");
 			note.setAttribute("class", "profileNote");
-			note.innerText = "No Avastars in this wallet.";
+			note.innerText = Strings.profile.emptyWallet;
 			this.grid.appendChild(note);
 			return;
 		}
@@ -292,7 +293,8 @@ export default class ProfileSection {
 				row.appendChild(icon);
 			}
 			const name = document.createElement("span");
-			name.innerText = (wallet.info && wallet.info.name) || "Wallet";
+			name.innerText =
+				(wallet.info && wallet.info.name) || Strings.profile.walletFallbackName;
 			row.appendChild(name);
 			row.addEventListener(
 				"click",

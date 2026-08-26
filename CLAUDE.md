@@ -96,6 +96,11 @@ Lib/VRMLoadingUI.js        center-screen VRM loading overlay
 Lib/RarityIcons.js         tier icons/colors, score->tier bands,
                            kind labels (single design-token source)
 Lib/UIHelpers.js           stopSceneEvents, svgToImage
+Lib/Strings.js             ALL editorial copy (docs/tads/strings.md):
+                           one file for the content editor, grouped
+                           by surface; parameterized strings are
+                           arrow functions; collection vocabulary
+                           and the build stamp stay at their sources
 Lib/vendor/                vendored libs (web3; three + three-vrm
                            ES modules wired by index.html's import
                            map) - never lint/format/edit

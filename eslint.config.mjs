@@ -37,6 +37,7 @@ export default [
 				requestAnimationFrame: "readonly",
 				cancelAnimationFrame: "readonly",
 				Event: "readonly",
+				Element: "readonly",
 				setTimeout: "readonly",
 				clearTimeout: "readonly",
 				AbortController: "readonly",

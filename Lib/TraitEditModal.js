@@ -1,3 +1,4 @@
+import { Strings } from "./Strings.js";
 import { stopSceneEvents, svgToImage } from "./UIHelpers.js";
 import { rarityIcon } from "./RarityIcons.js";
 
@@ -119,7 +120,7 @@ export default class TraitEditModal {
 		showAllBox.type = "checkbox";
 		showAll.appendChild(showAllBox);
 		const showAllText = document.createElement("span");
-		showAllText.innerText = "all genders";
+		showAllText.innerText = Strings.modal.allGenders;
 		showAll.appendChild(showAllText);
 		header.appendChild(showAll);
 		const close = document.createElement("span");
@@ -135,20 +136,20 @@ export default class TraitEditModal {
 		const textFilter = document.createElement("input");
 		textFilter.setAttribute("class", "modalFilterText");
 		textFilter.type = "text";
-		textFilter.placeholder = "Filter by name";
+		textFilter.placeholder = Strings.modal.filterPlaceholder;
 		filterBar.appendChild(textFilter);
 		const raritySelect = document.createElement("select");
 		raritySelect.setAttribute("class", "modalFilterRarity");
 		const anyRarity = document.createElement("option");
 		anyRarity.value = "";
-		anyRarity.innerText = "Any rarity";
+		anyRarity.innerText = Strings.modal.anyRarity;
 		raritySelect.appendChild(anyRarity);
 		filterBar.appendChild(raritySelect);
 		const seriesSelect = document.createElement("select");
 		seriesSelect.setAttribute("class", "modalFilterSeries");
 		const anySeries = document.createElement("option");
 		anySeries.value = "";
-		anySeries.innerText = "Any series";
+		anySeries.innerText = Strings.modal.anySeries;
 		seriesSelect.appendChild(anySeries);
 		filterBar.appendChild(seriesSelect);
 		sheet.appendChild(filterBar);
@@ -188,7 +189,7 @@ export default class TraitEditModal {
 		for (const value of seriesValues) {
 			const option = document.createElement("option");
 			option.value = String(value);
-			option.innerText = `Series ${value + 1}`;
+			option.innerText = Strings.modal.seriesOption(value);
 			seriesSelect.appendChild(option);
 		}
 		const renderOptions = async () => {
