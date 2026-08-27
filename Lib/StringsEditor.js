@@ -19,6 +19,12 @@ import { StringsMeta } from "./StringsMeta.js";
 
 // key ("group.name") -> edited raw value (text, or template body)
 const edits = new Map();
+// Draft edits whose key no longer exists in the current Strings
+// (the copy changed underneath a saved draft). Never exported,
+// never counted as changes - but SURFACED and preserved until the
+// draft is discarded, so an editor's words are never silently lost
+// (operator direction 2026-08-27).
+const orphanEdits = new Map();
 const fields = new Map();
 const DRAFT_KEY = "kwigbelle.stringsDraft";
 
@@ -59,7 +65,14 @@ const loadDraft = () => {
 
 const saveDraft = () => {
 	try {
-		localStorage.setItem(DRAFT_KEY, JSON.stringify(Object.fromEntries(edits)));
+		// Orphans ride along so later keystrokes can't erase them
+		localStorage.setItem(
+			DRAFT_KEY,
+			JSON.stringify({
+				...Object.fromEntries(orphanEdits),
+				...Object.fromEntries(edits),
+			}),
+		);
 	} catch (error) {
 		// Storage unavailable: editing still works, drafts just
 		// won't survive a tab eviction
@@ -171,7 +184,11 @@ const shareOrDownload = async () => {
 export function buildEditor(root) {
 	const draft = loadDraft();
 	for (const [key, value] of Object.entries(draft)) {
-		edits.set(key, value);
+		if (model.some((entry) => entry.key === key)) {
+			edits.set(key, value);
+		} else {
+			orphanEdits.set(key, value);
+		}
 	}
 
 	const heading = document.createElement("h1");
@@ -204,6 +221,38 @@ export function buildEditor(root) {
 		});
 		banner.appendChild(clear);
 		root.appendChild(banner);
+	}
+
+	if (orphanEdits.size > 0) {
+		const card = document.createElement("section");
+		card.setAttribute("class", "editorGroup editorOrphans");
+		const title = document.createElement("h2");
+		title.innerText = "Unmatched edits";
+		card.appendChild(title);
+		const note = document.createElement("p");
+		note.setAttribute("class", "editorGroupNote");
+		note.innerText =
+			"These drafted edits no longer match any current text - the " +
+			"copy changed since they were written. They will NOT be " +
+			"included in the export. Copy anything you still need into " +
+			"the fields below, then discard the draft.";
+		card.appendChild(note);
+		for (const [key, value] of orphanEdits) {
+			const fieldBox = document.createElement("div");
+			fieldBox.setAttribute("class", "editorField hasError");
+			const label = document.createElement("label");
+			label.setAttribute("class", "editorDescription");
+			label.innerText = key;
+			fieldBox.appendChild(label);
+			const input = document.createElement("textarea");
+			input.setAttribute("class", "editorInput");
+			input.readOnly = true;
+			input.rows = 2;
+			input.value = value;
+			fieldBox.appendChild(input);
+			card.appendChild(fieldBox);
+		}
+		root.appendChild(card);
 	}
 
 	for (const [group, entries] of Object.entries(Strings)) {

@@ -130,13 +130,62 @@ const { check } = require("./check.js");
 	);
 	check(verdict.groups === coverage.groupCount, "generated file lost groups");
 
-	// Drafts survive a reload; discarding restores the original
+	// Drafts survive a reload; a draft edit whose key no longer
+	// exists (the copy changed underneath it) surfaces as an
+	// Unmatched edit - visible, excluded from the export, preserved
+	await page.evaluate(() => {
+		const draft = JSON.parse(localStorage.getItem("kwigbelle.stringsDraft"));
+		draft["legacy.removedKey"] = "an edit of a string that is gone";
+		localStorage.setItem("kwigbelle.stringsDraft", JSON.stringify(draft));
+	});
 	await page.reload();
 	await page.waitForSelector(".editorDraftBanner", { timeout: 10000 });
 	const restored = await page.evaluate(
 		() => document.querySelector('textarea[data-key="load.button"]').value,
 	);
 	check(restored === "Fetch", "draft not restored after reload: " + restored);
+	const orphan = await page.evaluate(async () => {
+		const card = document.querySelector(".editorOrphans");
+		const text = await window.__stringsEditor.generate();
+		const draft = JSON.parse(localStorage.getItem("kwigbelle.stringsDraft"));
+		return {
+			shown: !!card,
+			label: card?.querySelector(".editorDescription")?.innerText,
+			value: card?.querySelector("textarea")?.value,
+			exported: text.includes("removedKey"),
+			status: document.getElementById("editorStatus").innerText,
+			persisted: draft["legacy.removedKey"],
+		};
+	});
+	check(orphan.shown, "unmatched-edits card missing");
+	check(
+		orphan.label === "legacy.removedKey" &&
+			orphan.value === "an edit of a string that is gone",
+		"orphan edit not surfaced: " + JSON.stringify(orphan),
+	);
+	check(!orphan.exported, "orphan edit leaked into the export");
+	check(
+		orphan.status === "1 change ready",
+		"orphan counted as a change: " + orphan.status,
+	);
+	check(
+		orphan.persisted === "an edit of a string that is gone",
+		"orphan edit dropped from the stored draft",
+	);
+	// A fresh keystroke on a live field must not erase the orphan
+	await page
+		.locator('textarea[data-key="load.placeholder"]')
+		.fill("Token number");
+	const survived = await page.evaluate(
+		() =>
+			JSON.parse(localStorage.getItem("kwigbelle.stringsDraft"))[
+				"legacy.removedKey"
+			],
+	);
+	check(
+		survived === "an edit of a string that is gone",
+		"orphan edit erased by a later keystroke",
+	);
 	await page.click(".editorDraftBanner button");
 	await page.waitForFunction(
 		() =>

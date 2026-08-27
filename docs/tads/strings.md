@@ -67,3 +67,9 @@
   ways, plain + template round-trip through a generated module
   import, placeholder-break blocking, and draft persistence
   across reload.
+- 2026-08-27 — Orphaned-draft handling (operator direction): a
+  draft edit whose key no longer exists in the current Strings
+  surfaces in an "Unmatched edits" card - visible and preserved
+  until the draft is discarded, excluded from the export and the
+  change count. An editor's words are never silently lost to
+  copy drift.
