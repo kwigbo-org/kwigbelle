@@ -73,6 +73,31 @@ const { check } = require("./check.js");
 		});
 	});
 
+	// Registered BEFORE navigation: MainScene's backup indicator
+	// probes the absolute mirror URL on load, and no test touches
+	// the real network (review catch)
+	let mirrorMode = "serve";
+	const mirror = { hits: 0, lastURL: null };
+	await page.route("**/vrm/**", (route) => {
+		if (route.request().method() === "HEAD") {
+			route.fulfill({ status: 404, body: "" });
+			return;
+		}
+		mirror.hits++;
+		mirror.lastURL = route.request().url();
+		if (mirrorMode === "serve") {
+			route.fulfill({
+				status: 200,
+				contentType: "application/octet-stream",
+				headers: cors,
+				body: bytes,
+			});
+		} else if (mirrorMode === "missing") {
+			route.fulfill({ status: 404, headers: cors, body: "no such object" });
+		} else {
+			route.abort();
+		}
+	});
 	await page.goto("http://localhost:8741/index.html?tokenid=8014");
 	await page.waitForFunction(
 		() => document.getElementById("preloader")?.style.opacity === "0",
@@ -408,6 +433,114 @@ const { check } = require("./check.js");
 	check(
 		cidRewrite.bafy.every((u) => u.includes("/ipfs/bafytestcid/")),
 		"CIDv1 URLs must pass through untouched",
+	);
+
+	// ---- Mirror-first lane (docs/tads/vrm-mirror.md Decision 5).
+	// Every scenario above ran WITHOUT a kindFor lookup, proving
+	// the lane is off by default (their hit counts pinned that).
+
+	// Mirror serves: right bytes, derived filename, and NO metadata
+	// or gateway request at all - the happy path outlives avastars.io
+	const before = { ...hits };
+	const served = await page.evaluate(async () => {
+		const { default: VRMSource } = await import("../Lib/VRMSource.js");
+		const source = new VRMSource();
+		source.kindFor = async () => "prime";
+		const progress = [];
+		const buffer = await source.fetchVRM(8014, (loaded, total) =>
+			progress.push([loaded, total]),
+		);
+		return {
+			byteLength: buffer.byteLength,
+			lastProgress: progress[progress.length - 1],
+		};
+	});
+	console.log("mirror serve:", JSON.stringify(served), mirror.lastURL);
+	check(served.byteLength === 131072, "mirror lane returned wrong bytes");
+	check(
+		served.lastProgress[0] === 131072,
+		"mirror lane did not stream progress",
+	);
+	check(
+		mirror.hits === 1 && mirror.lastURL.endsWith("/vrm/Avastar_Prime_8014.vrm"),
+		"mirror URL wrong: " + mirror.lastURL,
+	);
+	check(
+		hits.metadata === before.metadata && hits.pinata === before.pinata,
+		"mirror happy path touched metadata or a gateway: " + JSON.stringify(hits),
+	);
+
+	// Mirror 404s: quiet fallback to metadata + the gateway race
+	mirrorMode = "missing";
+	mode = "happy";
+	const fellBack = await page.evaluate(async () => {
+		const { default: VRMSource } = await import("../Lib/VRMSource.js");
+		const source = new VRMSource();
+		source.kindFor = async () => "prime";
+		const buffer = await source.fetchVRM(8014);
+		return buffer.byteLength;
+	});
+	check(fellBack === 131072, "mirror 404 did not fall back");
+	check(
+		mirror.hits === 2 &&
+			hits.metadata === before.metadata + 1 &&
+			hits.pinata === before.pinata + 1,
+		"fallback lane usage wrong: " + JSON.stringify(hits),
+	);
+
+	// Mirror connection dead: same quiet fallback
+	mirrorMode = "dead";
+	const deadFallback = await page.evaluate(async () => {
+		const { default: VRMSource } = await import("../Lib/VRMSource.js");
+		const source = new VRMSource();
+		source.kindFor = async () => "prime";
+		const buffer = await source.fetchVRM(8014);
+		return buffer.byteLength;
+	});
+	check(deadFallback === 131072, "dead mirror did not fall back");
+	check(
+		mirror.hits === 3 &&
+			hits.metadata === before.metadata + 2 &&
+			hits.pinata === before.pinata + 2,
+		"dead-mirror fallback accounting wrong: " + JSON.stringify(hits),
+	);
+
+	// Abort covers the mirror lane: nothing is requested anywhere
+	mirrorMode = "serve";
+	const requestsBefore = mirror.hits + hits.metadata + hits.pinata;
+	const mirrorAbort = await page.evaluate(async () => {
+		const { default: VRMSource } = await import("../Lib/VRMSource.js");
+		const source = new VRMSource();
+		source.kindFor = async () => "prime";
+		const controller = new AbortController();
+		controller.abort();
+		try {
+			await source.fetchVRM(8014, null, controller.signal);
+			return null;
+		} catch (error) {
+			return error.name;
+		}
+	});
+	check(mirrorAbort === "AbortError", "mirror-lane abort did not rethrow");
+	check(
+		mirror.hits + hits.metadata + hits.pinata === requestsBefore,
+		"aborted mirror fetch still issued a request",
+	);
+
+	// Metadata dead + mirror-derived filename: vrmInfo degrades to
+	// the derived name (uncached) instead of failing the download UI
+	const degraded = await page.evaluate(async () => {
+		const { default: VRMSource } = await import("../Lib/VRMSource.js");
+		const source = new VRMSource();
+		source.kindFor = async () => "replicant";
+		source.metadataURL = "http://localhost:1/nope/"; // unreachable
+		const info = await source.vrmInfo(25500);
+		return info;
+	});
+	check(
+		degraded.url === null &&
+			degraded.filename === "Avastar_Replicant_25500.vrm",
+		"degraded vrmInfo wrong: " + JSON.stringify(degraded),
 	);
 
 	console.log("errors:", errors.length ? errors : "none");

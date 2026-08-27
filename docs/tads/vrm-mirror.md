@@ -192,3 +192,18 @@ None.
   loads. A pending token logs one benign console 404 per view;
   console-strict tests route the probe. Strings/meta entries added
   (coverage test enforced). Stamp 2026-08-27.2.
+- 2026-08-27 — PR B RESTORED (operator "go", mirror at ~42%):
+  the original gating reason (an empty mirror would 404 every
+  fetch) expired - the fallback race covers misses, and the
+  public gateway ecosystem is confirmed shutting down (ipfs.io /
+  dweb.link EOL). Cherry-picked 0c103a3 onto develop: VRMSource
+  mirror-first lane (scene-wired kind lookup; lane OFF unwired,
+  pinned by the pre-existing suite), degraded vrmInfo, harness
+  mirror routes. Reconciled with the six PRs merged since,
+  including PR #38's backup indicator: the indicator now probes
+  the SAME absolute mirror URL as the serving lane (truthful on
+  stage/local dev once CORS lands - review catch), and a gap
+  token's permanent "pending" is an accepted, documented
+  limitation (client-side code cannot know gap-ness without the
+  metadata call the indicator avoids). Merge gates: operator-run
+  CORS ops + QA. Stamp 2026-08-27.3.

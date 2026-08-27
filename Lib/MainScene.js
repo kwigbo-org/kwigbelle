@@ -1,5 +1,4 @@
 import { Strings } from "./Strings.js";
-import { kindLabel } from "./RarityIcons.js";
 import Scene from "./Scene.js";
 import Size from "./Size.js";
 import Point from "./Point.js";
@@ -28,7 +27,7 @@ export default class MainScene extends Scene {
 	/// Overridden constructor
 	constructor(rootContainer) {
 		super(rootContainer);
-		console.log("kwigbelle build 2026-08-27.2 (backup indicator)");
+		console.log("kwigbelle build 2026-08-27.3 (mirror-first 3D)");
 		// Build the UI
 		this.buildUI();
 		// Start loading
@@ -157,6 +156,13 @@ export default class MainScene extends Scene {
 		// mode transition AND by beginLoad, so a stale fetch or
 		// parse completion can never mount over a newer state
 		this.vrmSource = new VRMSource();
+		// Mirror-first 3D (docs/tads/vrm-mirror.md Decision 5): the
+		// hash corpus derives the mirror filename, so the happy path
+		// makes no avastars.io call and outlives that endpoint
+		this.vrmSource.kindFor = async (tokenId) => {
+			const info = await this.traitComposer.tokenInfo(tokenId);
+			return info ? info.kind : null;
+		};
 		this.vrmViewer = new VRMViewer(rootContainer);
 		// A tap on the loading overlay cancels the fetch (toggle3D
 		// reads a tap during vrmAbort as a cancel)
@@ -438,11 +444,31 @@ export default class MainScene extends Scene {
 		this.vrmSection.setOwned(
 			this.ownedTokenIds.has(String(this.avastarLoader.tokenId)),
 		);
-		this.vrmSection.setMirrorCheck(
-			this.avastar && this.avastar.kind && this.avastar.tokenId != null
-				? `Avastar_${kindLabel(this.avastar.tokenId, this.avastar.kind)}_${this.avastar.tokenId}.vrm`
-				: null,
-		);
+		// The backup indicator probes the SAME absolute mirror URL
+		// the serving lane uses - one source of truth, truthful from
+		// any origin once the mirror CORS lands (review catch). The
+		// load generation gates the async URL derivation so a stale
+		// load's resolution can't repaint a newer token's verdict.
+		if (this.avastar && this.avastar.tokenId != null) {
+			this.vrmSource
+				.mirrorURL(this.avastar.tokenId)
+				.then((url) => {
+					// Returned so the chain also covers a rejection from
+					// setMirrorCheck itself (review catch)
+					if (generation === this.loadGeneration) {
+						return this.vrmSection.setMirrorCheck(url);
+					}
+				})
+				.catch(() => {
+					// A failed derivation hides the row rather than
+					// surfacing as an unhandled rejection (review catch)
+					if (generation === this.loadGeneration) {
+						return this.vrmSection.setMirrorCheck(null);
+					}
+				});
+		} else {
+			this.vrmSection.setMirrorCheck(null);
+		}
 	}
 
 	/// Remember which tokens the connected wallet owns and refresh

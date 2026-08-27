@@ -55,7 +55,7 @@ const STATUS = {
 	});
 	// The per-token backup indicator HEADs vrm/<file>: 8014 is in
 	// the mirror, everything else is pending
-	await page.route("**/vrm/Avastar_*.vrm", (route) => {
+	await page.route("https://kwigbelle.com/vrm/Avastar_*.vrm", (route) => {
 		route.fulfill({
 			status: route.request().url().includes("Avastar_Prime_8014.vrm")
 				? 200

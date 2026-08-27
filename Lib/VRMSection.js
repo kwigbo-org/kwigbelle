@@ -1,5 +1,6 @@
 import { Strings } from "./Strings.js";
 import { stopSceneEvents } from "./UIHelpers.js";
+import { MIRROR_BASE } from "./VRMSource.js";
 
 /// The "3D model" panel section (docs/tads/vrm-viewer.md): a short
 /// explanation, a view-toggle button mirroring the floating one,
@@ -112,15 +113,18 @@ export default class VRMSection {
 	}
 
 	/// Check the mirror for the displayed token's model and light
-	/// the indicator: one same-origin HEAD of vrm/<filename> - 200
-	/// means backed up, anything else means pending. A newer token
-	/// load supersedes an in-flight check.
+	/// the indicator: one HEAD of the mirror URL the serving lane
+	/// itself uses - 200 means backed up, anything else means
+	/// pending. A newer token load supersedes an in-flight check.
+	/// KNOWN LIMIT (review-acknowledged): a gap token (no VRM ever
+	/// minted) reads as perpetually pending - the client cannot
+	/// know gap-ness without the metadata call this probe avoids.
 	///
-	/// - Parameter file: The mirror filename, or null to hide
-	async setMirrorCheck(file) {
+	/// - Parameter url: The absolute mirror URL, or null to hide
+	async setMirrorCheck(url) {
 		this.backupGeneration = (this.backupGeneration || 0) + 1;
 		const generation = this.backupGeneration;
-		if (!file) {
+		if (!url) {
 			this.backupRow.style.display = "none";
 			return;
 		}
@@ -129,7 +133,7 @@ export default class VRMSection {
 		this.backupText.innerText = Strings.vrm.backupChecking;
 		let isBacked = false;
 		try {
-			const res = await fetch("vrm/" + encodeURIComponent(file), {
+			const res = await fetch(url, {
 				method: "HEAD",
 				cache: "no-store",
 			});
@@ -150,9 +154,10 @@ export default class VRMSection {
 	}
 
 	/// The mirror-status modal: fetches the capture-published
-	/// vrm/_status.json (same origin - the mirror lives in the
-	/// bucket the site is served from) and shows overall backup
-	/// progress. Absent status renders a quiet fallback.
+	/// _status.json from the ABSOLUTE mirror (MIRROR_BASE - the
+	/// same address from prod, stage, and local dev; CORS ops
+	/// landed 2026-08-27) and shows overall backup progress.
+	/// Absent status renders a quiet fallback.
 	async openMirrorStatus() {
 		if (document.getElementById("mirrorModal")) {
 			return;
@@ -188,7 +193,12 @@ export default class VRMSection {
 		sheet.appendChild(body);
 		document.body.appendChild(overlay);
 		try {
-			const res = await fetch("vrm/_status.json", { cache: "no-store" });
+			// The ABSOLUTE mirror status - identical from prod, stage,
+			// and local dev (operator QA: the relative fetch read as
+			// "not published" everywhere but prod)
+			const res = await fetch(MIRROR_BASE + "_status.json", {
+				cache: "no-store",
+			});
 			if (!res.ok) {
 				throw new Error(`HTTP ${res.status}`);
 			}

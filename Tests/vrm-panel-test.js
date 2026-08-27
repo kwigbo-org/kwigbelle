@@ -69,6 +69,11 @@ async function launch(withWallet) {
 	}
 	const model = fs.readFileSync(FIXTURE);
 	const cors = { "access-control-allow-origin": "*" };
+	// Mirror-first lane 404s -> the scene exercises the routed
+	// fallback pipeline; no real network either way
+	await page.route("**/vrm/**", (route) =>
+		route.fulfill({ status: 404, headers: cors, body: "not mirrored" }),
+	);
 	await page.route("**://avastars.io/metadata/**", (route) => {
 		route.fulfill({
 			status: 200,

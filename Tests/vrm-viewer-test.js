@@ -70,6 +70,12 @@ async function ensureFixture() {
 	const cors = { "access-control-allow-origin": "*" };
 	let gatewayDelay = 0;
 	let gatewayHits = 0;
+	// The mirror-first lane (docs/tads/vrm-mirror.md) 404s here so
+	// the scene falls back to the routed pipeline under test - no
+	// real network either way
+	await page.route("**/vrm/**", (route) =>
+		route.fulfill({ status: 404, headers: cors, body: "not mirrored" }),
+	);
 	await page.route("**://avastars.io/metadata/**", (route) => {
 		route.fulfill({
 			status: 200,
