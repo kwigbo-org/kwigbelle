@@ -53,6 +53,16 @@ const STATUS = {
 			body: JSON.stringify(STATUS),
 		});
 	});
+	// The per-token backup indicator HEADs vrm/<file>: 8014 is in
+	// the mirror, everything else is pending
+	await page.route("**/vrm/Avastar_*.vrm", (route) => {
+		route.fulfill({
+			status: route.request().url().includes("Avastar_Prime_8014.vrm")
+				? 200
+				: 404,
+			body: "",
+		});
+	});
 
 	await page.goto("http://localhost:8741/index.html?tokenid=8014");
 	await page.waitForFunction(
@@ -61,8 +71,40 @@ const STATUS = {
 	);
 	await page.waitForTimeout(300);
 
-	// Open settings, tap the info button, read the modal
+	// Backup indicator: 8014 is mirrored (green), a token whose HEAD
+	// 404s shows pending (red); the row lives in the 3D model section
 	await page.click("#panelHandle");
+	await page.waitForFunction(
+		() => document.querySelector(".vrmBackupText")?.innerText === "Backed up",
+		{ timeout: 5000 },
+	);
+	check(
+		await page.evaluate(() =>
+			document.querySelector(".vrmBackupDot").classList.contains("backed"),
+		),
+		"mirrored token's dot is not green",
+	);
+	await page.fill("#loadTokenInput", "12345");
+	await page.press("#loadTokenInput", "Enter");
+	await page.waitForFunction(
+		() =>
+			document.querySelector(".vrmBackupText")?.innerText === "Pending backup",
+		{ timeout: 15000 },
+	);
+	check(
+		await page.evaluate(() =>
+			document.querySelector(".vrmBackupDot").classList.contains("pending"),
+		),
+		"unmirrored token's dot is not red",
+	);
+	await page.fill("#loadTokenInput", "8014");
+	await page.press("#loadTokenInput", "Enter");
+	await page.waitForFunction(
+		() => document.querySelector(".vrmBackupText")?.innerText === "Backed up",
+		{ timeout: 15000 },
+	);
+
+	// Open the info modal and read it
 	await page.click(".vrmMirrorInfo");
 	await page.waitForSelector("#mirrorModal .mirrorHeadline", {
 		timeout: 5000,

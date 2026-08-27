@@ -184,3 +184,11 @@ None.
   Decision 10 (same day): capture publishes _status.json to the
   mirror prefix; the site's 3D-model section gained the ⓘ
   mirror-status modal reading it same-origin.
+- 2026-08-27 — Per-token backup indicator (operator request): the
+  3D model section's bottom row shows a green "Backed up" / red
+  "Pending backup" dot for the DISPLAYED token - one same-origin
+  HEAD of vrm/<filename> (filename derived locally via kindLabel,
+  no metadata call), generation-guarded against superseding token
+  loads. A pending token logs one benign console 404 per view;
+  console-strict tests route the probe. Strings/meta entries added
+  (coverage test enforced). Stamp 2026-08-27.2.

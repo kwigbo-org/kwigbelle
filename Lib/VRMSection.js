@@ -51,6 +51,19 @@ export default class VRMSection {
 		this.download.addEventListener("click", () => this.onDownload());
 		content.appendChild(this.download);
 
+		// Per-token mirror indicator (operator request 2026-08-27):
+		// green = this token's model is in the backup, red = not yet
+		this.backupRow = document.createElement("div");
+		this.backupRow.setAttribute("class", "vrmBackupRow");
+		this.backupRow.style.display = "none";
+		this.backupDot = document.createElement("span");
+		this.backupDot.setAttribute("class", "vrmBackupDot");
+		this.backupRow.appendChild(this.backupDot);
+		this.backupText = document.createElement("span");
+		this.backupText.setAttribute("class", "vrmBackupText");
+		this.backupRow.appendChild(this.backupText);
+		content.appendChild(this.backupRow);
+
 		this.setMode("vector");
 		return content;
 	}
@@ -96,6 +109,44 @@ export default class VRMSection {
 		this.download.disabled = text !== null;
 		this.download.innerText =
 			text === null ? Strings.vrm.download : Strings.vrm.downloadState(text);
+	}
+
+	/// Check the mirror for the displayed token's model and light
+	/// the indicator: one same-origin HEAD of vrm/<filename> - 200
+	/// means backed up, anything else means pending. A newer token
+	/// load supersedes an in-flight check.
+	///
+	/// - Parameter file: The mirror filename, or null to hide
+	async setMirrorCheck(file) {
+		this.backupGeneration = (this.backupGeneration || 0) + 1;
+		const generation = this.backupGeneration;
+		if (!file) {
+			this.backupRow.style.display = "none";
+			return;
+		}
+		this.backupRow.style.display = "";
+		this.backupDot.setAttribute("class", "vrmBackupDot checking");
+		this.backupText.innerText = Strings.vrm.backupChecking;
+		let isBacked = false;
+		try {
+			const res = await fetch("vrm/" + encodeURIComponent(file), {
+				method: "HEAD",
+				cache: "no-store",
+			});
+			isBacked = res.ok;
+		} catch (error) {
+			// Unreachable mirror reads as pending, never as an error
+		}
+		if (generation !== this.backupGeneration) {
+			return;
+		}
+		this.backupDot.setAttribute(
+			"class",
+			"vrmBackupDot " + (isBacked ? "backed" : "pending"),
+		);
+		this.backupText.innerText = isBacked
+			? Strings.vrm.backedUp
+			: Strings.vrm.backupPending;
 	}
 
 	/// The mirror-status modal: fetches the capture-published

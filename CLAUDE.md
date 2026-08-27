@@ -89,7 +89,9 @@ Lib/VRMViewer.js           own-canvas three.js VRM display (orbit
                            controls, spring-bones, full disposal)
 Lib/VRMSection.js          "3D model" panel section: view toggle,
                            owner-only Download VRM, ⓘ mirror-status
-                           modal (same-origin vrm/_status.json)
+                           modal (same-origin vrm/_status.json),
+                           per-token backed-up/pending dot (HEAD
+                           of vrm/<file>)
 Lib/VRMLoadingUI.js        center-screen VRM loading overlay
                            (tap-to-cancel) + failure toast; the
                            3D entry/exit lives in VRMSection
