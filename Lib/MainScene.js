@@ -1,5 +1,4 @@
 import { Strings } from "./Strings.js";
-import { kindLabel } from "./RarityIcons.js";
 import Scene from "./Scene.js";
 import Size from "./Size.js";
 import Point from "./Point.js";
@@ -445,11 +444,20 @@ export default class MainScene extends Scene {
 		this.vrmSection.setOwned(
 			this.ownedTokenIds.has(String(this.avastarLoader.tokenId)),
 		);
-		this.vrmSection.setMirrorCheck(
-			this.avastar && this.avastar.kind && this.avastar.tokenId != null
-				? `Avastar_${kindLabel(this.avastar.tokenId, this.avastar.kind)}_${this.avastar.tokenId}.vrm`
-				: null,
-		);
+		// The backup indicator probes the SAME absolute mirror URL
+		// the serving lane uses - one source of truth, truthful from
+		// any origin once the mirror CORS lands (review catch). The
+		// load generation gates the async URL derivation so a stale
+		// load's resolution can't repaint a newer token's verdict.
+		if (this.avastar && this.avastar.tokenId != null) {
+			this.vrmSource.mirrorURL(this.avastar.tokenId).then((url) => {
+				if (generation === this.loadGeneration) {
+					this.vrmSection.setMirrorCheck(url);
+				}
+			});
+		} else {
+			this.vrmSection.setMirrorCheck(null);
+		}
 	}
 
 	/// Remember which tokens the connected wallet owns and refresh

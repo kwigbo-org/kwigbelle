@@ -112,15 +112,18 @@ export default class VRMSection {
 	}
 
 	/// Check the mirror for the displayed token's model and light
-	/// the indicator: one same-origin HEAD of vrm/<filename> - 200
-	/// means backed up, anything else means pending. A newer token
-	/// load supersedes an in-flight check.
+	/// the indicator: one HEAD of the mirror URL the serving lane
+	/// itself uses - 200 means backed up, anything else means
+	/// pending. A newer token load supersedes an in-flight check.
+	/// KNOWN LIMIT (review-acknowledged): a gap token (no VRM ever
+	/// minted) reads as perpetually pending - the client cannot
+	/// know gap-ness without the metadata call this probe avoids.
 	///
-	/// - Parameter file: The mirror filename, or null to hide
-	async setMirrorCheck(file) {
+	/// - Parameter url: The absolute mirror URL, or null to hide
+	async setMirrorCheck(url) {
 		this.backupGeneration = (this.backupGeneration || 0) + 1;
 		const generation = this.backupGeneration;
-		if (!file) {
+		if (!url) {
 			this.backupRow.style.display = "none";
 			return;
 		}
@@ -129,7 +132,7 @@ export default class VRMSection {
 		this.backupText.innerText = Strings.vrm.backupChecking;
 		let isBacked = false;
 		try {
-			const res = await fetch("vrm/" + encodeURIComponent(file), {
+			const res = await fetch(url, {
 				method: "HEAD",
 				cache: "no-store",
 			});
