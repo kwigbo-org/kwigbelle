@@ -27,7 +27,7 @@ export default class MainScene extends Scene {
 	/// Overridden constructor
 	constructor(rootContainer) {
 		super(rootContainer);
-		console.log("kwigbelle build 2026-08-26.3 (strings module)");
+		console.log("kwigbelle build 2026-08-27.1 (copy editor page)");
 		// Build the UI
 		this.buildUI();
 		// Start loading

@@ -47,6 +47,7 @@
 | 5   | **Section titles come from Strings too**, passed through the existing `addSection(title, …)` calls. KNOWN COUPLING, documented here: collapse persistence keys by title (`kwigbelle.panels`), so retitling a section later resets that section's stored collapse choice to its default. Accepted — a rare one-time niceness cost, not data loss.                                        | Titles are copy. The alternative (separate stable keys) adds a second naming layer to every section for a cosmetic edge case.                                                   |
 | 6   | **The extraction PR is mechanical**: byte-identical rendered copy, proven by the full Tests/ suite passing UNCHANGED — the tests literally assert the strings. Copy EDITS come after, as their own PRs, updating the asserting tests in the same diff (the tests are the copy's spec and change log).                                                                                   | Separating the move from the edit makes both reviewable: the move is verified by green tests, the edit is visible as a pure copy diff in one file plus its test updates.        |
 | 7   | Ships as two PRs: **PR A** — this TAD. **PR B** — Strings.js + the mechanical extraction across Lib modules.                                                                                                                                                                                                                                                                        | House pattern (vrm-mirror, info-tab): decisions reviewed before diffs.                                                                                                          |
+| 8   | **Self-serve editor page** (operator direction 2026-08-27): `avastars-editor.html` — deployed but unlinked; renders every Strings entry as a form field with a "where you see this" description from `Lib/StringsMeta.js` (editor-page-only import; the strings-editor test enforces exact key coverage both ways). Plain strings are edited as text and serialized safely; parameterized strings expose their template source with live validation (syntax via non-executing Function construction + every original `${…}` placeholder must survive) — invalid fields block sharing with an inline message. Edits persist as a localStorage draft (iOS Safari evicts tabs). Export regenerates the complete Strings.js client-side (header comments carried verbatim, group comments emitted from meta) and hands it over via the native share sheet (`navigator.share` with the file — the editor works on an iPhone) with a plain download fallback. The file comes back by email and enters through the normal review lane — nothing the page does touches the server. | The editor never sees git OR raw JS punctuation; the syntax-breakage class of problems is removed structurally instead of caught in review. Client-side-only fits the no-backend site; the trust boundary stays at the PR lane. |
 
 ## Progress
 
@@ -59,3 +60,10 @@
   now read from it; pure glyphs (✕ ⓘ ▾) stay inline as
   iconography; the full 16-test suite passes UNCHANGED, proving
   the asserted copy byte-identical.
+- 2026-08-27 — Decision 8 (self-serve editor page) shipped:
+  avastars-editor.html + Lib/StringsEditor.js +
+  Lib/StringsMeta.js (76 keys described), deploy.sh copies the
+  page, Tests/strings-editor-test.js covers meta coverage both
+  ways, plain + template round-trip through a generated module
+  import, placeholder-break blocking, and draft persistence
+  across reload.
