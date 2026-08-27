@@ -450,11 +450,20 @@ export default class MainScene extends Scene {
 		// load generation gates the async URL derivation so a stale
 		// load's resolution can't repaint a newer token's verdict.
 		if (this.avastar && this.avastar.tokenId != null) {
-			this.vrmSource.mirrorURL(this.avastar.tokenId).then((url) => {
-				if (generation === this.loadGeneration) {
-					this.vrmSection.setMirrorCheck(url);
-				}
-			});
+			this.vrmSource
+				.mirrorURL(this.avastar.tokenId)
+				.then((url) => {
+					if (generation === this.loadGeneration) {
+						this.vrmSection.setMirrorCheck(url);
+					}
+				})
+				.catch(() => {
+					// A failed derivation hides the row rather than
+					// surfacing as an unhandled rejection (review catch)
+					if (generation === this.loadGeneration) {
+						this.vrmSection.setMirrorCheck(null);
+					}
+				});
 		} else {
 			this.vrmSection.setMirrorCheck(null);
 		}

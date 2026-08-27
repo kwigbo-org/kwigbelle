@@ -137,7 +137,8 @@ export default class VRMSource {
 		if (!kind) {
 			return null;
 		}
-		return `${this.mirrorBase}Avastar_${kindLabel(tokenId, kind)}_${tokenId}.vrm`;
+		const id = encodeURIComponent(String(tokenId));
+		return `${this.mirrorBase}Avastar_${kindLabel(tokenId, kind)}_${id}.vrm`;
 	}
 
 	/// The model URL and original filename for a token, from the
@@ -164,7 +165,7 @@ export default class VRMSource {
 				throw new Error(`metadata request failed (HTTP ${response.status})`);
 			}
 			metadata = await response.json();
-			if (!metadata.vrm_url) {
+			if (!metadata || !metadata.vrm_url) {
 				throw new Error("metadata has no vrm_url");
 			}
 		} catch (error) {

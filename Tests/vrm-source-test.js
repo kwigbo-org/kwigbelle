@@ -73,6 +73,31 @@ const { check } = require("./check.js");
 		});
 	});
 
+	// Registered BEFORE navigation: MainScene's backup indicator
+	// probes the absolute mirror URL on load, and no test touches
+	// the real network (review catch)
+	let mirrorMode = "serve";
+	const mirror = { hits: 0, lastURL: null };
+	await page.route("**/vrm/**", (route) => {
+		if (route.request().method() === "HEAD") {
+			route.fulfill({ status: 404, body: "" });
+			return;
+		}
+		mirror.hits++;
+		mirror.lastURL = route.request().url();
+		if (mirrorMode === "serve") {
+			route.fulfill({
+				status: 200,
+				contentType: "application/octet-stream",
+				headers: cors,
+				body: bytes,
+			});
+		} else if (mirrorMode === "missing") {
+			route.fulfill({ status: 404, headers: cors, body: "no such object" });
+		} else {
+			route.abort();
+		}
+	});
 	await page.goto("http://localhost:8741/index.html?tokenid=8014");
 	await page.waitForFunction(
 		() => document.getElementById("preloader")?.style.opacity === "0",
@@ -413,24 +438,6 @@ const { check } = require("./check.js");
 	// ---- Mirror-first lane (docs/tads/vrm-mirror.md Decision 5).
 	// Every scenario above ran WITHOUT a kindFor lookup, proving
 	// the lane is off by default (their hit counts pinned that).
-	let mirrorMode = "serve";
-	const mirror = { hits: 0, lastURL: null };
-	await page.route("**/vrm/**", (route) => {
-		mirror.hits++;
-		mirror.lastURL = route.request().url();
-		if (mirrorMode === "serve") {
-			route.fulfill({
-				status: 200,
-				contentType: "application/octet-stream",
-				headers: cors,
-				body: bytes,
-			});
-		} else if (mirrorMode === "missing") {
-			route.fulfill({ status: 404, headers: cors, body: "no such object" });
-		} else {
-			route.abort();
-		}
-	});
 
 	// Mirror serves: right bytes, derived filename, and NO metadata
 	// or gateway request at all - the happy path outlives avastars.io
@@ -491,6 +498,12 @@ const { check } = require("./check.js");
 		return buffer.byteLength;
 	});
 	check(deadFallback === 131072, "dead mirror did not fall back");
+	check(
+		mirror.hits === 3 &&
+			hits.metadata === before.metadata + 2 &&
+			hits.pinata === before.pinata + 2,
+		"dead-mirror fallback accounting wrong: " + JSON.stringify(hits),
+	);
 
 	// Abort covers the mirror lane: nothing is requested anywhere
 	mirrorMode = "serve";

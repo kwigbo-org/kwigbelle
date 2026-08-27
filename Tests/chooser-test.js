@@ -73,7 +73,7 @@ announce();
 
 	// The backup indicator probes the absolute mirror URL; answer
 	// locally so no test touches the real network
-	await page.route("**/vrm/Avastar_*.vrm", (route) =>
+	await page.route("https://kwigbelle.com/vrm/Avastar_*.vrm", (route) =>
 		route.fulfill({ status: 200, body: "" }),
 	);
 	await page.goto("http://localhost:8741/index.html");
