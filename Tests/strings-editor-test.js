@@ -96,6 +96,26 @@ const { check } = require("./check.js");
 	);
 	await template.fill("`There is no Avastar with id ${tokenId}`");
 
+	// A placeholder used in BOTH branches of a ternary template must
+	// survive in both - deleting one occurrence is caught (the check
+	// counts occurrences, not mere presence)
+	const gaps = page.locator('textarea[data-key="mirror.gapsLine"]');
+	const gapsOriginal = await gaps.inputValue();
+	await gaps.fill(
+		"isOne ? `One token has no VRM` : `${count} tokens have no VRM`",
+	);
+	check(
+		await page.evaluate(() => document.getElementById("editorShare").disabled),
+		"dropping one of two placeholder occurrences went uncaught",
+	);
+	await gaps.fill(gapsOriginal);
+	check(
+		!(await page.evaluate(
+			() => document.getElementById("editorShare").disabled,
+		)),
+		"restoring the gapsLine body did not clear the error",
+	);
+
 	// Generate, then import the produced module and verify edits
 	const verdict = await page.evaluate(async () => {
 		const text = await window.__stringsEditor.generate();
@@ -164,9 +184,10 @@ const { check } = require("./check.js");
 		"orphan edit not surfaced: " + JSON.stringify(orphan),
 	);
 	check(!orphan.exported, "orphan edit leaked into the export");
+	// Two live edits restored; the orphan must NOT make it three
 	check(
-		orphan.status === "1 change ready",
-		"orphan counted as a change: " + orphan.status,
+		orphan.status === "2 changes ready",
+		"orphan miscounted: " + orphan.status,
 	);
 	check(
 		orphan.persisted === "an edit of a string that is gone",

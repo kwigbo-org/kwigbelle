@@ -25,7 +25,6 @@ const edits = new Map();
 // draft is discarded, so an editor's words are never silently lost
 // (operator direction 2026-08-27).
 const orphanEdits = new Map();
-const fields = new Map();
 const DRAFT_KEY = "kwigbelle.stringsDraft";
 let statusElement = null;
 
@@ -93,7 +92,14 @@ const templateProblem = (entry, body) => {
 	} catch (error) {
 		return "This edit breaks the code structure - check backticks and braces.";
 	}
-	const missing = entry.placeholders.filter((p) => !body.includes(p));
+	// Occurrence-counted, not set-based: a placeholder used twice
+	// (gapsLine's two branches) must survive twice (review catch)
+	const missing = [...new Set(entry.placeholders)].filter((placeholder) => {
+		const needed = entry.placeholders.filter(
+			(candidate) => candidate === placeholder,
+		).length;
+		return body.split(placeholder).length - 1 < needed;
+	});
 	if (missing.length > 0) {
 		return `Keep the placeholder${missing.length > 1 ? "s" : ""} ${missing.join(", ")} in the text.`;
 	}
@@ -327,7 +333,6 @@ export function buildEditor(root) {
 			fieldBox.appendChild(input);
 			fieldBox.appendChild(error);
 			card.appendChild(fieldBox);
-			fields.set(key, { input, revalidate });
 		}
 		root.appendChild(card);
 	}
