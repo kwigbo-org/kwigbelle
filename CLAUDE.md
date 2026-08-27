@@ -101,6 +101,14 @@ Lib/Strings.js             ALL editorial copy (docs/tads/strings.md):
                            by surface; parameterized strings are
                            arrow functions; collection vocabulary
                            and the build stamp stay at their sources
+Lib/StringsMeta.js         editor-page-only "where you see this"
+                           descriptions (coverage test-enforced)
+Lib/StringsEditor.js       avastars-editor.html logic: form from
+                           Strings+Meta, live template validation,
+                           localStorage draft, client-side file
+                           regeneration, native share / download
+avastars-editor.html       self-serve copy editor (deployed,
+                           unlinked, mobile-first; TAD Decision 8)
 Lib/vendor/                vendored libs (web3; three + three-vrm
                            ES modules wired by index.html's import
                            map) - never lint/format/edit
