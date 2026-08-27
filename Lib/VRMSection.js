@@ -1,5 +1,6 @@
 import { Strings } from "./Strings.js";
 import { stopSceneEvents } from "./UIHelpers.js";
+import { MIRROR_BASE } from "./VRMSource.js";
 
 /// The "3D model" panel section (docs/tads/vrm-viewer.md): a short
 /// explanation, a view-toggle button mirroring the floating one,
@@ -191,7 +192,12 @@ export default class VRMSection {
 		sheet.appendChild(body);
 		document.body.appendChild(overlay);
 		try {
-			const res = await fetch("vrm/_status.json", { cache: "no-store" });
+			// The ABSOLUTE mirror status - identical from prod, stage,
+			// and local dev (operator QA: the relative fetch read as
+			// "not published" everywhere but prod)
+			const res = await fetch(MIRROR_BASE + "_status.json", {
+				cache: "no-store",
+			});
 			if (!res.ok) {
 				throw new Error(`HTTP ${res.status}`);
 			}

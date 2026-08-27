@@ -1,5 +1,12 @@
 import { kindLabel } from "./RarityIcons.js";
 
+/// The operator-owned mirror prefix (docs/tads/vrm-mirror.md
+/// Decision 1). ABSOLUTE on purpose: the one mirror is addressed
+/// identically from prod, stage, and local dev (CORS ops landed
+/// 2026-08-27), so serving, the backup indicator, and the status
+/// modal all read the same place.
+export const MIRROR_BASE = "https://kwigbelle.com/vrm/";
+
 // CIDv0 -> CIDv1 conversion: founder and replicant models are
 // published under Qm... (CIDv0, base58) CIDs, whose mixed case
 // breaks the subdomain redirect several public gateways answer
@@ -79,7 +86,7 @@ export default class VRMSource {
 		// model backed up under one absolute prefix behind the
 		// site's CloudFront. Absolute on purpose - ONE copy,
 		// addressable from prod, stage, and local dev alike.
-		this.mirrorBase = "https://kwigbelle.com/vrm/";
+		this.mirrorBase = MIRROR_BASE;
 		// The scene wires this to the hash corpus:
 		// (tokenId) -> Promise<"prime"|"replicant"|null>. Without it
 		// the mirror lane stays off and behavior is unchanged.
