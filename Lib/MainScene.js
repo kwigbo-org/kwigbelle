@@ -453,15 +453,17 @@ export default class MainScene extends Scene {
 			this.vrmSource
 				.mirrorURL(this.avastar.tokenId)
 				.then((url) => {
+					// Returned so the chain also covers a rejection from
+					// setMirrorCheck itself (review catch)
 					if (generation === this.loadGeneration) {
-						this.vrmSection.setMirrorCheck(url);
+						return this.vrmSection.setMirrorCheck(url);
 					}
 				})
 				.catch(() => {
 					// A failed derivation hides the row rather than
 					// surfacing as an unhandled rejection (review catch)
 					if (generation === this.loadGeneration) {
-						this.vrmSection.setMirrorCheck(null);
+						return this.vrmSection.setMirrorCheck(null);
 					}
 				});
 		} else {

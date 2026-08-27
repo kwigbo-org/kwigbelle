@@ -154,9 +154,10 @@ export default class VRMSection {
 	}
 
 	/// The mirror-status modal: fetches the capture-published
-	/// vrm/_status.json (same origin - the mirror lives in the
-	/// bucket the site is served from) and shows overall backup
-	/// progress. Absent status renders a quiet fallback.
+	/// _status.json from the ABSOLUTE mirror (MIRROR_BASE - the
+	/// same address from prod, stage, and local dev; CORS ops
+	/// landed 2026-08-27) and shows overall backup progress.
+	/// Absent status renders a quiet fallback.
 	async openMirrorStatus() {
 		if (document.getElementById("mirrorModal")) {
 			return;
