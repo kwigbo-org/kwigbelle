@@ -145,6 +145,14 @@ export const StringsMeta = {
 		"vrm.tapToCancel": "Hint under the center-screen loader.",
 		"vrm.unavailable":
 			"Bottom-center toast when the 3D model can't be fetched.",
+		"vrm.backupChecking":
+			"Backup indicator at the bottom of the section, while the " +
+			"mirror is being checked for this token's model.",
+		"vrm.backedUp":
+			"Backup indicator (green dot): this token's model is in " + "the mirror.",
+		"vrm.backupPending":
+			"Backup indicator (red dot): this token's model isn't in " +
+			"the mirror yet.",
 		"mirror.title": "Backup modal title.",
 		"mirror.checking": "Shown while the modal fetches the status.",
 		"mirror.notPublished":

@@ -878,6 +878,32 @@
 	cursor: default;
 }
 
+.vrmBackupRow {
+	display: flex;
+	align-items: center;
+	gap: 7px;
+	font-family: var(--font);
+	font-size: 13px;
+	color: var(--muted);
+	padding: 2px 0;
+}
+
+.vrmBackupDot {
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	background: var(--muted);
+	flex-shrink: 0;
+}
+
+.vrmBackupDot.backed {
+	background: #3ecf6a;
+}
+
+.vrmBackupDot.pending {
+	background: #e05555;
+}
+
 .vrmNoteRow {
 	display: flex;
 	align-items: flex-start;

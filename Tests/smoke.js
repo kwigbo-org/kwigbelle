@@ -10,6 +10,11 @@ const { check } = require("./check.js");
 		if (m.type() === "error") errors.push("console: " + m.text());
 	});
 
+	// The 3D section's backup indicator HEADs vrm/<file>; the test
+	// server has no mirror, so answer 200 to keep the console clean
+	await page.route("**/vrm/Avastar_*.vrm", (route) =>
+		route.fulfill({ status: 200, body: "" }),
+	);
 	await page.goto("http://localhost:8741/index.html?tokenid=8014");
 	// Wait for the preloader to fade (load + parse complete)
 	await page.waitForFunction(

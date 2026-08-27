@@ -146,6 +146,9 @@ export const Strings = {
 		loadingFullProgress: (progress) => `Loading 3D model… ${progress}`,
 		tapToCancel: "Tap to cancel",
 		unavailable: "3D model unavailable",
+		backupChecking: "Checking backup…",
+		backedUp: "Backed up",
+		backupPending: "Pending backup",
 	},
 
 	// Mirror status modal (the ⓘ in the 3D model section)
