@@ -19,6 +19,11 @@
 /// Section titles double as collapse-persistence keys (TAD
 /// Decision 5): retitling a section resets its stored
 /// collapsed/expanded choice to the default, once, for everyone.
+///
+/// Keep parameterized entries SIMPLE for the editor page's
+/// validator: arrow functions only, no braces inside a ${…}
+/// placeholder, and no editable words inside one - conditional
+/// copy is a ternary OF whole templates (see mirror.gapsLine).
 export const Strings = {
 	// Drawer section titles (the stacked right-edge panel)
 	panel: {
@@ -154,8 +159,9 @@ export const Strings = {
 			`${captured} of ${total} models backed up (${percent}%)`,
 		gbMirrored: (gb) => `${gb} GB safely mirrored`,
 		gapsLine: (count, isOne) =>
-			`${count} ${isOne ? "token has" : "tokens have"} ` +
-			"no VRM to back up (recorded gaps)",
+			isOne
+				? `${count} token has no VRM to back up (recorded gaps)`
+				: `${count} tokens have no VRM to back up (recorded gaps)`,
 		frontLine: (from, until, captured, ago) =>
 			`Tokens ${from}–${until}: ${captured} captured · ${ago}`,
 		note:

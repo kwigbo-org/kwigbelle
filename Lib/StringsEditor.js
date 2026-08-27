@@ -27,6 +27,7 @@ const edits = new Map();
 const orphanEdits = new Map();
 const fields = new Map();
 const DRAFT_KEY = "kwigbelle.stringsDraft";
+let statusElement = null;
 
 const model = [];
 for (const [group, entries] of Object.entries(Strings)) {
@@ -35,6 +36,11 @@ for (const [group, entries] of Object.entries(Strings)) {
 		if (typeof value === "function") {
 			const source = value.toString();
 			const arrow = source.indexOf("=>");
+			if (arrow < 0) {
+				// Strings.js promises arrow functions (see its header);
+				// failing loudly beats generating a broken file
+				throw new Error(`${key} is not an arrow function`);
+			}
 			const params = source.slice(0, arrow).trim();
 			const body = source.slice(arrow + 2).trim();
 			const placeholders = [...body.matchAll(/\$\{[^}]*\}/g)].map(
@@ -120,9 +126,18 @@ const problems = () => {
 /// body is regenerated from the model with group comments emitted
 /// from StringsMeta. Prettier normalizes formatting on intake.
 export async function generate() {
-	const source = await (await fetch("Lib/Strings.js")).text();
+	// Resolved against THIS module's URL, so the page's own path
+	// can't break the fetch (review catch)
+	const source = await (
+		await fetch(new URL("Strings.js", import.meta.url))
+	).text();
 	const at = source.indexOf("export const Strings = {");
-	const header = at > 0 ? source.slice(0, at) : "";
+	if (at < 0) {
+		// A silent empty header would export a file stripped of its
+		// documentation (review catch)
+		throw new Error("Strings.js marker not found - cannot export");
+	}
+	const header = source.slice(0, at);
 	const wrap = (text) =>
 		text
 			.split(" ")
@@ -132,8 +147,7 @@ export async function generate() {
 					if ((last + " " + word).length > 62) {
 						lines.push("\t// " + word);
 					} else {
-						lines[lines.length - 1] =
-							last === "\t//" ? last + " " + word : last + " " + word;
+						lines[lines.length - 1] = last + " " + word;
 					}
 					return lines;
 				},
@@ -161,8 +175,17 @@ export async function generate() {
 }
 
 const shareOrDownload = async () => {
-	const text = await generate();
-	window.__lastGenerated = text;
+	let text;
+	try {
+		text = await generate();
+	} catch (error) {
+		// The button must never fail silently (review catch)
+		if (statusElement) {
+			statusElement.innerText =
+				"Could not build the file - check your connection and try again.";
+		}
+		return;
+	}
 	const file = new File([text], "Strings.js", { type: "text/javascript" });
 	if (navigator.canShare && navigator.canShare({ files: [file] })) {
 		try {
@@ -178,7 +201,9 @@ const shareOrDownload = async () => {
 	);
 	link.download = "Strings.js";
 	link.click();
-	URL.revokeObjectURL(link.href);
+	// Deferred: a synchronous revoke can race the download start in
+	// some browsers (review catch)
+	setTimeout(() => URL.revokeObjectURL(link.href), 5000);
 };
 
 export function buildEditor(root) {
@@ -311,6 +336,7 @@ export function buildEditor(root) {
 	bar.setAttribute("id", "editorBar");
 	const status = document.createElement("span");
 	status.setAttribute("id", "editorStatus");
+	statusElement = status;
 	bar.appendChild(status);
 	const share = document.createElement("button");
 	share.setAttribute("id", "editorShare");
