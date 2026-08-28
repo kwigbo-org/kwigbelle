@@ -96,6 +96,8 @@ const { check } = require("./check.js");
 			minter: document.querySelector(".identityMinter")?.innerText || "",
 			minterTitle:
 				document.querySelector(".identityMinter")?.getAttribute("title") || "",
+			minterHref: document.querySelector(".identityMinter")?.href || "",
+			minterTarget: document.querySelector(".identityMinter")?.target || "",
 			outlines: [...document.querySelectorAll(".traitRow")].map(
 				(row) => row.style.borderColor,
 			),
@@ -128,6 +130,11 @@ const { check } = require("./check.js");
 			`Minted by ${minter8014.slice(0, 6)}\u2026${minter8014.slice(-4)}` &&
 			card.minterTitle === minter8014,
 		"minter line wrong: " + JSON.stringify([card.minter, card.minterTitle]),
+	);
+	check(
+		card.minterHref === `https://etherscan.io/address/${minter8014}` &&
+			card.minterTarget === "_blank",
+		"minter link wrong: " + card.minterHref,
 	);
 	// Card outlines carry the tier colors: every outline must match
 	// the library index's rarity for that gene, via the ONE color

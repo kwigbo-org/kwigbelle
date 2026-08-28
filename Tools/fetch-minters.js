@@ -100,6 +100,9 @@ async function capture() {
 		}
 		const result = await rpc("alchemy_getAssetTransfers", [params]);
 		for (const transfer of result.transfers) {
+			if (!transfer.to) {
+				continue;
+			}
 			const tokenId = Number(BigInt(transfer.tokenId));
 			minters.set(tokenId, {
 				address: transfer.to.toLowerCase(),
@@ -148,7 +151,8 @@ async function verify(sampleSize) {
 		// legal, and byte-for-byte against the raw chain log
 		const block = mintBlock[tokenId];
 		const logs = await mintLogs(block, block, topic);
-		const onChain = logs.length > 0 ? wordToAddress(logs[0].topics[2]) : null;
+		const onChain =
+			logs.length > 0 ? wordToAddress(logs[0].topics[2]).toLowerCase() : null;
 		const recorded = addresses[minterIndex[tokenId]];
 		const ok = onChain === recorded;
 		console.log(

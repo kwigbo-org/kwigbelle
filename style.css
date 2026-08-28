@@ -1110,6 +1110,10 @@
 .identityMinter {
 	font-size: 13px;
 	color: var(--muted);
+	text-decoration: underline;
+	text-underline-offset: 3px;
+	width: fit-content;
+	-webkit-tap-highlight-color: transparent;
 }
 
 .identityBurned {

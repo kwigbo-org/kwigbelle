@@ -283,23 +283,37 @@ export default class TraitsSection {
 		// from the cached table; a token swap mid-lookup must not
 		// stamp the old token's minter.
 		if (this.callbacks.minterFor && avastar.tokenId != null) {
-			const minterLine = document.createElement("div");
-			minterLine.setAttribute("class", "identityMinter");
-			card.appendChild(minterLine);
 			const tokenAtStart = avastar.tokenId;
-			this.callbacks.minterFor(tokenAtStart).then((address) => {
-				if (
-					this.currentTokenId !== tokenAtStart ||
-					!address ||
-					!minterLine.isConnected
-				) {
-					return;
-				}
-				minterLine.innerText = Strings.traits.mintedBy(
-					address.slice(0, 6) + "…" + address.slice(-4),
-				);
-				minterLine.setAttribute("title", address);
-			});
+			this.callbacks
+				.minterFor(tokenAtStart)
+				.then((address) => {
+					// Created only once the address resolves (review
+					// catch: no empty element for table-less tokens), and
+					// only if the card is still the displayed token's
+					if (
+						this.currentTokenId !== tokenAtStart ||
+						!address ||
+						!card.isConnected
+					) {
+						return;
+					}
+					const minterLine = document.createElement("a");
+					minterLine.setAttribute("class", "identityMinter");
+					// Etherscan is the reference explorer for the frozen
+					// facts (operator request 2026-08-28)
+					minterLine.href = "https://etherscan.io/address/" + address;
+					minterLine.target = "_blank";
+					minterLine.rel = "noopener noreferrer";
+					minterLine.innerText = Strings.traits.mintedBy(
+						address.slice(0, 6) + "…" + address.slice(-4),
+					);
+					minterLine.setAttribute("title", address);
+					card.appendChild(minterLine);
+				})
+				.catch(() => {
+					// A malformed table reads as "no minter line", never
+					// an unhandled rejection (review catch)
+				});
 		}
 		if (this.burnedMask !== null && this.burnedMask !== 0) {
 			let burnedCount = 0;
