@@ -27,19 +27,29 @@ profile and settings (traits moved there + rarity explainer), the
 shipped the Lock-layers effect (default on: drag moves the face
 as one piece), the depth-coherent idle retune, and the backdrop's
 own canvas (visible through Trails and behind the 3D view);
-remaining: PR C (wallet-provider transfer history). ALSO IN
+remaining: PR C (wallet-provider transfer history), plus the
+2026-08-28 identity revision (minter line w/ etherscan link,
+tier-colored card outlines, pick keeps the drawer open). ALSO IN
 PROGRESS: docs/tads/vrm-mirror.md — back up all ~26.6k VRMs
-(~285GB, one live browser gateway left) to s3://kwigbelle/vrm/
-and serve mirror-first. Capture tooling shipped (PRs #26/#27/#29:
-guardrail, parallel workers + run lock, shared 429 cooldown,
---gateway override; plus stall auto-rest — see the TAD's
-2026-08-26 entry); the capture runs on the operator's Lightsail
-instance through a local kubo node (--gateway bitswap lane) and
-is mid-flight — pinata's upstream peers grant a transfer budget
-per window then stall, so the tool rests and resumes on its own. PR B (mirror-first
-serving) is implemented and PRESERVED at 0c103a3 (PR #28 closed
-to unblock the hotfix); it reopens once the capture completes,
---verify passes, and the operator runs the CORS ops step. Parked:
+(~285GB; ipfs.io/dweb.link are SHUTTING DOWN, pinata is the sole
+source) to s3://kwigbelle/vrm/. Capture tooling shipped (PRs
+#26/#27/#29/#31/#32: guardrail, parallel workers + run lock,
+shared 429 cooldown, stall auto-rest, --gateway, --from/--until
+two-front split + --merge); a TWO-FRONT capture is mid-flight
+(instance = kubo bitswap lane, tokens 0–13,999; operator's laptop
+= pinata HTTP, 14,000–26,616 — flaky-uplink SSL EOFs absorbed by
+retries), >57% done. MIRROR-FIRST SERVING IS MERGED (PR #39;
+0c103a3 restored): fetchVRM tries kwigbelle.com/vrm/ first,
+gateway race is the fallback; the ⓘ status modal + per-token
+backed-up/pending dot read the same ABSOLUTE mirror. Operator ops
+DONE: bucket CORS (GET/HEAD, origin list, ExposeHeaders),
+stage.kwigbelle.com (CloudFront, CachingDisabled, website-endpoint
+origin), prod distro vrm/* behavior (Origin in cache key +
+CORS-S3Origin) after a live cache-poisoning repro. Endgame when
+capture completes: merge manifests (--merge), --verify 50, commit
+the manifest. COMPLETE: docs/tads/strings.md — Lib/Strings.js
+(all editorial copy) + avastars-editor.html (self-serve mobile
+copy editor, native share; hand the editor that link). Parked:
 PR #1 wallet LOWs (likely mooted — WalletConnectUI was deleted in
 PR #16; re-verify against ProfileSection before resurrecting).
 
@@ -75,7 +85,7 @@ Lib/EffectsSection.js      spring-rig controls (motion, follow,
                            follow); localStorage persisted; poke
                            (tap impulse) is always on, no control
 Lib/TraitsSection.js       info-drawer Overview section (identity
-                           card: chips, score/tier, dist, Unique-By,
+                           card: chips, score/tier, minter link, Unique-By,
                            mint/burned) + Traits section (trait
                            cards: whole-card tap = edit, burned
                            marks, visibility the render loop
@@ -144,6 +154,10 @@ Tools/fetch-burned.js      every prime's burned-trait flags (the
                            locked contract's bool[12], bit=gene) ->
                            Tools/data/burned.json (sparse masks);
                            --verify cross-checks chain + metadata
+Tools/fetch-minters.js     every token's original minter (frozen
+                           mint facts via alchemy_getAssetTransfers)
+                           -> Tools/data/minters.json; --verify
+                           re-checks per-token via 1-block getLogs
 Tools/check-corpus.js      totalSupply vs hashes.json staleness;
                            --update refreshes; deploy.sh runs it
                            warn-only when AVASTARS_RPC_URL is set
@@ -217,8 +231,8 @@ Frozen TADs and generated/vendored trees are excluded on purpose.
 `./deploy.sh` local-only → `~/Sites`; `-w` also serves at
 127.0.0.1:8000; `-s` stage; `-p` promote stage→prod + CloudFront
 invalidation. deploy.sh must copy any new runtime asset (it ships
-`Lib SVG favicon Traits Tools/data/hashes.json`, `ub.json`, and
-`burned.json`). Both bucket syncs `--exclude "vrm/*"` — the VRM
+`Lib SVG favicon Traits Tools/data/hashes.json`, `ub.json`,
+`burned.json`, and `minters.json`). Both bucket syncs `--exclude "vrm/*"` — the VRM
 mirror (docs/tads/vrm-mirror.md) lives in the prod bucket outside
 the deploy pipeline; removing that exclude would let a `--delete`
 sync erase the ~285GB backup.

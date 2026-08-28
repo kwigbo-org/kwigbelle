@@ -162,3 +162,15 @@ None.
   clears only the layer canvas; the theme---bg swap and its 3D
   guards were removed. Supersedes burned-traits Decision 10's
   skip-the-backdrop-during-Trails clause.
+- 2026-08-28 — Identity card revision (operator QA): the tier
+  distribution row (redundant with the cards below) replaced by
+  the ORIGINAL MINTER's address — a frozen chain fact captured by
+  the new Tools/fetch-minters.js (alchemy_getAssetTransfers pages
+  all 26,617 mints; 2,008 unique minters; committed
+  Tools/data/minters.json with per-token mint blocks so --verify
+  re-checks any token via a one-block eth_getLogs; 10/10
+  verified). Trait cards' outlines now carry their tier color
+  (TIERS, the one color source). Picking an owned Avastar keeps
+  the profile drawer OPEN. Explainer's distribution-row sentence
+  reworded (tests updated in the same PR per the strings TAD).
+  Stamp 2026-08-28.1.

@@ -1,5 +1,6 @@
 import { Strings } from "./Strings.js";
 import {
+	TIERS,
 	rarityIcon,
 	tierForScore,
 	kindLabel,
@@ -276,23 +277,43 @@ export default class TraitsSection {
 			score.appendChild(text);
 			card.appendChild(score);
 		}
-		if (avastar.traits) {
-			const dist = document.createElement("div");
-			dist.setAttribute("class", "identityDist");
-			const counts = [0, 0, 0, 0, 0];
-			for (const trait of avastar.traits) {
-				counts[trait.rarity]++;
-			}
-			counts.forEach((count, rarity) => {
-				const item = document.createElement("span");
-				item.setAttribute("class", "identityDistItem");
-				item.appendChild(rarityIcon(rarity));
-				const value = document.createElement("span");
-				value.innerText = String(count);
-				item.appendChild(value);
-				dist.appendChild(item);
-			});
-			card.appendChild(dist);
+		// The original minter (frozen chain fact, operator QA
+		// 2026-08-28 - replaced the tier-distribution row, which was
+		// redundant with the tier-tinted cards below). Fills async
+		// from the cached table; a token swap mid-lookup must not
+		// stamp the old token's minter.
+		if (this.callbacks.minterFor && avastar.tokenId != null) {
+			const tokenAtStart = avastar.tokenId;
+			this.callbacks
+				.minterFor(tokenAtStart)
+				.then((address) => {
+					// Created only once the address resolves (review
+					// catch: no empty element for table-less tokens), and
+					// only if the card is still the displayed token's
+					if (
+						this.currentTokenId !== tokenAtStart ||
+						!address ||
+						!card.isConnected
+					) {
+						return;
+					}
+					const minterLine = document.createElement("a");
+					minterLine.setAttribute("class", "identityMinter");
+					// Etherscan is the reference explorer for the frozen
+					// facts (operator request 2026-08-28)
+					minterLine.href = "https://etherscan.io/address/" + address;
+					minterLine.target = "_blank";
+					minterLine.rel = "noopener noreferrer";
+					minterLine.innerText = Strings.traits.mintedBy(
+						address.slice(0, 6) + "…" + address.slice(-4),
+					);
+					minterLine.setAttribute("title", address);
+					card.appendChild(minterLine);
+				})
+				.catch(() => {
+					// A malformed table reads as "no minter line", never
+					// an unhandled rejection (review catch)
+				});
 		}
 		if (this.burnedMask !== null && this.burnedMask !== 0) {
 			let burnedCount = 0;
@@ -355,6 +376,11 @@ export default class TraitsSection {
 		// label would toggle visibility on every card tap
 		const row = document.createElement("div");
 		row.setAttribute("class", isToggle ? "traitRow" : "traitRow info");
+		// The card outline carries the trait's tier color (operator
+		// QA 2026-08-28) - the tier vocabulary's ONE color source
+		if (TIERS[info.rarity]) {
+			row.style.borderColor = TIERS[info.rarity].color;
+		}
 		if (isToggle) {
 			const checkbox = document.createElement("input");
 			checkbox.type = "checkbox";

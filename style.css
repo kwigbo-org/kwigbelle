@@ -1107,16 +1107,13 @@
 	font-size: 14px;
 }
 
-.identityDist {
-	display: flex;
-	gap: 12px;
+.identityMinter {
 	font-size: 13px;
-}
-
-.identityDistItem {
-	display: inline-flex;
-	align-items: center;
-	gap: 4px;
+	color: var(--muted);
+	text-decoration: underline;
+	text-underline-offset: 3px;
+	width: fit-content;
+	-webkit-tap-highlight-color: transparent;
 }
 
 .identityBurned {

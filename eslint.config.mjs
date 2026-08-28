@@ -76,6 +76,7 @@ export default [
 				performance: "readonly",
 				DeviceOrientationEvent: "readonly",
 				Blob: "readonly",
+				getComputedStyle: "readonly",
 				sessionStorage: "readonly",
 				localStorage: "readonly",
 				CustomEvent: "readonly",

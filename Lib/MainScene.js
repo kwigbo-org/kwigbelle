@@ -27,7 +27,9 @@ export default class MainScene extends Scene {
 	/// Overridden constructor
 	constructor(rootContainer) {
 		super(rootContainer);
-		console.log("kwigbelle build 2026-08-27.3 (mirror-first 3D)");
+		console.log(
+			"kwigbelle build 2026-08-28.1 (identity minter, tier outlines)",
+		);
 		// Build the UI
 		this.buildUI();
 		// Start loading
@@ -63,8 +65,8 @@ export default class MainScene extends Scene {
 					}
 				},
 				onPick: (tokenId) => {
-					// Close the drawer so the load is visible
-					this.sidePanel.close();
+					// The drawer STAYS OPEN (operator QA 2026-08-28): the
+					// grid highlights the pick and browsing continues
 					this.selectAvastar(tokenId);
 				},
 				onLoggedOut: () => {
@@ -102,6 +104,7 @@ export default class MainScene extends Scene {
 			onResetAll: () => this.resetOverrides(),
 			ubFor: (tokenId) => this.traitComposer.ubFor(tokenId),
 			burnedFor: (tokenId) => this.traitComposer.burnedFor(tokenId),
+			minterFor: (tokenId) => this.traitComposer.minterFor(tokenId),
 		});
 		this.sidePanel.addSection(
 			Strings.panel.howRarityWorks,

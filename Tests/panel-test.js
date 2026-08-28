@@ -315,11 +315,17 @@ window.ethereum = {
 		{ timeout: 20000 },
 	);
 	await page.locator("#profileGrid .profileTile").nth(1).click();
+	// Picking an owned Avastar keeps the drawer OPEN (operator QA
+	// 2026-08-28) - browsing the collection continues
 	await page.waitForFunction(
-		() =>
-			!document.getElementById("sidePanel").classList.contains("open") &&
-			document.getElementById("preloader")?.style.opacity === "0",
+		() => document.getElementById("preloader")?.style.opacity === "0",
 		{ timeout: 15000 },
+	);
+	check(
+		await page.evaluate(() =>
+			document.getElementById("sidePanel").classList.contains("open"),
+		),
+		"picking an owned Avastar closed the drawer",
 	);
 	await page.waitForTimeout(500);
 	const swapState = await page.evaluate(() => {

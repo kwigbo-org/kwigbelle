@@ -11,3 +11,4 @@
 # noise and large enough to crash panel reviewers.
 /Lib/vendor/** -diff
 /Tools/data/vrm-manifest.json -diff
+/Tools/data/minters.json -diff
