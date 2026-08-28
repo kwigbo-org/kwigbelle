@@ -46,8 +46,8 @@ export const Strings = {
 			"12 traits. The score places it in one of five tiers:",
 		traitTiers:
 			"Each trait has its own contract-assigned tier, shown on " +
-			"its card below. The identity card's distribution row " +
-			"counts the 12 traits by tier.",
+			"its card below — each card's outline is tinted by its " +
+			"tier.",
 		uniqueBy:
 			"Unique By counts trait combinations no other Avastar " +
 			"wears: a pair (or triple) of this Avastar's traits found " +
@@ -69,6 +69,7 @@ export const Strings = {
 		identityTitleUnknown: "Avastar",
 		series: (series) => `Gen 1 · Series ${series}`,
 		mintCondition: "Mint condition",
+		mintedBy: (address) => `Minted by ${address}`,
 		score: (ranking, tierName) => `Score ${ranking} · ${tierName}`,
 		burnedCount: (count) => `${count} of 12 traits burned`,
 		uniqueByCombos: (u2, u3) =>

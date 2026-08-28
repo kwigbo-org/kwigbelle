@@ -1,6 +1,7 @@
 // Identity card + rarity icons (docs/tads/design-cues.md Steps
 // 1-2): the Traits section leads with token id, kind/series chips,
-// score + tier from the verified bands, and a distribution row
+// score + tier from the verified bands, the original minter (from
+// the committed frozen mint table), tier-colored card outlines
 // whose counts match the library index; tier icons render in the
 // card rows and the edit modal; replicants and promos get their
 // kind chips (replicants: no series).
@@ -92,14 +93,25 @@ const { check } = require("./check.js");
 				(c) => c.innerText,
 			),
 			score: document.querySelector(".identityScore")?.innerText || "",
-			dist: [...document.querySelectorAll(".identityDistItem")].map((i) =>
-				Number(i.innerText),
+			minter: document.querySelector(".identityMinter")?.innerText || "",
+			minterTitle:
+				document.querySelector(".identityMinter")?.getAttribute("title") || "",
+			outlines: [...document.querySelectorAll(".traitRow")].map(
+				(row) => row.style.borderColor,
 			),
 			cardIcons: document.querySelectorAll(".identityCard .rarityIcon").length,
 			rowIcons: document.querySelectorAll(".traitRow .rarityIcon").length,
 		}));
 
-	// 8014: prime, series 2, score 36 -> Uncommon (33-40 band)
+	// 8014: prime, series 2, score 36 -> Uncommon (33-40 band).
+	// The minter line fills async from the committed mint table -
+	// wait for it, then compare against the REAL data file.
+	const minters = require("../Tools/data/minters.json");
+	const minter8014 = minters.addresses[minters.minterIndex["8014"]];
+	await page.waitForFunction(
+		() => (document.querySelector(".identityMinter")?.innerText || "") !== "",
+		{ timeout: 10000 },
+	);
 	const card = await readCard();
 	console.log("8014 card:", JSON.stringify(card));
 	check(card.title === "Avastar #8014", "wrong title: " + card.title);
@@ -112,25 +124,40 @@ const { check } = require("./check.js");
 		"wrong score line: " + card.score,
 	);
 	check(
-		card.dist.length === 5 && card.dist.reduce((a, b) => a + b, 0) === 12,
-		"distribution does not sum to 12: " + JSON.stringify(card.dist),
+		card.minter ===
+			`Minted by ${minter8014.slice(0, 6)}\u2026${minter8014.slice(-4)}` &&
+			card.minterTitle === minter8014,
+		"minter line wrong: " + JSON.stringify([card.minter, card.minterTitle]),
 	);
-	// Distribution counts must match the library index for the picks
-	const expectedDist = await page.evaluate(async () => {
+	// Card outlines carry the tier colors: every outline must match
+	// the library index's rarity for that gene, via the ONE color
+	// source (RarityIcons TIERS)
+	const expectedOutlines = await page.evaluate(async () => {
 		const { default: TraitComposer } = await import("../Lib/TraitComposer.js");
+		const { TIERS } = await import("../Lib/RarityIcons.js");
 		const composer = new TraitComposer();
 		const picks = await composer.picksFor(8014);
-		const counts = [0, 0, 0, 0, 0];
-		for (const pick of picks) counts[pick.rarity]++;
-		return counts;
+		const probe = document.createElement("div");
+		document.body.appendChild(probe);
+		const rgb = picks.map((pick) => {
+			probe.style.borderColor = TIERS[pick.rarity].color;
+			return getComputedStyle(probe).borderColor;
+		});
+		probe.remove();
+		return rgb;
 	});
-	check(
-		JSON.stringify(card.dist) === JSON.stringify(expectedDist),
-		`distribution ${JSON.stringify(card.dist)} != index-derived ${JSON.stringify(expectedDist)}`,
+	const gotOutlines = await page.evaluate(() =>
+		[...document.querySelectorAll(".traitRow")].map(
+			(row) => getComputedStyle(row).borderColor,
+		),
 	);
 	check(
-		card.cardIcons === 6,
-		"identity card should carry 6 icons (score + 5 dist): " + card.cardIcons,
+		JSON.stringify(gotOutlines) === JSON.stringify(expectedOutlines),
+		`outlines ${JSON.stringify(gotOutlines)} != index-derived ${JSON.stringify(expectedOutlines)}`,
+	);
+	check(
+		card.cardIcons === 1,
+		"identity card should carry exactly the score icon: " + card.cardIcons,
 	);
 	check(card.rowIcons === 12, "every trait card needs a tier icon");
 
@@ -198,9 +225,10 @@ const { check } = require("./check.js");
 		"override changed the token's identity: " + JSON.stringify(overridden),
 	);
 	check(
-		overridden.dist.reduce((a, b) => a + b, 0) === 12,
-		"overridden distribution does not sum to 12",
+		overridden.outlines.length === 12,
+		"overridden cards lost their outlines",
 	);
+	check(overridden.minter === card.minter, "override changed the minter line");
 	await page.locator(".traitUndo").click();
 	await page.waitForFunction(
 		() => document.querySelectorAll(".traitUndo").length === 0,
@@ -208,8 +236,8 @@ const { check } = require("./check.js");
 	);
 	const undone = await readCard();
 	check(
-		JSON.stringify(undone.dist) === JSON.stringify(card.dist),
-		"undo did not restore the distribution",
+		JSON.stringify(undone.outlines) === JSON.stringify(card.outlines),
+		"undo did not restore the tier outlines",
 	);
 
 	// Replicant: kind chip, NO series chip, own score (25500 -> 61

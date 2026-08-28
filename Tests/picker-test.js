@@ -145,12 +145,18 @@ window.ethereum = {
 	// Pick the second Avastar: loads it, closes the drawer, moves
 	// the highlight
 	await page.locator("#profileGrid .profileTile").nth(1).click();
+	// The drawer stays OPEN across a pick (operator QA 2026-08-28)
 	await page.waitForFunction(
 		() =>
-			!document.getElementById("sidePanel").classList.contains("open") &&
 			document.getElementById("preloader")?.style.opacity === "0" &&
 			document.querySelector(".profileTile.current")?.dataset.token !== "8014",
 		{ timeout: 15000 },
+	);
+	check(
+		await page.evaluate(() =>
+			document.getElementById("sidePanel").classList.contains("open"),
+		),
+		"picking an owned Avastar closed the drawer",
 	);
 	await page.waitForTimeout(500);
 	const picked = await page.evaluate(() => ({

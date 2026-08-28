@@ -144,6 +144,10 @@ Tools/fetch-burned.js      every prime's burned-trait flags (the
                            locked contract's bool[12], bit=gene) ->
                            Tools/data/burned.json (sparse masks);
                            --verify cross-checks chain + metadata
+Tools/fetch-minters.js     every token's original minter (frozen
+                           mint facts via alchemy_getAssetTransfers)
+                           -> Tools/data/minters.json; --verify
+                           re-checks per-token via 1-block getLogs
 Tools/check-corpus.js      totalSupply vs hashes.json staleness;
                            --update refreshes; deploy.sh runs it
                            warn-only when AVASTARS_RPC_URL is set
@@ -217,8 +221,8 @@ Frozen TADs and generated/vendored trees are excluded on purpose.
 `./deploy.sh` local-only → `~/Sites`; `-w` also serves at
 127.0.0.1:8000; `-s` stage; `-p` promote stage→prod + CloudFront
 invalidation. deploy.sh must copy any new runtime asset (it ships
-`Lib SVG favicon Traits Tools/data/hashes.json`, `ub.json`, and
-`burned.json`). Both bucket syncs `--exclude "vrm/*"` — the VRM
+`Lib SVG favicon Traits Tools/data/hashes.json`, `ub.json`,
+`burned.json`, and `minters.json`). Both bucket syncs `--exclude "vrm/*"` — the VRM
 mirror (docs/tads/vrm-mirror.md) lives in the prod bucket outside
 the deploy pipeline; removing that exclude would let a `--delete`
 sync erase the ~285GB backup.

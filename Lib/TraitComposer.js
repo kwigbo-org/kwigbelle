@@ -109,6 +109,29 @@ export default class TraitComposer {
 		return table ? table[id] || 0 : null;
 	}
 
+	/// The original minter's address for a token (docs/tads/
+	/// info-tab.md identity revision, 2026-08-28): the frozen mint
+	/// table (Tools/fetch-minters.js) fetched lazily and cached,
+	/// like the Unique-By and burned tables. The factory is closed,
+	/// so minters are immutable history.
+	///
+	/// - Parameter tokenId: A token id
+	/// - Returns: The minter's address, or null (unknown token /
+	///		table unavailable)
+	async minterFor(tokenId) {
+		if (this.mintersPromise === undefined) {
+			this.mintersPromise = fetch("./Tools/data/minters.json")
+				.then((r) => (r.ok ? r.json() : null))
+				.catch(() => null);
+		}
+		const table = await this.mintersPromise;
+		if (!table) {
+			return null;
+		}
+		const index = table.minterIndex[Number(tokenId)];
+		return index === undefined ? null : table.addresses[index];
+	}
+
 	/// Identity facts for a token straight from the hash corpus -
 	/// no composition needed, so the static-fallback path can use
 	/// it too (docs/tads/design-cues.md)
