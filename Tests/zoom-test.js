@@ -198,13 +198,23 @@ const { check } = require("./check.js");
 	);
 	console.log("re-raster back to base:", JSON.stringify(await zoomState()));
 
-	// (f) A two-finger pinch zooms, and its touchmove is cancelled
-	const moveNotPrevented = await page.evaluate(() => {
-		const canvas = document.getElementById("mainCanvas");
-		const touch = (id, x, y) =>
-			new Touch({ identifier: id, target: canvas, clientX: x, clientY: y });
-		const fire = (type, touches) =>
-			canvas.dispatchEvent(
+	// Shared synthetic-pinch dispatcher: fires a TouchEvent on the
+	// canvas (bubbling to the window listeners) with finger pairs
+	// as [[x1,y1],[x2,y2]], returning dispatchEvent's result
+	// (false = a listener preventDefaulted)
+	await page.evaluate(() => {
+		window.__firePinch = (type, pairs) => {
+			const canvas = document.getElementById("mainCanvas");
+			const touches = pairs.map(
+				([x, y], index) =>
+					new Touch({
+						identifier: index + 1,
+						target: canvas,
+						clientX: x,
+						clientY: y,
+					}),
+			);
+			return canvas.dispatchEvent(
 				new TouchEvent(type, {
 					touches,
 					changedTouches: touches,
@@ -212,10 +222,21 @@ const { check } = require("./check.js");
 					bubbles: true,
 				}),
 			);
-		fire("touchstart", [touch(1, 350, 300), touch(2, 450, 300)]);
+		};
+	});
+
+	// (f) A two-finger pinch zooms, and its touchmove is cancelled
+	const moveNotPrevented = await page.evaluate(() => {
+		window.__firePinch("touchstart", [
+			[350, 300],
+			[450, 300],
+		]);
 		// Spread the fingers: 100px apart -> 300px apart
-		const result = fire("touchmove", [touch(1, 250, 300), touch(2, 550, 300)]);
-		fire("touchend", []);
+		const result = window.__firePinch("touchmove", [
+			[250, 300],
+			[550, 300],
+		]);
+		window.__firePinch("touchend", []);
 		return result;
 	});
 	const pinched = await zoomState();
@@ -244,6 +265,60 @@ const { check } = require("./check.js");
 	check(
 		afterLoad.rasterScale === 1 && afterLoad.layerWidth === 800,
 		"token load kept a zoomed raster: " + JSON.stringify(afterLoad),
+	);
+
+	// (h) In 3D mode a pinch belongs to OrbitControls: it must not
+	// drive the hidden 2D zoom (operator QA 2026-08-29 - the
+	// vector came back zoomed after pinching the model)
+	const scaleIn3D = await page.evaluate(() => {
+		window.kwigbelleScene.is3D = true;
+		window.__firePinch("touchstart", [
+			[350, 300],
+			[450, 300],
+		]);
+		window.__firePinch("touchmove", [
+			[250, 300],
+			[550, 300],
+		]);
+		window.__firePinch("touchend", []);
+		const scale = window.kwigbelleScene.zoomView.scale;
+		window.kwigbelleScene.is3D = false;
+		return scale;
+	});
+	check(scaleIn3D === 1, "3D pinch drove the 2D zoom: " + scaleIn3D);
+
+	// (i) Degenerate pinch - both fingers on one pixel - must never
+	// divide the state into NaN/Infinity (review catch); once the
+	// fingers separate the pinch works from the separated seed
+	const degenerate = await page.evaluate(() => {
+		window.__firePinch("touchstart", [
+			[400, 300],
+			[400, 300],
+		]);
+		window.__firePinch("touchmove", [
+			[400, 300],
+			[400, 300],
+		]);
+		window.__firePinch("touchmove", [
+			[350, 300],
+			[450, 300],
+		]);
+		window.__firePinch("touchmove", [
+			[300, 300],
+			[500, 300],
+		]);
+		window.__firePinch("touchend", []);
+		const view = window.kwigbelleScene.zoomView;
+		return { scale: view.scale, tx: view.tx, ty: view.ty };
+	});
+	console.log("degenerate pinch:", JSON.stringify(degenerate));
+	check(
+		Number.isFinite(degenerate.scale) &&
+			Number.isFinite(degenerate.tx) &&
+			Number.isFinite(degenerate.ty) &&
+			degenerate.scale >= 1 &&
+			degenerate.scale <= 4,
+		"degenerate pinch corrupted zoom state: " + JSON.stringify(degenerate),
 	);
 
 	console.log("errors:", errors.length ? errors : "none");

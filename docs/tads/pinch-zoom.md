@@ -84,6 +84,20 @@
   elementFromPoint (real hit-testing - a canvas-targeted dispatch
   had masked the bug) and pins center screen hit-testing to the
   canvas.
+- 2026-08-29 — Operator QA: pinching the 3D model bubbled into
+  the window-level touch handlers and silently zoomed the hidden
+  2D view (revealed on exit). Fix: 3D guards on the pinch path +
+  exit3D resets too — mode changes reset in BOTH directions
+  (Decision 5 extended). Same round, PR B review r1 fixes: pinch
+  distance zero-guard (NaN/Infinity), 3→2-finger reseed,
+  window-listener teardown in destroy() + settle-timer cancel,
+  glideHome-at-1x reschedules the base re-raster, and desktop
+  Safari trackpad pinch (gesture events with `scale`, no
+  ctrl+wheel there) now DRIVES the zoom, gated on no touch-pinch
+  active since iOS fires both streams for one pinch. Declined
+  (codex): "explicit logical draw size defeats the re-raster" —
+  canvas drawImage samples source→device in one pass through the
+  concatenated transform; at settled zoom the ratio is 1:1.
 - 2026-08-29 — Review round 1 (lite): CLEAN 2/3; sonnet's
   minority MEDIUM was genuine — `finishTap` has no inter-tap
   awareness, so "existing tap timing" couldn't distinguish a

@@ -533,8 +533,14 @@ export default class MainScene extends Scene {
 
 	touchStart(event) {
 		// Two fingers = pinch (docs/tads/pinch-zoom.md Decision 2):
-		// the tap is disarmed, follow/pan hand over to the gesture
+		// the tap is disarmed, follow/pan hand over to the gesture.
+		// In 3D the pinch belongs to OrbitControls - driving the 2D
+		// zoom from here left the vector view silently zoomed on
+		// return (operator QA 2026-08-29)
 		if (event.touches.length >= 2) {
+			if (this.is3D) {
+				return;
+			}
 			this.seedPinch(event);
 			this.tapStart = null;
 			this.isTouchDown = false;
@@ -551,9 +557,15 @@ export default class MainScene extends Scene {
 
 	touchMove(event) {
 		if (event.touches.length >= 2) {
+			if (this.is3D) {
+				return;
+			}
 			// A second finger can land without a fresh touchstart
-			// reaching us; seed on first sight either way
-			if (this.pinchDistance == null) {
+			// reaching us; seed on first sight either way. A
+			// zero-distance seed (both fingers on one pixel) would
+			// divide to NaN/Infinity below (review catch) - reseed
+			// until the fingers separate.
+			if (this.pinchDistance == null || this.pinchDistance === 0) {
 				this.seedPinch(event);
 				this.tapStart = null;
 				this.isTouchDown = false;
@@ -587,7 +599,10 @@ export default class MainScene extends Scene {
 	touchEnd(event) {
 		if (this.pinchDistance != null) {
 			if (event && event.touches.length >= 2) {
-				// Three fingers down to two: still pinching
+				// Three fingers down to two: still pinching, but the
+				// surviving pair may differ from the tracked one -
+				// reseed so the next move doesn't jump (review catch)
+				this.seedPinch(event);
 				return;
 			}
 			this.pinchDistance = null;
@@ -684,6 +699,8 @@ export default class MainScene extends Scene {
 	mouseUp() {
 		const releasePoint = this.touchPoint;
 		super.mouseUp();
+		// Unconditionally: nil-ing pan tracking is always safe, even
+		// for a synthetic-mouse release where it was never set
 		this.panLast = null;
 		if (!this.isSyntheticMouse()) {
 			this.finishTap(releasePoint);
@@ -784,10 +801,18 @@ export default class MainScene extends Scene {
 		}
 	}
 
-	/// Overridden teardown: the tilt sensor listener lives outside
-	/// the base class's bound set
+	/// Overridden teardown: the tilt sensor listener and the zoom
+	/// suppression/input listeners live outside the base class's
+	/// bound set, and the zoom's settle timer must not fire into a
+	/// torn-down scene
 	destroy() {
 		this.setTiltEnabled(false);
+		window.removeEventListener("gesturestart", this.onGestureStart);
+		window.removeEventListener("gesturechange", this.onGestureChange);
+		window.removeEventListener("gestureend", this.onGestureEnd);
+		window.removeEventListener("touchmove", this.onSceneTouchMove);
+		window.removeEventListener("wheel", this.onSceneWheel);
+		this.zoomView.cancelSettle();
 		// Releases the panel's document-level dismiss listener
 		this.sidePanel.destroy();
 		super.destroy();
@@ -1004,6 +1029,10 @@ export default class MainScene extends Scene {
 	/// Return to the vector view. Safe to call in any state; bumps
 	/// vrmGeneration so anything 3D still in flight goes stale.
 	exit3D() {
+		// Mode changes reset the vector zoom in BOTH directions
+		// (operator QA 2026-08-29): belt to the 3D input guards'
+		// suspenders, so no leak path can hand back a zoomed view
+		this.zoomView.reset();
 		this.vrmGeneration++;
 		if (this.vrmAbort) {
 			this.vrmAbort.abort();
@@ -1293,19 +1322,57 @@ export default class MainScene extends Scene {
 		// - multi-touch touchmove is cancelled everywhere as the
 		//   belt to touch-action's suspender; single-finger drawer
 		//   scrolling is untouched
-		const stopBrowserGesture = (event) => event.preventDefault();
-		window.addEventListener("gesturestart", stopBrowserGesture);
-		window.addEventListener("gesturechange", stopBrowserGesture);
-		window.addEventListener("gestureend", stopBrowserGesture);
-		window.addEventListener(
-			"touchmove",
-			(event) => {
-				if (event.touches.length > 1) {
-					event.preventDefault();
-				}
-			},
-			{ passive: false },
-		);
+		// All references are stored so destroy() can remove them -
+		// these live outside the base class's bound set, matching
+		// the tilt-listener teardown discipline (review catch).
+		// Desktop Safari delivers trackpad pinch ONLY as gesture
+		// events (no ctrl+wheel, no touches), so gesturechange also
+		// DRIVES the zoom there - gated on no touch-pinch being
+		// active, because iOS fires gesture AND touch events for
+		// the same pinch and the touch path already handles it.
+		this.onGestureStart = (event) => {
+			event.preventDefault();
+			this.gestureScale =
+				typeof event.scale === "number" && event.scale > 0 ? event.scale : null;
+		};
+		this.onGestureChange = (event) => {
+			event.preventDefault();
+			if (
+				this.is3D ||
+				this.pinchDistance != null ||
+				this.gestureScale == null ||
+				typeof event.scale !== "number" ||
+				event.scale <= 0
+			) {
+				return;
+			}
+			const cx =
+				typeof event.clientX === "number"
+					? event.clientX
+					: this.canvas.width / 2;
+			const cy =
+				typeof event.clientY === "number"
+					? event.clientY
+					: this.canvas.height / 2;
+			this.zoomView.zoomAbout(event.scale / this.gestureScale, cx, cy, true);
+			this.gestureScale = event.scale;
+		};
+		this.onGestureEnd = (event) => {
+			event.preventDefault();
+			this.gestureScale = null;
+			this.zoomView.endGesture();
+		};
+		this.onSceneTouchMove = (event) => {
+			if (event.touches.length > 1) {
+				event.preventDefault();
+			}
+		};
+		window.addEventListener("gesturestart", this.onGestureStart);
+		window.addEventListener("gesturechange", this.onGestureChange);
+		window.addEventListener("gestureend", this.onGestureEnd);
+		window.addEventListener("touchmove", this.onSceneTouchMove, {
+			passive: false,
+		});
 		// The wheel listener lives on WINDOW like all scene input
 		// (operator field report 2026-08-29): transparent overlays -
 		// the preloader sits hit-testable over center screen - would
@@ -1313,30 +1380,27 @@ export default class MainScene extends Scene {
 		// is usually over the face. Scope is by target instead:
 		// wheel over the drawer stack or a modal keeps its native
 		// scrolling (Decision 8), everything else is scene zoom.
-		window.addEventListener(
-			"wheel",
-			(event) => {
-				if (this.is3D || this.isLoading) {
-					// 3D wheel belongs to OrbitControls on its own canvas
-					return;
-				}
-				if (
-					event.target instanceof Element &&
-					event.target.closest("#sidePanel, #traitModal, #mirrorModal")
-				) {
-					return;
-				}
-				event.preventDefault();
-				// Exponential mapping keeps trackpad pinch and wheel
-				// notches proportional in either direction
-				this.zoomView.zoomAbout(
-					Math.exp(-event.deltaY * 0.0022),
-					event.clientX,
-					event.clientY,
-				);
-			},
-			{ passive: false },
-		);
+		this.onSceneWheel = (event) => {
+			if (this.is3D || this.isLoading) {
+				// 3D wheel belongs to OrbitControls on its own canvas
+				return;
+			}
+			if (
+				event.target instanceof Element &&
+				event.target.closest("#sidePanel, #traitModal, #mirrorModal")
+			) {
+				return;
+			}
+			event.preventDefault();
+			// Exponential mapping keeps trackpad pinch and wheel
+			// notches proportional in either direction
+			this.zoomView.zoomAbout(
+				Math.exp(-event.deltaY * 0.0022),
+				event.clientX,
+				event.clientY,
+			);
+		};
+		window.addEventListener("wheel", this.onSceneWheel, { passive: false });
 		this.displayLoop.start(60);
 
 		// Preloader Container

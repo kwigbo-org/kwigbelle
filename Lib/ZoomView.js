@@ -106,6 +106,11 @@ export default class ZoomView {
 		this.isGliding = this.scale !== 1;
 		if (!this.isGliding) {
 			this.clampPan();
+			// Already home, but a pending settle may have just been
+			// cancelled: reschedule so a base-size re-raster is never
+			// lost (review catch - the stale hi-res rasters would
+			// linger in memory)
+			this.scheduleSettle();
 		}
 	}
 
