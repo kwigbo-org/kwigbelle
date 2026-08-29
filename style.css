@@ -777,6 +777,10 @@
 }
 
 #preloader {
+	/* Purely visual: at opacity 0 it still covered center screen
+	   and swallowed hit-tested input (the desktop wheel-zoom dead
+	   zone - operator field report 2026-08-29) */
+	pointer-events: none;
 }
 
 .lds-circle {
