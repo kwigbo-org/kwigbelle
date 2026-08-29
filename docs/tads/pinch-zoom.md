@@ -48,7 +48,8 @@
 | 5   | **Zoom is transient view state**: it resets to 1× on every token load, trait-swap preview recompose, resize, and 3D entry. It is not persisted and gets NO effects-drawer control — the gesture is the whole interface (same doctrine as poke). | Zoom is a moment of inspection, not a display setting. Carrying it across token swaps or reloads would mostly surprise. |
 | 6   | **Physics and effects stay live under zoom, in scene space.** The springs keep stepping in unzoomed canvas coordinates; the zoom transform is applied at draw time only. Pointer-derived points that survive at zoom > 1 (poke) map through the inverse transform so the impulse lands where the finger actually touched. Trails' destination-out fade pass runs at identity transform (whole-canvas erase, as today), so ghosts fade uniformly and never smear at the wrong scale. | One coordinate space for physics keeps LayerSprings untouched — the feature stays a MainScene draw/input concern. Amplified parallax at zoom comes free from drawing the same spring offsets under a scale. |
 | 7   | **Verification**: a new `Tests/zoom-test.js` drives synthetic pinch/double-tap through the `?testharness` scene handle and asserts (a) zoom state changes and clamps, (b) the settled re-raster actually swapped in at the settled scale (layer image dimensions), (c) double-tap resets, (d) pan clamps, and (e) a token load resets zoom. Existing suite must stay green unchanged. | The re-raster swap is the load-bearing claim ("actual vectors, not page zoom") — the test pins it structurally, not visually. |
-| 8   | Ships as two PRs: **PR A** — this TAD. **PR B** — implementation + test. | House pattern: decisions reviewed before diffs. |
+| 8   | **Suppress the browser's own page zoom** (operator, 2026-08-29: "doesn't work on mobile we need to stop default page zooming"). The page already declares `user-scalable=no` and `touch-action: none` on the main canvas, but iOS Safari deliberately IGNORES `user-scalable=no` (accessibility override since iOS 10), so a pinch still zooms the page and never reaches our gesture. Fix is belt-and-suspenders, scoped to the scene: `preventDefault` on Safari's proprietary `gesturestart`/`gesturechange`/`gestureend` events (these ARE cancelable and are the reliable iOS blocker) plus a non-passive `touchmove` listener that `preventDefault`s only multi-touch (`touches.length > 1`) — both attached so drawer content is untouched: single-finger scrolling inside the side panel and its inputs must keep working. Double-tap-to-zoom is already moot (`touch-action: none` covers it on the canvas, and our double-tap reset claims the gesture). Accessibility trade-off acknowledged: page pinch-zoom is lost, and the feature itself is the mitigation — it magnifies the actual content deeper (4× vectors) than Safari's page zoom would. | Without this the whole feature is unreachable on the primary device class. Scoping the suppression keeps the drawers' native scrolling and form controls intact. |
+| 9   | Ships as two PRs: **PR A** — this TAD. **PR B** — implementation + test. | House pattern: decisions reviewed before diffs. |
 
 ## Progress
 
@@ -56,3 +57,8 @@
   sources retained through composition; backdrop canvas already
   separate; two-pointer and double-tap gestures unclaimed).
   Operator pre-agreed: no background zoom, gesture rules.
+- 2026-08-29 — Decision 8 added (operator field report): iOS
+  Safari ignores `user-scalable=no`, so the browser's page zoom
+  eats the pinch — suppression via `gesturestart`/`gesturechange`
+  preventDefault + non-passive multi-touch `touchmove`, scoped so
+  drawer scrolling survives.
