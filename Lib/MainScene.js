@@ -1282,20 +1282,22 @@ export default class MainScene extends Scene {
 		this.canvas.height = window.innerHeight;
 		this.rootContainer.appendChild(this.canvas);
 		// The browser's own page zoom must not eat the gesture
-		// (docs/tads/pinch-zoom.md Decision 8), scoped to the scene
-		// canvas so drawer scrolling and inputs stay native:
+		// (docs/tads/pinch-zoom.md Decision 8). These live on WINDOW,
+		// not the canvas (operator field report 2026-08-29: a pinch
+		// whose finger lands on any overlay - a drawer handle, the
+		// hit-testable preloader - escaped canvas-scoped suppression
+		// and Safari page-zoomed, wedging the whole interface):
 		// - iOS Safari ignores user-scalable=no; its cancelable
-		//   proprietary gesture events are the reliable blocker
-		// - the wheel listener is non-passive and preventDefaults,
-		//   stopping ctrl+wheel (trackpad pinch) page zoom and
-		//   claiming plain wheel for scroll-to-zoom (Decision 2)
-		// - multi-touch touchmove is cancelled as the belt to
-		//   touch-action: none's suspender
+		//   proprietary gesture events are the reliable blocker, and
+		//   the page has no legitimate browser-pinch surface
+		// - multi-touch touchmove is cancelled everywhere as the
+		//   belt to touch-action's suspender; single-finger drawer
+		//   scrolling is untouched
 		const stopBrowserGesture = (event) => event.preventDefault();
-		this.canvas.addEventListener("gesturestart", stopBrowserGesture);
-		this.canvas.addEventListener("gesturechange", stopBrowserGesture);
-		this.canvas.addEventListener("gestureend", stopBrowserGesture);
-		this.canvas.addEventListener(
+		window.addEventListener("gesturestart", stopBrowserGesture);
+		window.addEventListener("gesturechange", stopBrowserGesture);
+		window.addEventListener("gestureend", stopBrowserGesture);
+		window.addEventListener(
 			"touchmove",
 			(event) => {
 				if (event.touches.length > 1) {
@@ -1304,13 +1306,27 @@ export default class MainScene extends Scene {
 			},
 			{ passive: false },
 		);
-		this.canvas.addEventListener(
+		// The wheel listener lives on WINDOW like all scene input
+		// (operator field report 2026-08-29): transparent overlays -
+		// the preloader sits hit-testable over center screen - would
+		// swallow a canvas-level listener's events, and the cursor
+		// is usually over the face. Scope is by target instead:
+		// wheel over the drawer stack or a modal keeps its native
+		// scrolling (Decision 8), everything else is scene zoom.
+		window.addEventListener(
 			"wheel",
 			(event) => {
-				event.preventDefault();
 				if (this.is3D || this.isLoading) {
+					// 3D wheel belongs to OrbitControls on its own canvas
 					return;
 				}
+				if (
+					event.target instanceof Element &&
+					event.target.closest("#sidePanel, #traitModal, #mirrorModal")
+				) {
+					return;
+				}
+				event.preventDefault();
 				// Exponential mapping keeps trackpad pinch and wheel
 				// notches proportional in either direction
 				this.zoomView.zoomAbout(

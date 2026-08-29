@@ -68,6 +68,22 @@
   Decision 8 extended — non-passive `preventDefault`ing wheel
   listener suppresses the browser's ctrl+wheel page zoom
   (drawer/modal wheel untouched; ⌘+/- browser zoom still works).
+- 2026-08-29 — PR B launch field reports (operator deployed the
+  branch ahead of review): (1) desktop wheel was dead — the
+  preloader sits hit-testable at opacity 0 over center screen and
+  swallowed the canvas-scoped wheel listener's events; (2) page
+  zoom still triggered when a pinch finger landed on any overlay,
+  wedging the interface. Decision 8's MECHANISM revised: the
+  gesture-event and multi-touch-touchmove suppression moved to
+  window level (the page has no legitimate browser-pinch
+  surface), the wheel listener also lives on window and scopes by
+  TARGET exclusion (#sidePanel and the modals keep native
+  scrolling) instead of by attachment point, html/body gained
+  `touch-action: pan-x pan-y` as the CSS fence, and the preloader
+  is `pointer-events: none`. The test now dispatches wheel via
+  elementFromPoint (real hit-testing - a canvas-targeted dispatch
+  had masked the bug) and pins center screen hit-testing to the
+  canvas.
 - 2026-08-29 — Review round 1 (lite): CLEAN 2/3; sonnet's
   minority MEDIUM was genuine — `finishTap` has no inter-tap
   awareness, so "existing tap timing" couldn't distinguish a

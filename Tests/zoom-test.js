@@ -54,13 +54,14 @@ const { check } = require("./check.js");
 				canvasWidth: scene.canvas.width,
 			};
 		});
+	// Wheel events dispatch on the HIT-TESTED element at the
+	// cursor, exactly like a real wheel - a canvas-targeted
+	// dispatch masked the launch bug where the hit-testable
+	// preloader swallowed center-screen wheel events
 	const wheel = (deltaY, x, y) =>
 		page.evaluate(
-			([dy, cx, cy]) => {
-				const canvas = document.getElementById("mainCanvas");
-				// dispatchEvent returns FALSE when a listener called
-				// preventDefault - the page-zoom suppression itself
-				return canvas.dispatchEvent(
+			([dy, cx, cy]) =>
+				document.elementFromPoint(cx, cy).dispatchEvent(
 					new WheelEvent("wheel", {
 						deltaY: dy,
 						clientX: cx,
@@ -68,12 +69,21 @@ const { check } = require("./check.js");
 						cancelable: true,
 						bubbles: true,
 					}),
-				);
-			},
+				),
 			[deltaY, x, y],
 		);
 
-	// (a) Wheel zoom: scale rises, default is prevented
+	// (a) Wheel zoom: scale rises, default is prevented. First the
+	// dead-zone guard: center screen must hit-test to the canvas
+	// (the preloader is pointer-events: none), so touch
+	// suppression and gestures land on the scene everywhere.
+	const centerTarget = await page.evaluate(
+		() => document.elementFromPoint(400, 300).id,
+	);
+	check(
+		centerTarget === "mainCanvas",
+		"center screen hit-tests to " + centerTarget + ", not the canvas",
+	);
 	const before = await zoomState();
 	check(before.scale === 1, "scene did not start at 1x: " + before.scale);
 	check(before.layerWidth === 800, "base raster not canvas-sized");
@@ -85,6 +95,29 @@ const { check } = require("./check.js");
 		"wheel listener did not preventDefault (browser page zoom not suppressed)",
 	);
 	check(zoomed.scale > 1.5, "wheel did not zoom in: " + zoomed.scale);
+
+	// Decision 8 scoping: wheel over the drawer stack is left to
+	// native scrolling - not prevented, no zoom change
+	const drawerWheel = await page.evaluate(() =>
+		document.getElementById("sidePanel").dispatchEvent(
+			new WheelEvent("wheel", {
+				deltaY: -400,
+				clientX: 795,
+				clientY: 300,
+				cancelable: true,
+				bubbles: true,
+			}),
+		),
+	);
+	const afterDrawerWheel = await zoomState();
+	check(
+		drawerWheel === true,
+		"wheel over the drawer was preventDefaulted (native scroll broken)",
+	);
+	check(
+		afterDrawerWheel.scale === zoomed.scale,
+		"wheel over the drawer changed the zoom",
+	);
 
 	// (b) Clamp: keep zooming, the scale stops at 4
 	for (let i = 0; i < 12; i++) {

@@ -55,6 +55,12 @@
 				background: #150437;
 				overflow: hidden;
 				position: fixed;
+				/* Pinch-to-zoom (docs/tads/pinch-zoom.md Decision 8):
+				   pans are allowed (drawer scrolling), browser
+				   pinch-zoom is not - the scene owns the pinch. The
+				   gesture-event preventDefault in MainScene is the
+				   belt to this suspender on iOS. */
+				touch-action: pan-x pan-y;
 			}
 
 			canvas {
