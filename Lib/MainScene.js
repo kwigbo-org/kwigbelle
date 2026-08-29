@@ -15,6 +15,7 @@ import VRMSection, { progressText } from "./VRMSection.js";
 import VRMSource from "./VRMSource.js";
 import VRMViewer from "./VRMViewer.js";
 import VRMLoadingUI from "./VRMLoadingUI.js";
+import ZoomView from "./ZoomView.js";
 import { rarityExplainer } from "./InfoSections.js";
 import { svgToImage } from "./UIHelpers.js";
 
@@ -27,9 +28,7 @@ export default class MainScene extends Scene {
 	/// Overridden constructor
 	constructor(rootContainer) {
 		super(rootContainer);
-		console.log(
-			"kwigbelle build 2026-08-28.1 (identity minter, tier outlines)",
-		);
+		console.log("kwigbelle build 2026-08-29.1 (pinch-to-zoom)");
 		// Build the UI
 		this.buildUI();
 		// Start loading
@@ -42,6 +41,12 @@ export default class MainScene extends Scene {
 		// degrades to a single static full-render layer.
 		this.traitComposer = new TraitComposer();
 		this.layerSprings = new LayerSprings();
+		// Pinch-to-zoom (docs/tads/pinch-zoom.md): draw-time view
+		// state; the settle callback is Decision 1's vector re-raster
+		this.zoomView = new ZoomView(
+			() => ({ width: this.canvas.width, height: this.canvas.height }),
+			() => this.rerasterLayers(),
+		);
 		// The right-side panel: effects controls drive the spring
 		// rig; trait rows drive per-layer visibility that the render
 		// loop consults each frame
@@ -263,6 +268,9 @@ export default class MainScene extends Scene {
 		// choke point that returns 3D mode to vector: the load flow is
 		// vector-native and the user opts into 3D per token
 		this.exit3D();
+		// Zoom is transient view state (docs/tads/pinch-zoom.md
+		// Decision 5): every token load starts at 1x
+		this.zoomView.reset();
 		// Any in-flight preview recompose belongs to the previous
 		// display: invalidate it now, or an A->B->A reload could let
 		// a stale overridden render land on A's fresh baseline (its
@@ -409,9 +417,11 @@ export default class MainScene extends Scene {
 	/// An img for a full-render SVG sized to the current canvas.
 	/// Chain and bundled renders size themselves (1000px or viewBox
 	/// only), so the root tag's size is replaced for drawImage.
-	staticImage(svgString) {
-		const width = this.canvas.width;
-		const height = this.canvas.height;
+	staticImage(
+		svgString,
+		width = this.canvas.width,
+		height = this.canvas.height,
+	) {
 		const sized = svgString.replace(/<svg\b[^>]*>/, (tag) =>
 			tag
 				.replace(/\s(?:width|height)="[^"]*"/g, "")
@@ -522,12 +532,84 @@ export default class MainScene extends Scene {
 	// propagates, but finishTap no-ops without a matching start).
 
 	touchStart(event) {
+		// Two fingers = pinch (docs/tads/pinch-zoom.md Decision 2):
+		// the tap is disarmed, follow/pan hand over to the gesture
+		if (event.touches.length >= 2) {
+			this.seedPinch(event);
+			this.tapStart = null;
+			this.isTouchDown = false;
+			this.panLast = null;
+			this.lastTouchTime = performance.now();
+			return;
+		}
 		super.touchStart(event);
 		this.lastTouchTime = performance.now();
 		this.beginTap(this.touchPoint);
+		// Zoomed in, a single-finger drag pans (Decision 2)
+		this.panLast = this.zoomView.isZoomed ? this.touchPoint : null;
 	}
 
-	touchEnd() {
+	touchMove(event) {
+		if (event.touches.length >= 2) {
+			// A second finger can land without a fresh touchstart
+			// reaching us; seed on first sight either way
+			if (this.pinchDistance == null) {
+				this.seedPinch(event);
+				this.tapStart = null;
+				this.isTouchDown = false;
+				this.panLast = null;
+				return;
+			}
+			const a = event.touches[0];
+			const b = event.touches[1];
+			const distance = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+			const mid = new Point(
+				(a.clientX + b.clientX) / 2,
+				(a.clientY + b.clientY) / 2,
+			);
+			// Scale about the midpoint AND track its travel, so the
+			// content under the fingers stays under the fingers
+			this.zoomView.zoomAbout(
+				distance / this.pinchDistance,
+				mid.x,
+				mid.y,
+				true,
+			);
+			this.zoomView.panBy(mid.x - this.pinchMid.x, mid.y - this.pinchMid.y);
+			this.pinchDistance = distance;
+			this.pinchMid = mid;
+			return;
+		}
+		super.touchMove(event);
+		this.panFromDrag();
+	}
+
+	touchEnd(event) {
+		if (this.pinchDistance != null) {
+			if (event && event.touches.length >= 2) {
+				// Three fingers down to two: still pinching
+				return;
+			}
+			this.pinchDistance = null;
+			this.pinchMid = null;
+			this.zoomView.endGesture();
+			this.lastTouchTime = performance.now();
+			if (event && event.touches.length === 1) {
+				// One finger stays down: continue as a pan, never a tap
+				// (the pinch already disarmed tapStart)
+				this.isTouchDown = true;
+				this.touchPoint = new Point(
+					event.touches[0].clientX,
+					event.touches[0].clientY,
+				);
+				this.panLast = this.zoomView.isZoomed ? this.touchPoint : null;
+				return;
+			}
+			this.isTouchDown = false;
+			this.touchPoint = new Point(0, 0);
+			this.panLast = null;
+			return;
+		}
 		// super resets touchPoint to (0,0): capture the release
 		// point first. Panel-tap releases propagate here too
 		// (stopSceneEvents lets them, to clear a canvas drag that
@@ -538,10 +620,38 @@ export default class MainScene extends Scene {
 		const wasDown = this.isTouchDown;
 		const releasePoint = this.touchPoint;
 		super.touchEnd();
+		this.panLast = null;
 		if (wasDown) {
 			this.lastTouchTime = performance.now();
 		}
 		this.finishTap(releasePoint);
+	}
+
+	/// Capture a starting pinch's distance and midpoint
+	seedPinch(event) {
+		const a = event.touches[0];
+		const b = event.touches[1];
+		this.pinchDistance = Math.hypot(
+			a.clientX - b.clientX,
+			a.clientY - b.clientY,
+		);
+		this.pinchMid = new Point(
+			(a.clientX + b.clientX) / 2,
+			(a.clientY + b.clientY) / 2,
+		);
+	}
+
+	/// Shared single-pointer pan step (touch drag and mouse drag):
+	/// while zoomed, pressed movement translates the view
+	panFromDrag() {
+		if (!this.isTouchDown || !this.panLast || !this.zoomView.isZoomed) {
+			return;
+		}
+		this.zoomView.panBy(
+			this.touchPoint.x - this.panLast.x,
+			this.touchPoint.y - this.panLast.y,
+		);
+		this.panLast = this.touchPoint;
 	}
 
 	/// Browsers replay a touch as synthetic mouse events; counting
@@ -560,12 +670,21 @@ export default class MainScene extends Scene {
 		super.mouseDown(event);
 		if (!this.isSyntheticMouse()) {
 			this.beginTap(this.touchPoint);
+			this.panLast = this.zoomView.isZoomed ? this.touchPoint : null;
+		}
+	}
+
+	mouseMove(event) {
+		super.mouseMove(event);
+		if (!this.isSyntheticMouse()) {
+			this.panFromDrag();
 		}
 	}
 
 	mouseUp() {
 		const releasePoint = this.touchPoint;
 		super.mouseUp();
+		this.panLast = null;
 		if (!this.isSyntheticMouse()) {
 			this.finishTap(releasePoint);
 		}
@@ -584,7 +703,22 @@ export default class MainScene extends Scene {
 		const isQuick = performance.now() - start.time < 250;
 		const isStill = Math.hypot(point.x - start.x, point.y - start.y) < 10;
 		if (isQuick && isStill) {
-			this.layerSprings.poke(point);
+			// The springs live in unzoomed scene space (pinch-zoom
+			// Decision 6): the impulse lands where the finger touched
+			this.layerSprings.poke(this.zoomView.toScene(point));
+			// Double-tap = glide back to 1x (pinch-zoom Decision 2).
+			// Both taps poke - deliberately: no hold-off latency, the
+			// reset just joins the second poke.
+			const previous = this.lastPoke;
+			this.lastPoke = { time: performance.now(), x: point.x, y: point.y };
+			if (
+				previous &&
+				this.lastPoke.time - previous.time < 350 &&
+				Math.hypot(point.x - previous.x, point.y - previous.y) < 40
+			) {
+				this.zoomView.glideHome();
+				this.lastPoke = null;
+			}
 		}
 	}
 
@@ -660,6 +794,9 @@ export default class MainScene extends Scene {
 	}
 
 	resize() {
+		// The clamp math and raster sizes are viewport-derived: a
+		// resized viewport starts over at 1x (pinch-zoom Decision 5)
+		this.zoomView.reset();
 		this.canvas.width = window.innerWidth;
 		this.canvas.height = window.innerHeight;
 		this.backdropCanvas.width = window.innerWidth;
@@ -697,7 +834,9 @@ export default class MainScene extends Scene {
 					if (width !== this.canvas.width || height !== this.canvas.height) {
 						return;
 					}
-					this.avastar = { ...this.avastar, layers: [image] };
+					// rasterScale resets with the base-size rebuild, or a
+					// stale value would suppress the next zoom re-raster
+					this.avastar = { ...this.avastar, layers: [image], rasterScale: 1 };
 					this.setupLayerSprings();
 				},
 				{ once: true },
@@ -802,6 +941,9 @@ export default class MainScene extends Scene {
 			return;
 		}
 		const tokenId = this.avastar.tokenId;
+		// 3D has its own OrbitControls zoom; the vector zoom resets
+		// on entry (pinch-zoom Decision 5)
+		this.zoomView.reset();
 		this.vrmGeneration++;
 		const generation = this.vrmGeneration;
 		const controller = new AbortController();
@@ -938,6 +1080,9 @@ export default class MainScene extends Scene {
 		// beginLoad allocates a fresh picks array even for the same
 		// token id, so a stale preview can never pass both checks
 		const baselineAtStart = this.baselinePicks;
+		// A preview recompose replaces the layer set at base size:
+		// zoom starts over (pinch-zoom Decision 5)
+		this.zoomView.reset();
 		const width = this.canvas.width;
 		const height = this.canvas.height;
 		this.previewGeneration = (this.previewGeneration || 0) + 1;
@@ -1075,14 +1220,29 @@ export default class MainScene extends Scene {
 			this.canvas.width / 2,
 			this.canvas.height / 2,
 		);
+		// The double-tap glide home eases per frame (pinch-zoom
+		// Decision 2)
+		this.zoomView.update(dt);
 		// A pressed pointer wins; otherwise the tilt sensor (when
-		// enabled) drives the same follow path
+		// enabled) drives the same follow path. Zoomed in, the
+		// pressed pointer PANS instead (pinch-zoom Decision 2), so
+		// pointer-follow is suppressed and tilt keeps the floor.
 		this.layerSprings.step(
 			dt,
 			now,
 			centerPoint,
-			this.isTouchDown ? this.touchPoint : this.tiltPoint,
+			this.isTouchDown && !this.zoomView.isZoomed
+				? this.touchPoint
+				: this.tiltPoint,
 		);
+		// The zoom is a draw-time transform over unzoomed spring
+		// space (pinch-zoom Decision 6); the Trails erase above ran
+		// at identity, so ghosts fade uniformly. Layers draw at
+		// LOGICAL canvas size explicitly - a settled re-raster swaps
+		// in higher-resolution images that land crisp under the
+		// scale without moving.
+		const zoom = this.zoomView;
+		context.setTransform(zoom.scale, 0, 0, zoom.scale, zoom.tx, zoom.ty);
 		for (let index = 0; index < this.avastar.layers.length; index++) {
 			// Hidden layers keep their springs (indices stay stable);
 			// they just aren't drawn
@@ -1094,8 +1254,11 @@ export default class MainScene extends Scene {
 				this.avastar.layers[index],
 				spring.x - this.canvas.width / 2,
 				spring.y - this.canvas.height / 2,
+				this.canvas.width,
+				this.canvas.height,
 			);
 		}
+		context.setTransform(1, 0, 0, 1, 0, 0);
 	}
 
 	// "Private Methods"
@@ -1118,6 +1281,46 @@ export default class MainScene extends Scene {
 		this.canvas.width = window.innerWidth;
 		this.canvas.height = window.innerHeight;
 		this.rootContainer.appendChild(this.canvas);
+		// The browser's own page zoom must not eat the gesture
+		// (docs/tads/pinch-zoom.md Decision 8), scoped to the scene
+		// canvas so drawer scrolling and inputs stay native:
+		// - iOS Safari ignores user-scalable=no; its cancelable
+		//   proprietary gesture events are the reliable blocker
+		// - the wheel listener is non-passive and preventDefaults,
+		//   stopping ctrl+wheel (trackpad pinch) page zoom and
+		//   claiming plain wheel for scroll-to-zoom (Decision 2)
+		// - multi-touch touchmove is cancelled as the belt to
+		//   touch-action: none's suspender
+		const stopBrowserGesture = (event) => event.preventDefault();
+		this.canvas.addEventListener("gesturestart", stopBrowserGesture);
+		this.canvas.addEventListener("gesturechange", stopBrowserGesture);
+		this.canvas.addEventListener("gestureend", stopBrowserGesture);
+		this.canvas.addEventListener(
+			"touchmove",
+			(event) => {
+				if (event.touches.length > 1) {
+					event.preventDefault();
+				}
+			},
+			{ passive: false },
+		);
+		this.canvas.addEventListener(
+			"wheel",
+			(event) => {
+				event.preventDefault();
+				if (this.is3D || this.isLoading) {
+					return;
+				}
+				// Exponential mapping keeps trackpad pinch and wheel
+				// notches proportional in either direction
+				this.zoomView.zoomAbout(
+					Math.exp(-event.deltaY * 0.0022),
+					event.clientX,
+					event.clientY,
+				);
+			},
+			{ passive: false },
+		);
 		this.displayLoop.start(60);
 
 		// Preloader Container
@@ -1133,6 +1336,78 @@ export default class MainScene extends Scene {
 		this.preloader.appendChild(spinner);
 
 		this.rootContainer.appendChild(this.preloader);
+	}
+
+	/// The crisp phase of pinch-to-zoom (docs/tads/pinch-zoom.md
+	/// Decision 1): once the gesture settles, rebuild the layer
+	/// rasters from their retained SVG sources at the settled
+	/// scale and swap. The draw call renders every raster at
+	/// LOGICAL canvas size, so the swap is invisible except for
+	/// sharpness. Staleness guards follow the resize pattern:
+	/// load generation, raster generation (a newer settle
+	/// supersedes), avastar identity, and captured canvas size.
+	/// The backdrop never re-rasters - it does not zoom
+	/// (Decision 3).
+	rerasterLayers() {
+		if (this.is3D || this.isLoading || !this.avastar) {
+			return;
+		}
+		const scale = this.zoomView.rasterScale();
+		if (scale === (this.avastar.rasterScale || 1)) {
+			return;
+		}
+		const generation = this.loadGeneration;
+		this.rasterGeneration = (this.rasterGeneration || 0) + 1;
+		const rasterGeneration = this.rasterGeneration;
+		const width = this.canvas.width;
+		const height = this.canvas.height;
+		const avastarAtStart = this.avastar;
+		const size = new Size(
+			Math.round(width * scale),
+			Math.round(height * scale),
+		);
+		let images;
+		if (avastarAtStart.isStatic) {
+			images = [
+				this.staticImage(avastarAtStart.sourceSVG, size.width, size.height),
+			];
+		} else if (avastarAtStart.layerSources) {
+			images = avastarAtStart.layerSources.map((source) =>
+				this.traitComposer.toImage(source, false, size),
+			);
+		} else {
+			return;
+		}
+		Promise.all(
+			images.map(
+				(image) =>
+					new Promise((resolve, reject) => {
+						image.addEventListener("load", resolve, { once: true });
+						image.addEventListener("error", reject, { once: true });
+					}),
+			),
+		)
+			.then(() => {
+				if (
+					generation !== this.loadGeneration ||
+					rasterGeneration !== this.rasterGeneration ||
+					this.avastar !== avastarAtStart ||
+					width !== this.canvas.width ||
+					height !== this.canvas.height
+				) {
+					return;
+				}
+				// Same layer count by construction: the springs carry over
+				this.avastar = {
+					...avastarAtStart,
+					layers: images,
+					rasterScale: scale,
+				};
+			})
+			.catch(() => {
+				// A failed decode keeps the current (softer) rasters -
+				// the view stays correct, just not crisper
+			});
 	}
 
 	/// Rebuild the spring rig for the current Avastar's layers.

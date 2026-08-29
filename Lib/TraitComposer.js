@@ -272,8 +272,14 @@ export default class TraitComposer {
 		});
 		const layers = [];
 		const layerInfo = [];
+		// Per-layer SVG sources survive alongside the rasters so the
+		// zoom re-raster (docs/tads/pinch-zoom.md Decision 1) can
+		// rebuild any layer at a new size without refetching
+		const layerSources = [];
 		for (let gene = 5; gene < 12; gene++) {
-			layers.push(this.toImage(styles + fragments[gene], false, displaySize));
+			const source = styles + fragments[gene];
+			layers.push(this.toImage(source, false, displaySize));
+			layerSources.push(source);
 			layerInfo.push(picks[gene]);
 		}
 		return {
@@ -285,6 +291,7 @@ export default class TraitComposer {
 			// stretched - see toImage)
 			backgroundLayer: this.toImage(styles + fragments[4], true, displaySize),
 			layers,
+			layerSources,
 			layerInfo,
 			// Gene-ordered by construction (index = gene id, 0-11);
 			// TraitsSection relies on 0-3 being the color genes and
