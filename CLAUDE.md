@@ -3,7 +3,8 @@
 Interactive Avastars display site (kwigbelle.com). Static — no build
 step, no framework: ES modules served as-is. An Avastar renders on a
 canvas as independently-moving layers (spring physics, idle
-breathing, pointer/tilt follow, tap-to-poke, wave/trails effects),
+breathing, pointer/tilt follow, tap-to-poke, wave/trails effects,
+pinch/wheel vector zoom with pan and double-tap reset),
 with a right-edge drawer stack: a profile drawer (wallet connect,
 owned-Avastars grid with composed thumbnails, logout, presence dot),
 an info drawer (rarity explainer collapsed by default, the identity
@@ -20,7 +21,11 @@ by policy. Shipped directions, each frozen as a TAD in docs/tads/:
 the VRM 3D viewer (vrm-viewer.md), the avastars.io design match
 (design-cues.md), the profile drawer + composed thumbnails
 (profile-drawer.md), and burned traits + effects + trait-card
-polish (burned-traits.md). IN PROGRESS (operator 2026-08-25):
+polish (burned-traits.md), and pinch-to-zoom (pinch-zoom.md,
+2026-08-29: true vector zoom — live transform during the gesture,
+settled re-raster from retained SVG sources; backdrop never
+zooms; window-level browser page-zoom suppression). IN PROGRESS
+(operator 2026-08-25):
 docs/tads/info-tab.md — PR A shipped the info drawer between
 profile and settings (traits moved there + rarity explainer), the
 3D background fix, and the mobile backdrop squish fix; PR B
@@ -65,6 +70,13 @@ Lib/LayerSprings.js        spring physics: per-depth params +
                            follow, poke impulses, wave pulse);
                            lock-layers mode = shared mid-depth
                            profile, the stack moves as one
+Lib/ZoomView.js            pinch-to-zoom view state (docs/tads/
+                           pinch-zoom.md): scale/pan + focal math,
+                           clamp, rubber band, double-tap glide,
+                           settle debounce -> MainScene re-rasters
+                           layers from retained SVG sources; input
+                           events + page-zoom suppression live in
+                           MainScene (window-level)
 Lib/ProfileSection.js      profile drawer: wallet connect flow
                            (multi-wallet chooser, switch/link,
                            logout) + owned-Avastars grid w/ lazy
