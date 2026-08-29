@@ -579,12 +579,15 @@ export default class MainScene extends Scene {
 				(a.clientX + b.clientX) / 2,
 				(a.clientY + b.clientY) / 2,
 			);
-			// Scale about the midpoint AND track its travel, so the
-			// content under the fingers stays under the fingers
+			// Scale about the PREVIOUS midpoint, then translate by its
+			// travel: t' = M1 - r*M0 + r*t keeps the content under
+			// the fingers exactly. Zooming about the new midpoint
+			// would double-count the travel by (M1-M0)(1-r) per frame
+			// (review catch - accumulates over a long sliding pinch).
 			this.zoomView.zoomAbout(
 				distance / this.pinchDistance,
-				mid.x,
-				mid.y,
+				this.pinchMid.x,
+				this.pinchMid.y,
 				true,
 			);
 			this.zoomView.panBy(mid.x - this.pinchMid.x, mid.y - this.pinchMid.y);
