@@ -266,20 +266,9 @@ function renderMirrorStatus(body, data) {
 		),
 	);
 	line("mirrorDetail", Strings.mirror.gbMirrored((bytes / 1e9).toFixed(2)));
-	for (const front of fronts) {
-		if (front.from === undefined || front.until === undefined) {
-			continue;
-		}
-		line(
-			"mirrorFront",
-			Strings.mirror.frontLine(
-				front.from.toLocaleString(),
-				(front.until - 1).toLocaleString(),
-				(front.captured || 0).toLocaleString(),
-				agoText(front.updated),
-			),
-		);
-	}
+	// Per-front capture-machine lines are gone (operator QA
+	// 2026-08-31): they were operational detail that reads as stale
+	// noise once the capture completes - fronts still feed the sums
 	line("mirrorKnownTitle", Strings.mirror.knownMissingTitle);
 	for (const block of KNOWN_MISSING) {
 		// The range itself is the headline (operator direction: the
@@ -302,22 +291,6 @@ function renderMirrorStatus(body, data) {
 		);
 	}
 	line("mirrorNote", Strings.mirror.note);
-}
-
-/// "just now" / "12m ago" / "3h ago" - defensive on bad input
-function agoText(iso) {
-	const at = Date.parse(iso);
-	if (!Number.isFinite(at)) {
-		return Strings.mirror.updatedFallback;
-	}
-	const minutes = Math.max(0, Math.floor((Date.now() - at) / 60000));
-	if (minutes < 1) {
-		return Strings.mirror.justNow;
-	}
-	if (minutes < 60) {
-		return Strings.mirror.minutesAgo(minutes);
-	}
-	return Strings.mirror.hoursAgo(Math.floor(minutes / 60));
 }
 
 /// "62%" when the size is known, a MB count otherwise

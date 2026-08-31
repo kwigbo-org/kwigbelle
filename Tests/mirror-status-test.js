@@ -115,9 +115,7 @@ const STATUS = {
 		details: [...document.querySelectorAll("#mirrorModal .mirrorDetail")].map(
 			(element) => element.innerText,
 		),
-		fronts: [...document.querySelectorAll("#mirrorModal .mirrorFront")].map(
-			(element) => element.innerText,
-		),
+		frontLines: document.querySelectorAll("#mirrorModal .mirrorFront").length,
 		knownTitle: document.querySelector("#mirrorModal .mirrorKnownTitle")
 			?.innerText,
 		knownRanges: [
@@ -150,17 +148,12 @@ const STATUS = {
 		modal.details.length === 1,
 		"unexpected extra detail line: " + JSON.stringify(modal.details),
 	);
-	check(modal.fronts.length === 2, "expected two front lines");
+	// Per-front capture-machine lines removed (operator QA
+	// 2026-08-31): the fixture's fronts still feed the sums, but no
+	// per-machine rows render
 	check(
-		modal.fronts[0].includes("Tokens 0–13,999") &&
-			modal.fronts[0].includes("900 captured") &&
-			modal.fronts[0].includes("just now"),
-		"front 1 line wrong: " + modal.fronts[0],
-	);
-	check(
-		modal.fronts[1].includes("Tokens 14,000–26,616") &&
-			modal.fronts[1].includes("5m ago"),
-		"front 2 line wrong: " + modal.fronts[1],
+		modal.frontLines === 0,
+		"per-front lines still render: " + modal.frontLines,
 	);
 	check(modal.barWidth === "3.8%", "bar width wrong: " + modal.barWidth);
 	// Known-missing blocks (operator request 2026-08-31): the two

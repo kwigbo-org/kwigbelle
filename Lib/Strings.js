@@ -163,8 +163,6 @@ export const Strings = {
 		headline: (captured, total, percent) =>
 			`${captured} of ${total} models backed up (${percent}%)`,
 		gbMirrored: (gb) => `${gb} GB safely mirrored`,
-		frontLine: (from, until, captured, ago) =>
-			`Tokens ${from}–${until}: ${captured} captured · ${ago}`,
 		knownMissingTitle: "Known missing",
 		knownRange: (from, until, count) =>
 			`#${from} – #${until} · ${count} tokens`,
@@ -175,9 +173,5 @@ export const Strings = {
 			"The models live on IPFS with a single remaining public " +
 			"source; this backup preserves every model that can " +
 			"still be fetched.",
-		justNow: "just now",
-		minutesAgo: (minutes) => `${minutes}m ago`,
-		hoursAgo: (hours) => `${hours}h ago`,
-		updatedFallback: "updated",
 	},
 };

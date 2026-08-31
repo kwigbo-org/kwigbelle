@@ -960,8 +960,7 @@
 	color: var(--heading);
 }
 
-.mirrorDetail,
-.mirrorFront {
+.mirrorDetail {
 	color: var(--text);
 }
 
