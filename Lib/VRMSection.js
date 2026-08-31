@@ -236,11 +236,12 @@ function renderMirrorStatus(body, data) {
 		(sum, front) => sum + (front.captured || 0),
 		0,
 	);
-	const gaps = fronts.reduce((sum, front) => sum + (front.gaps || 0), 0);
 	const bytes = fronts.reduce((sum, front) => sum + (front.bytes || 0), 0);
 	// The headline says "models backed up", so the percent and bar
-	// count ONLY captured models (review catch); gaps - tokens with
-	// no VRM to back up - get their own line below
+	// count ONLY captured models (review catch). The published gap
+	// count is NOT rendered - the Known missing section below names
+	// the same tokens with their ranges and reasons, and one truth
+	// beats two phrasings (operator QA 2026-08-31).
 	const percent = Math.min(100, (captured / total) * 100);
 	body.innerText = "";
 	const bar = document.createElement("div");
@@ -265,12 +266,6 @@ function renderMirrorStatus(body, data) {
 		),
 	);
 	line("mirrorDetail", Strings.mirror.gbMirrored((bytes / 1e9).toFixed(2)));
-	if (gaps > 0) {
-		line(
-			"mirrorDetail",
-			Strings.mirror.gapsLine(gaps.toLocaleString(), gaps === 1),
-		);
-	}
 	for (const front of fronts) {
 		if (front.from === undefined || front.until === undefined) {
 			continue;

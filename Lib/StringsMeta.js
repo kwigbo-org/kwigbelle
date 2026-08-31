@@ -164,10 +164,6 @@ export const StringsMeta = {
 			"The big progress line; placeholders arrive pre-formatted, " +
 			"e.g. “1,000 of 26,617 models backed up (3.8%)”.",
 		"mirror.gbMirrored": "The gigabytes line under the progress bar.",
-		"mirror.gapsLine":
-			"Shown only when some tokens have no VRM at all. Two " +
-			"versions, singular then plural - edit the words freely, " +
-			"keep ${count} in both.",
 		"mirror.frontLine":
 			"One line per capture machine, e.g. “Tokens 0–13,999: " +
 			"900 captured · just now”.",

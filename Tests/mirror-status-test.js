@@ -141,9 +141,14 @@ const STATUS = {
 		modal.details[0] === "10.00 GB safely mirrored",
 		"GB line wrong: " + modal.details[0],
 	);
+	// The published gap count must NOT render its own line (operator
+	// QA 2026-08-31): the Known missing section below names the same
+	// tokens with ranges and reasons - the fixture's gaps:10 exists
+	// to prove both that the percent ignores it AND that no gaps
+	// line appears
 	check(
-		modal.details[1] === "10 tokens have no VRM to back up (recorded gaps)",
-		"gaps line wrong: " + modal.details[1],
+		modal.details.length === 1,
+		"unexpected extra detail line: " + JSON.stringify(modal.details),
 	);
 	check(modal.fronts.length === 2, "expected two front lines");
 	check(

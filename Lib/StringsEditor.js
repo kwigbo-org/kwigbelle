@@ -93,7 +93,8 @@ const templateProblem = (entry, body) => {
 		return "This edit breaks the code structure - check backticks and braces.";
 	}
 	// Occurrence-counted, not set-based: a placeholder used twice
-	// (gapsLine's two branches) must survive twice (review catch)
+	// (e.g. both branches of a ternary template) must survive twice
+	// (review catch)
 	const missing = [...new Set(entry.placeholders)].filter((placeholder) => {
 		const needed = entry.placeholders.filter(
 			(candidate) => candidate === placeholder,
