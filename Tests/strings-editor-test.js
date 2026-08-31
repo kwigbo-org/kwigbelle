@@ -117,6 +117,33 @@ const { check } = require("./check.js");
 		"restoring the knownRange body did not clear the error",
 	);
 
+	// MULTI-occurrence counting exercised directly (no in-catalog
+	// string repeats a placeholder since gapsLine left): a
+	// placeholder the original uses twice must survive twice - one
+	// surviving occurrence is NOT enough (the review-catch rule)
+	const occurrence = await page.evaluate(async () => {
+		const { templateProblem } = await import("./Lib/StringsEditor.js");
+		const entry = {
+			params: "(count)",
+			placeholders: ["${count}", "${count}"],
+		};
+		return {
+			oneOfTwo: templateProblem(entry, "isOne ? `one` : `${count} things`"),
+			bothKept: templateProblem(
+				entry,
+				"isOne ? `${count} thing` : `${count} things`",
+			),
+		};
+	});
+	check(
+		(occurrence.oneOfTwo || "").includes("${count}"),
+		"one-of-two placeholder occurrences went uncaught: " + occurrence.oneOfTwo,
+	);
+	check(
+		occurrence.bothKept === null,
+		"both occurrences kept but still flagged: " + occurrence.bothKept,
+	);
+
 	// Generate, then import the produced module and verify edits
 	const verdict = await page.evaluate(async () => {
 		const text = await window.__stringsEditor.generate();

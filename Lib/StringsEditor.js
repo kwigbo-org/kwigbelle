@@ -85,7 +85,9 @@ const saveDraft = () => {
 };
 
 /// null when the edited template is sound, else a message
-const templateProblem = (entry, body) => {
+// Exported for the harness: the multi-occurrence rule has no
+// in-catalog ternary left to exercise it through the form
+export const templateProblem = (entry, body) => {
 	try {
 		// Constructing the function parses the body WITHOUT running it
 		new Function(`return (${entry.params} => ${body});`);

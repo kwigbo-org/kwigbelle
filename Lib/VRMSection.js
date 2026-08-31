@@ -227,8 +227,9 @@ const KNOWN_MISSING = [
 	{ from: 26530, until: 26616, reason: "neverMade" },
 ];
 
-/// Render the fetched status into the modal body: an overall bar
-/// plus a per-front freshness line for each capture machine
+/// Render the fetched status into the modal body: the overall
+/// bar, the headline and GB counts summed across capture fronts,
+/// the Known missing blocks, and the closing note
 function renderMirrorStatus(body, data) {
 	const fronts = Object.values(data.fronts || {});
 	const total = data.total > 0 ? data.total : 26617;
