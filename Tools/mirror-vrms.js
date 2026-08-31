@@ -41,6 +41,19 @@
 //                                             with its own manifest -
 //                                             fold them together at the
 //                                             end with --merge
+//     [--skip A-B] [--skip N]                 never attempt these ids
+//                                             (inclusive; repeatable).
+//                                             For blocks the source is
+//                                             KNOWN not to serve (the
+//                                             23000-23199 Pinata 404s,
+//                                             2026-08-31): re-grinding
+//                                             them burns 6 attempts
+//                                             each plus the rate
+//                                             budget, starving the
+//                                             fetchable stragglers
+//                                             behind them. Skipped ids
+//                                             are not failures and not
+//                                             gaps - just deferred.
 //     [--gateway <url>/ipfs/]                 fetch through another
 //                                             gateway - e.g. a local
 //                                             kubo node's
@@ -332,17 +345,25 @@ class Status {
 		const gaps = Object.keys(this.manifest.gaps).length;
 		// Pending (and so the ETA) covers only THIS run's range: on a
 		// two-front split, the other machine's half is not this run's
-		// work to project
+		// work to project. --skip blocks are not this run's work
+		// either - they'd inflate the ETA with tokens the run will
+		// never touch.
 		let remaining = 0;
+		let skipped = 0;
+		const skip = this.range.skip || [];
 		for (let id = this.range.from; id < this.range.until; id++) {
 			if (!this.manifest.entries[id] && this.manifest.gaps[id] === undefined) {
-				remaining++;
+				if (skippedBy(skip, id)) {
+					skipped++;
+				} else {
+					remaining++;
+				}
 			}
 		}
 		const partial =
-			this.range.from > 0 || this.range.until < TOKEN_COUNT
+			(this.range.from > 0 || this.range.until < TOKEN_COUNT
 				? ` · range ${this.range.from}-${this.range.until - 1}`
-				: "";
+				: "") + (skipped > 0 ? ` · skipped: ${skipped}` : "");
 		const totalBytes = Object.values(this.manifest.entries).reduce(
 			(sum, entry) => sum + entry.size,
 			0,
@@ -640,7 +661,39 @@ const awsQuiet = (args) =>
 
 // ---- modes ----
 
+// ---- skip blocks ----
+
+// Every --skip A-B (or --skip N) becomes an inclusive block the
+// capture never attempts. Throws on malformed input so the entry
+// block can refuse loudly instead of silently capturing the wrong
+// slice (same doctrine as --from/--until).
+function parseSkipArgs(args) {
+	const blocks = [];
+	for (let at = 0; at < args.length; at++) {
+		if (args[at] !== "--skip") {
+			continue;
+		}
+		const value = args[at + 1] || "";
+		const match = /^(\d+)-(\d+)$|^(\d+)$/.exec(value);
+		if (!match) {
+			throw new Error(`--skip needs "A-B" or a single id, got "${value}"`);
+		}
+		const from = Number(match[1] ?? match[3]);
+		const to = Number(match[2] ?? match[3]);
+		if (from > to || to >= TOKEN_COUNT) {
+			throw new Error(`--skip ${value} must satisfy A <= B < ${TOKEN_COUNT}`);
+		}
+		blocks.push({ from, to });
+	}
+	return blocks;
+}
+
+function skippedBy(blocks, tokenId) {
+	return blocks.some((block) => tokenId >= block.from && tokenId <= block.to);
+}
+
 async function capture(dest, limit, parallel, range) {
+	range.skip = range.skip || [];
 	acquireLock();
 	const manifest = loadManifest();
 	// One mirror, one destination: a dest that disagrees with the
@@ -663,8 +716,17 @@ async function capture(dest, limit, parallel, range) {
 		range.from > 0 || range.until < TOKEN_COUNT
 			? `, range ${range.from}-${range.until - 1}`
 			: "";
+	const skipNote = range.skip.length
+		? `, skipping ${range.skip
+				.map((block) =>
+					block.from === block.to
+						? `#${block.from}`
+						: `#${block.from}-#${block.to}`,
+				)
+				.join(", ")}`
+		: "";
 	status.event(
-		`run ${done > 0 ? "resumed" : "started"} at ${done.toLocaleString()} captured, dest ${dest}, ${parallel} in flight${rangeNote}`,
+		`run ${done > 0 ? "resumed" : "started"} at ${done.toLocaleString()} captured, dest ${dest}, ${parallel} in flight${rangeNote}${skipNote}`,
 	);
 	// Public progress surface (TAD Decision 10): a tiny JSON at
 	// <dest>_status.json, fetched same-origin by the site's mirror
@@ -806,7 +868,11 @@ async function capture(dest, limit, parallel, range) {
 		}
 		while (nextTokenId < range.until) {
 			const tokenId = nextTokenId++;
-			if (manifest.entries[tokenId] || manifest.gaps[tokenId] !== undefined) {
+			if (
+				manifest.entries[tokenId] ||
+				manifest.gaps[tokenId] !== undefined ||
+				skippedBy(range.skip, tokenId)
+			) {
 				continue;
 			}
 			return tokenId;
@@ -1272,10 +1338,38 @@ async function selftest() {
 		gaps: { 1: "no vrm_url" },
 	});
 	mustRefuse("dest mismatch", { dest: "s3://y/", entries: {}, gaps: {} });
+	// --skip parsing and membership: inclusive blocks, single ids,
+	// malformed and inverted input refused
+	const skipBlocks = parseSkipArgs(["--skip", "23000-23199", "--skip", "42"]);
+	if (
+		skipBlocks.length !== 2 ||
+		!skippedBy(skipBlocks, 23000) ||
+		!skippedBy(skipBlocks, 23199) ||
+		skippedBy(skipBlocks, 22999) ||
+		skippedBy(skipBlocks, 23200) ||
+		!skippedBy(skipBlocks, 42) ||
+		skippedBy(skipBlocks, 41)
+	) {
+		fail("--skip parse/membership wrong");
+	}
+	if (parseSkipArgs(["--parallel", "2"]).length !== 0) {
+		fail("--skip parsed from thin air");
+	}
+	const mustRefuseSkip = (label, value) => {
+		try {
+			parseSkipArgs(["--skip", value]);
+		} catch (error) {
+			return;
+		}
+		fail(`--skip accepted ${label}`);
+	};
+	mustRefuseSkip("malformed input", "banana");
+	mustRefuseSkip("an inverted range", "50-40");
+	mustRefuseSkip("an out-of-corpus id", "99999");
 	console.log(
 		"SELFTEST PASS: verified round-trip, bad-magic/truncation rejection, " +
 			"429 cooldown honored, stall auto-rest armed and reset, manifest " +
-			"merge safe",
+			"merge safe, --skip parsing sound",
 	);
 }
 
@@ -1375,9 +1469,17 @@ function argDest() {
 			);
 			process.exit(1);
 		}
+		let skip;
+		try {
+			skip = parseSkipArgs(argv);
+		} catch (error) {
+			console.error(error.message);
+			process.exit(1);
+		}
 		await capture(argDest(), argValue("--limit", 0), parallel, {
 			from,
 			until,
+			skip,
 		});
 	}
 })().catch((error) => {

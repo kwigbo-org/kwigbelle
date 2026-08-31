@@ -223,3 +223,15 @@ None.
   block is ever restored and captured), and the note copy is
   revised from "preserves every one of them" to "every model that
   can still be fetched" — the achievable ceiling is 26,530.
+- 2026-08-31 — `--skip A-B` flag (operator request). The endgame
+  sweep for front B's last 39 fetchable stragglers starved behind
+  the 23000-23199 dead block: each of the 200 burned 6 retry
+  attempts per run, and the rapid-fire 404 grinding tripped
+  Pinata's rate limiter (300s shared cooldowns - observed ~25
+  minutes per token, ~20h projected before the sweep would reach
+  the first straggler). `--skip` (inclusive, repeatable) makes the
+  capture never attempt a block the source is KNOWN not to serve:
+  skipped ids are neither failures nor gaps - just deferred, so a
+  later run without the flag retries them if Pinata restores the
+  block. Pending/ETA and the status line account for skips;
+  selftest covers parsing and membership.
