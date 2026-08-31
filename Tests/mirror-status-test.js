@@ -120,9 +120,12 @@ const STATUS = {
 		),
 		knownTitle: document.querySelector("#mirrorModal .mirrorKnownTitle")
 			?.innerText,
-		known: [...document.querySelectorAll("#mirrorModal .mirrorKnown")].map(
-			(element) => element.innerText,
-		),
+		knownRanges: [
+			...document.querySelectorAll("#mirrorModal .mirrorKnownRange"),
+		].map((element) => element.innerText),
+		knownReasons: [
+			...document.querySelectorAll("#mirrorModal .mirrorKnownReason"),
+		].map((element) => element.innerText),
 		barWidth: document.querySelector("#mirrorModal .mirrorBarFill").style.width,
 	}));
 	console.log("modal:", JSON.stringify(modal, null, 1));
@@ -162,18 +165,27 @@ const STATUS = {
 		modal.knownTitle === "KNOWN MISSING",
 		"known-missing title wrong: " + modal.knownTitle,
 	);
-	check(modal.known.length === 2, "expected two known-missing rows");
 	check(
-		modal.known[0].includes("#23,000–#23,199") &&
-			modal.known[0].includes("(200)") &&
-			modal.known[0].includes("missing from the IPFS source"),
-		"404-block row wrong: " + modal.known[0],
+		modal.knownRanges.length === 2 && modal.knownReasons.length === 2,
+		"expected two known-missing range+reason pairs",
+	);
+	// The mint-number ranges are the headline (operator direction:
+	// readable at a glance), reasons beneath
+	check(
+		modal.knownRanges[0] === "#23,000 – #23,199 · 200 tokens",
+		"404-block range wrong: " + modal.knownRanges[0],
 	);
 	check(
-		modal.known[1].includes("#26,530–#26,616") &&
-			modal.known[1].includes("(87)") &&
-			modal.known[1].includes("never generated"),
-		"never-generated row wrong: " + modal.known[1],
+		modal.knownReasons[0].includes("Missing from the IPFS source"),
+		"404-block reason wrong: " + modal.knownReasons[0],
+	);
+	check(
+		modal.knownRanges[1] === "#26,530 – #26,616 · 87 tokens",
+		"never-generated range wrong: " + modal.knownRanges[1],
+	);
+	check(
+		modal.knownReasons[1].includes("never generated"),
+		"never-generated reason wrong: " + modal.knownReasons[1],
 	);
 
 	// A second tap while open must not stack overlays

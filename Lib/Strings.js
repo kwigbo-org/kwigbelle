@@ -169,12 +169,11 @@ export const Strings = {
 		frontLine: (from, until, captured, ago) =>
 			`Tokens ${from}–${until}: ${captured} captured · ${ago}`,
 		knownMissingTitle: "Known missing",
-		missingAtSource: (from, until, count) =>
-			`#${from}–#${until} (${count}): missing from the IPFS ` +
-			`source — raised with the project`,
-		missingNeverMade: (from, until, count) =>
-			`#${from}–#${until} (${count}): minted after the last ` +
-			`batch — a 3D model was never generated`,
+		knownRange: (from, until, count) =>
+			`#${from} – #${until} · ${count} tokens`,
+		reasonSource: "Missing from the IPFS source — raised with the project",
+		reasonNeverMade:
+			"Minted after the last batch — a 3D model was never generated",
 		note:
 			"The models live on IPFS with a single remaining public " +
 			"source; this backup preserves every model that can " +

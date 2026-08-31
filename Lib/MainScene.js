@@ -29,7 +29,7 @@ export default class MainScene extends Scene {
 	constructor(rootContainer) {
 		super(rootContainer);
 		console.log(
-			"kwigbelle build 2026-08-31.1 (known-missing in backup dialog)",
+			"kwigbelle build 2026-08-31.2 (known-missing ranges prominent)",
 		);
 		// Build the UI
 		this.buildUI();

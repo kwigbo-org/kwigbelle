@@ -174,14 +174,15 @@ export const StringsMeta = {
 		"mirror.knownMissingTitle":
 			"Small heading above the known-missing token blocks in " +
 			"the backup modal.",
-		"mirror.missingAtSource":
-			"Known-missing row for tokens the IPFS source itself no " +
-			"longer serves, e.g. “#23,000–#23,199 (200): missing " +
-			"from the IPFS source — raised with the project”.",
-		"mirror.missingNeverMade":
-			"Known-missing row for tokens minted after the last VRM " +
-			"batch, so no 3D model ever existed, e.g. " +
-			"“#26,530–#26,616 (87): …never generated”.",
+		"mirror.knownRange":
+			"The prominent mint-number range line of a known-missing " +
+			"block, e.g. “#23,000 – #23,199 · 200 tokens”.",
+		"mirror.reasonSource":
+			"Reason line under the 23,000-block range: the IPFS " +
+			"source itself no longer serves these files.",
+		"mirror.reasonNeverMade":
+			"Reason line under the 26,530-block range: minted after " +
+			"the last VRM batch, so no 3D model ever existed.",
 		"mirror.note": "The closing why-this-exists line of the modal.",
 		"mirror.justNow": "Freshness label under a minute old.",
 		"mirror.minutesAgo": "Freshness label in minutes, e.g. “12m ago”.",
