@@ -85,7 +85,9 @@ const saveDraft = () => {
 };
 
 /// null when the edited template is sound, else a message
-const templateProblem = (entry, body) => {
+// Exported for the harness: the multi-occurrence rule has no
+// in-catalog ternary left to exercise it through the form
+export const templateProblem = (entry, body) => {
 	try {
 		// Constructing the function parses the body WITHOUT running it
 		new Function(`return (${entry.params} => ${body});`);
@@ -93,7 +95,8 @@ const templateProblem = (entry, body) => {
 		return "This edit breaks the code structure - check backticks and braces.";
 	}
 	// Occurrence-counted, not set-based: a placeholder used twice
-	// (gapsLine's two branches) must survive twice (review catch)
+	// (e.g. both branches of a ternary template) must survive twice
+	// (review catch)
 	const missing = [...new Set(entry.placeholders)].filter((placeholder) => {
 		const needed = entry.placeholders.filter(
 			(candidate) => candidate === placeholder,

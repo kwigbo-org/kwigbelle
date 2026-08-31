@@ -164,13 +164,6 @@ export const StringsMeta = {
 			"The big progress line; placeholders arrive pre-formatted, " +
 			"e.g. “1,000 of 26,617 models backed up (3.8%)”.",
 		"mirror.gbMirrored": "The gigabytes line under the progress bar.",
-		"mirror.gapsLine":
-			"Shown only when some tokens have no VRM at all. Two " +
-			"versions, singular then plural - edit the words freely, " +
-			"keep ${count} in both.",
-		"mirror.frontLine":
-			"One line per capture machine, e.g. “Tokens 0–13,999: " +
-			"900 captured · just now”.",
 		"mirror.knownMissingTitle":
 			"Small heading above the known-missing token blocks in " +
 			"the backup modal.",
@@ -184,10 +177,5 @@ export const StringsMeta = {
 			"Reason line under the 26,530-block range: minted after " +
 			"the last VRM batch, so no 3D model ever existed.",
 		"mirror.note": "The closing why-this-exists line of the modal.",
-		"mirror.justNow": "Freshness label under a minute old.",
-		"mirror.minutesAgo": "Freshness label in minutes, e.g. “12m ago”.",
-		"mirror.hoursAgo": "Freshness label in hours, e.g. “3h ago”.",
-		"mirror.updatedFallback":
-			"Freshness label when the timestamp can't be read.",
 	},
 };

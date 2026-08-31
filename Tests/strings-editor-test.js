@@ -96,24 +96,52 @@ const { check } = require("./check.js");
 	);
 	await template.fill("`There is no Avastar with id ${tokenId}`");
 
-	// A placeholder used in BOTH branches of a ternary template must
-	// survive in both - deleting one occurrence is caught (the check
-	// counts occurrences, not mere presence)
-	const gaps = page.locator('textarea[data-key="mirror.gapsLine"]');
-	const gapsOriginal = await gaps.inputValue();
-	await gaps.fill(
-		"isOne ? `One token has no VRM` : `${count} tokens have no VRM`",
-	);
+	// Occurrence counting: the validator counts placeholder
+	// occurrences, not mere presence, so a multi-use template must
+	// keep every occurrence. No current string is a ternary (the
+	// last one left with mirror.gapsLine, operator QA 2026-08-31),
+	// so this exercises the counter on a three-placeholder template:
+	// dropping one of them is caught, restoring clears the error.
+	const range = page.locator('textarea[data-key="mirror.knownRange"]');
+	const rangeOriginal = await range.inputValue();
+	await range.fill("`#${from} – #${until} tokens`");
 	check(
 		await page.evaluate(() => document.getElementById("editorShare").disabled),
-		"dropping one of two placeholder occurrences went uncaught",
+		"dropping a placeholder occurrence went uncaught",
 	);
-	await gaps.fill(gapsOriginal);
+	await range.fill(rangeOriginal);
 	check(
 		!(await page.evaluate(
 			() => document.getElementById("editorShare").disabled,
 		)),
-		"restoring the gapsLine body did not clear the error",
+		"restoring the knownRange body did not clear the error",
+	);
+
+	// MULTI-occurrence counting exercised directly (no in-catalog
+	// string repeats a placeholder since gapsLine left): a
+	// placeholder the original uses twice must survive twice - one
+	// surviving occurrence is NOT enough (the review-catch rule)
+	const occurrence = await page.evaluate(async () => {
+		const { templateProblem } = await import("./Lib/StringsEditor.js");
+		const entry = {
+			params: "(count)",
+			placeholders: ["${count}", "${count}"],
+		};
+		return {
+			oneOfTwo: templateProblem(entry, "isOne ? `one` : `${count} things`"),
+			bothKept: templateProblem(
+				entry,
+				"isOne ? `${count} thing` : `${count} things`",
+			),
+		};
+	});
+	check(
+		(occurrence.oneOfTwo || "").includes("${count}"),
+		"one-of-two placeholder occurrences went uncaught: " + occurrence.oneOfTwo,
+	);
+	check(
+		occurrence.bothKept === null,
+		"both occurrences kept but still flagged: " + occurrence.bothKept,
 	);
 
 	// Generate, then import the produced module and verify edits
@@ -130,7 +158,7 @@ const { check } = require("./check.js");
 			button: generated.load.button,
 			error: generated.load.errorUnknown(42),
 			untouched: generated.panel.effects,
-			template: generated.mirror.gapsLine("3", false),
+			template: generated.mirror.knownRange("23,000", "23,199", "200"),
 			groups: Object.keys(generated).length,
 		};
 	});
@@ -145,7 +173,7 @@ const { check } = require("./check.js");
 		"untouched string changed: " + verdict.untouched,
 	);
 	check(
-		verdict.template === "3 tokens have no VRM to back up (recorded gaps)",
+		verdict.template === "#23,000 – #23,199 · 200 tokens",
 		"untouched template changed: " + verdict.template,
 	);
 	check(verdict.groups === coverage.groupCount, "generated file lost groups");

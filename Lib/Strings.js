@@ -23,7 +23,8 @@
 /// Keep parameterized entries SIMPLE for the editor page's
 /// validator: arrow functions only, no braces inside a ${…}
 /// placeholder, and no editable words inside one - conditional
-/// copy is a ternary OF whole templates (see mirror.gapsLine).
+/// copy is a ternary OF whole templates (none currently; the
+/// validator still counts placeholder occurrences per branch).
 export const Strings = {
 	// Drawer section titles (the stacked right-edge panel)
 	panel: {
@@ -162,12 +163,6 @@ export const Strings = {
 		headline: (captured, total, percent) =>
 			`${captured} of ${total} models backed up (${percent}%)`,
 		gbMirrored: (gb) => `${gb} GB safely mirrored`,
-		gapsLine: (count, isOne) =>
-			isOne
-				? `${count} token has no VRM to back up (recorded gaps)`
-				: `${count} tokens have no VRM to back up (recorded gaps)`,
-		frontLine: (from, until, captured, ago) =>
-			`Tokens ${from}–${until}: ${captured} captured · ${ago}`,
 		knownMissingTitle: "Known missing",
 		knownRange: (from, until, count) =>
 			`#${from} – #${until} · ${count} tokens`,
@@ -178,9 +173,5 @@ export const Strings = {
 			"The models live on IPFS with a single remaining public " +
 			"source; this backup preserves every model that can " +
 			"still be fetched.",
-		justNow: "just now",
-		minutesAgo: (minutes) => `${minutes}m ago`,
-		hoursAgo: (hours) => `${hours}h ago`,
-		updatedFallback: "updated",
 	},
 };

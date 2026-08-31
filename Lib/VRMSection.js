@@ -227,8 +227,9 @@ const KNOWN_MISSING = [
 	{ from: 26530, until: 26616, reason: "neverMade" },
 ];
 
-/// Render the fetched status into the modal body: an overall bar
-/// plus a per-front freshness line for each capture machine
+/// Render the fetched status into the modal body: the overall
+/// bar, the headline and GB counts summed across capture fronts,
+/// the Known missing blocks, and the closing note
 function renderMirrorStatus(body, data) {
 	const fronts = Object.values(data.fronts || {});
 	const total = data.total > 0 ? data.total : 26617;
@@ -236,11 +237,12 @@ function renderMirrorStatus(body, data) {
 		(sum, front) => sum + (front.captured || 0),
 		0,
 	);
-	const gaps = fronts.reduce((sum, front) => sum + (front.gaps || 0), 0);
 	const bytes = fronts.reduce((sum, front) => sum + (front.bytes || 0), 0);
 	// The headline says "models backed up", so the percent and bar
-	// count ONLY captured models (review catch); gaps - tokens with
-	// no VRM to back up - get their own line below
+	// count ONLY captured models (review catch). The published gap
+	// count is NOT rendered - the Known missing section below names
+	// the same tokens with their ranges and reasons, and one truth
+	// beats two phrasings (operator QA 2026-08-31).
 	const percent = Math.min(100, (captured / total) * 100);
 	body.innerText = "";
 	const bar = document.createElement("div");
@@ -265,26 +267,9 @@ function renderMirrorStatus(body, data) {
 		),
 	);
 	line("mirrorDetail", Strings.mirror.gbMirrored((bytes / 1e9).toFixed(2)));
-	if (gaps > 0) {
-		line(
-			"mirrorDetail",
-			Strings.mirror.gapsLine(gaps.toLocaleString(), gaps === 1),
-		);
-	}
-	for (const front of fronts) {
-		if (front.from === undefined || front.until === undefined) {
-			continue;
-		}
-		line(
-			"mirrorFront",
-			Strings.mirror.frontLine(
-				front.from.toLocaleString(),
-				(front.until - 1).toLocaleString(),
-				(front.captured || 0).toLocaleString(),
-				agoText(front.updated),
-			),
-		);
-	}
+	// Per-front capture-machine lines are gone (operator QA
+	// 2026-08-31): they were operational detail that reads as stale
+	// noise once the capture completes - fronts still feed the sums
 	line("mirrorKnownTitle", Strings.mirror.knownMissingTitle);
 	for (const block of KNOWN_MISSING) {
 		// The range itself is the headline (operator direction: the
@@ -307,22 +292,6 @@ function renderMirrorStatus(body, data) {
 		);
 	}
 	line("mirrorNote", Strings.mirror.note);
-}
-
-/// "just now" / "12m ago" / "3h ago" - defensive on bad input
-function agoText(iso) {
-	const at = Date.parse(iso);
-	if (!Number.isFinite(at)) {
-		return Strings.mirror.updatedFallback;
-	}
-	const minutes = Math.max(0, Math.floor((Date.now() - at) / 60000));
-	if (minutes < 1) {
-		return Strings.mirror.justNow;
-	}
-	if (minutes < 60) {
-		return Strings.mirror.minutesAgo(minutes);
-	}
-	return Strings.mirror.hoursAgo(Math.floor(minutes / 60));
 }
 
 /// "62%" when the size is known, a MB count otherwise
