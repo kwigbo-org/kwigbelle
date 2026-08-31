@@ -287,17 +287,23 @@ function renderMirrorStatus(body, data) {
 	}
 	line("mirrorKnownTitle", Strings.mirror.knownMissingTitle);
 	for (const block of KNOWN_MISSING) {
-		const template =
-			block.reason === "source"
-				? Strings.mirror.missingAtSource
-				: Strings.mirror.missingNeverMade;
+		// The range itself is the headline (operator direction: the
+		// affected mint numbers must read at a glance) - both blocks
+		// are contiguous, so the endpoints are exact; the reason
+		// sits beneath in smaller type
 		line(
-			"mirrorKnown",
-			template(
+			"mirrorKnownRange",
+			Strings.mirror.knownRange(
 				block.from.toLocaleString(),
 				block.until.toLocaleString(),
 				(block.until - block.from + 1).toLocaleString(),
 			),
+		);
+		line(
+			"mirrorKnownReason",
+			block.reason === "source"
+				? Strings.mirror.reasonSource
+				: Strings.mirror.reasonNeverMade,
 		);
 	}
 	line("mirrorNote", Strings.mirror.note);

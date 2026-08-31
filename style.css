@@ -974,9 +974,17 @@
 	letter-spacing: 0.06em;
 }
 
-.mirrorKnown {
+.mirrorKnownRange {
 	color: var(--burned);
-	font-size: 13px;
+	font-size: 17px;
+	font-weight: 700;
+	letter-spacing: 0.02em;
+}
+
+.mirrorKnownReason {
+	color: var(--muted);
+	font-size: 12px;
+	margin-bottom: 6px;
 }
 
 .mirrorNote {
