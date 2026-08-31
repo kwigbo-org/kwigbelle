@@ -207,3 +207,19 @@ None.
   limitation (client-side code cannot know gap-ness without the
   metadata call the indicator avoids). Merge gates: operator-run
   CORS ops + QA. Stamp 2026-08-27.3.
+- 2026-08-31 — Known-missing surfaced in the status modal
+  (operator request). The 2026-08-30 handoff
+  (feedback/HANDOFF-vrm-mirror-2026-08-30.md) established two
+  unmirrorable blocks, both verified against the live source:
+  #23000–#23199 (200) are a stable 404 inside an otherwise-live
+  Pinata pin (sibling #23466 under the same CID serves — raised
+  with the original project, who may hold the source files), and
+  #26530–#26616 (87) were minted months AFTER the collection's
+  one VRM generation batch (mint-block cliff at the boundary; the
+  tail batch directory's DAG ends at 26529) — no model ever
+  existed. The modal now renders a "Known missing" section with
+  both ranges and reasons (KNOWN_MISSING constant in
+  VRMSection.js; copy in Strings.mirror; remove an entry if its
+  block is ever restored and captured), and the note copy is
+  revised from "preserves every one of them" to "every model that
+  can still be fetched" — the achievable ceiling is 26,530.

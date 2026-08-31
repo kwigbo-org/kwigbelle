@@ -171,6 +171,17 @@ export const StringsMeta = {
 		"mirror.frontLine":
 			"One line per capture machine, e.g. “Tokens 0–13,999: " +
 			"900 captured · just now”.",
+		"mirror.knownMissingTitle":
+			"Small heading above the known-missing token blocks in " +
+			"the backup modal.",
+		"mirror.missingAtSource":
+			"Known-missing row for tokens the IPFS source itself no " +
+			"longer serves, e.g. “#23,000–#23,199 (200): missing " +
+			"from the IPFS source — raised with the project”.",
+		"mirror.missingNeverMade":
+			"Known-missing row for tokens minted after the last VRM " +
+			"batch, so no 3D model ever existed, e.g. " +
+			"“#26,530–#26,616 (87): …never generated”.",
 		"mirror.note": "The closing why-this-exists line of the modal.",
 		"mirror.justNow": "Freshness label under a minute old.",
 		"mirror.minutesAgo": "Freshness label in minutes, e.g. “12m ago”.",

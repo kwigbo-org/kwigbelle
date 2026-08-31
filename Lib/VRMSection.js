@@ -212,6 +212,21 @@ export default class VRMSection {
 	}
 }
 
+/// Token blocks known to be unmirrorable, shown with their reason
+/// (operator request 2026-08-31) so the modal names WHAT is absent
+/// and WHY instead of reading as silently incomplete. Frozen facts
+/// verified against the live IPFS source: 23000-23199 are a stable
+/// 404 inside an otherwise-live pin (raised with the project);
+/// 26530-26616 were minted AFTER the collection's one VRM
+/// generation batch ran - no model was ever created (metadata has
+/// no vrm_url, and the tail batch directory ends at 26529). If
+/// either block is ever restored upstream and captured, remove its
+/// entry here.
+const KNOWN_MISSING = [
+	{ from: 23000, until: 23199, reason: "source" },
+	{ from: 26530, until: 26616, reason: "neverMade" },
+];
+
 /// Render the fetched status into the modal body: an overall bar
 /// plus a per-front freshness line for each capture machine
 function renderMirrorStatus(body, data) {
@@ -267,6 +282,21 @@ function renderMirrorStatus(body, data) {
 				(front.until - 1).toLocaleString(),
 				(front.captured || 0).toLocaleString(),
 				agoText(front.updated),
+			),
+		);
+	}
+	line("mirrorKnownTitle", Strings.mirror.knownMissingTitle);
+	for (const block of KNOWN_MISSING) {
+		const template =
+			block.reason === "source"
+				? Strings.mirror.missingAtSource
+				: Strings.mirror.missingNeverMade;
+		line(
+			"mirrorKnown",
+			template(
+				block.from.toLocaleString(),
+				block.until.toLocaleString(),
+				(block.until - block.from + 1).toLocaleString(),
 			),
 		);
 	}

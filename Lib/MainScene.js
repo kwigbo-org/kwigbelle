@@ -28,7 +28,9 @@ export default class MainScene extends Scene {
 	/// Overridden constructor
 	constructor(rootContainer) {
 		super(rootContainer);
-		console.log("kwigbelle build 2026-08-29.1 (pinch-to-zoom)");
+		console.log(
+			"kwigbelle build 2026-08-31.1 (known-missing in backup dialog)",
+		);
 		// Build the UI
 		this.buildUI();
 		// Start loading
