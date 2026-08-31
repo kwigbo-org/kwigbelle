@@ -168,9 +168,17 @@ export const Strings = {
 				: `${count} tokens have no VRM to back up (recorded gaps)`,
 		frontLine: (from, until, captured, ago) =>
 			`Tokens ${from}–${until}: ${captured} captured · ${ago}`,
+		knownMissingTitle: "Known missing",
+		missingAtSource: (from, until, count) =>
+			`#${from}–#${until} (${count}): missing from the IPFS ` +
+			`source — raised with the project`,
+		missingNeverMade: (from, until, count) =>
+			`#${from}–#${until} (${count}): minted after the last ` +
+			`batch — a 3D model was never generated`,
 		note:
 			"The models live on IPFS with a single remaining public " +
-			"source; this backup preserves every one of them.",
+			"source; this backup preserves every model that can " +
+			"still be fetched.",
 		justNow: "just now",
 		minutesAgo: (minutes) => `${minutes}m ago`,
 		hoursAgo: (hours) => `${hours}h ago`,

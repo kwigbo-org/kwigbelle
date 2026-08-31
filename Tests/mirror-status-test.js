@@ -118,6 +118,11 @@ const STATUS = {
 		fronts: [...document.querySelectorAll("#mirrorModal .mirrorFront")].map(
 			(element) => element.innerText,
 		),
+		knownTitle: document.querySelector("#mirrorModal .mirrorKnownTitle")
+			?.innerText,
+		known: [...document.querySelectorAll("#mirrorModal .mirrorKnown")].map(
+			(element) => element.innerText,
+		),
 		barWidth: document.querySelector("#mirrorModal .mirrorBarFill").style.width,
 	}));
 	console.log("modal:", JSON.stringify(modal, null, 1));
@@ -150,6 +155,26 @@ const STATUS = {
 		"front 2 line wrong: " + modal.fronts[1],
 	);
 	check(modal.barWidth === "3.8%", "bar width wrong: " + modal.barWidth);
+	// Known-missing blocks (operator request 2026-08-31): the two
+	// unmirrorable ranges render with counts and reasons
+	// .mirrorKnownTitle renders uppercase via CSS
+	check(
+		modal.knownTitle === "KNOWN MISSING",
+		"known-missing title wrong: " + modal.knownTitle,
+	);
+	check(modal.known.length === 2, "expected two known-missing rows");
+	check(
+		modal.known[0].includes("#23,000–#23,199") &&
+			modal.known[0].includes("(200)") &&
+			modal.known[0].includes("missing from the IPFS source"),
+		"404-block row wrong: " + modal.known[0],
+	);
+	check(
+		modal.known[1].includes("#26,530–#26,616") &&
+			modal.known[1].includes("(87)") &&
+			modal.known[1].includes("never generated"),
+		"never-generated row wrong: " + modal.known[1],
+	);
 
 	// A second tap while open must not stack overlays
 	await page.click(".vrmMirrorInfo").catch(() => {});
