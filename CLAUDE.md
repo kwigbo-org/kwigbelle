@@ -39,11 +39,13 @@ history). PENDING OPERATOR DECISIONS (2026-09-01): (a) the
 "lottery" terminology is WRONG — minting was the SCROLL, a page
 that randomly generated candidate Avastars the minter CHOSE from
 ("scrolled for & teleported"); the Unique-By explainer string +
-~15 code/test comments still say "lottery" and need the
+~15 code/test call sites still say "lottery" and need the
 correction (frozen TADs keep their historical wording; open
 question: agent wording vs content-editor voice pass); (b) a
 proposed minimal-uniqueness card line for the 698 scroll-minted
-primes with u2=u3=0 (computed: 690 bottom out at a unique
+primes with u2=u3=0 (computed ad-hoc 2026-09-01, not yet a
+committed script — shipping it means extending compute-ub.js so
+the numbers become auditable: 690 bottom out at a unique
 4-combo, 8 at 5 — #394/#1365/#2063/#4208/#4448/#5166/#5634/
 #18547 — none deeper; no two primes share a full outfit).
 COMPLETE
