@@ -1,5 +1,12 @@
 import { Strings } from "./Strings.js";
 import { svgToImage } from "./UIHelpers.js";
+import {
+	rarityIcon,
+	tierForScore,
+	kindLabel,
+	genderLabel,
+	flameIcon,
+} from "./RarityIcons.js";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 
@@ -130,7 +137,9 @@ export default class ProfileSection {
 		}
 	}
 
-	/// Build the owned-Avastars grid
+	/// Build the owned-Avastars grid as trading cards
+	/// (docs/tads/wallet-cards.md): stats front + Load, ⓘ flips to
+	/// a details back
 	///
 	/// - Parameter tokenIds: The owned token ids to list
 	buildGrid(tokenIds) {
@@ -144,6 +153,8 @@ export default class ProfileSection {
 		this.ownedTokenIds = tokenIds;
 		this.thumbnailCache = {};
 		this.gridItems = {};
+		this.backBuilt = {};
+		this.flippedTokenId = null;
 		this.grid.innerHTML = "";
 		if (tokenIds.length === 0) {
 			const note = document.createElement("div");
@@ -153,17 +164,21 @@ export default class ProfileSection {
 			return;
 		}
 		for (const tokenId of tokenIds) {
-			const item = document.createElement("div");
-			item.setAttribute("class", "profileTile");
-			// The tile keeps naming its token after the id label is
+			const card = document.createElement("div");
+			card.setAttribute("class", "profileCard");
+			// The card keeps naming its token after the id label is
 			// replaced by a thumbnail
-			item.setAttribute("data-token", String(tokenId));
-			const label = document.createElement("span");
-			label.innerText = tokenId;
-			item.appendChild(label);
-			item.addEventListener("click", () => this.callbacks.onPick(tokenId));
-			this.gridItems[tokenId] = item;
-			this.grid.appendChild(item);
+			card.setAttribute("data-token", String(tokenId));
+			const inner = document.createElement("div");
+			inner.setAttribute("class", "cardInner");
+			inner.appendChild(this.cardFront(tokenId));
+			const back = document.createElement("div");
+			back.setAttribute("class", "cardBack");
+			inner.appendChild(back);
+			card.appendChild(inner);
+			this.gridItems[tokenId] = card;
+			this.grid.appendChild(card);
+			this.fillCardStats(tokenId, card);
 		}
 		this.setCurrent(this.currentTokenId);
 		// The grid can be (re)built while the drawer is already
@@ -171,6 +186,205 @@ export default class ProfileSection {
 		// alone would leave these tiles as bare labels
 		if (this.callbacks.isDrawerOpen && this.callbacks.isDrawerOpen()) {
 			this.loadThumbnails();
+		}
+	}
+
+	/// A card's front face: the composed art, the stat strip, the
+	/// Load button, and the ⓘ flip affordance. A tap anywhere else
+	/// on the front loads too — the old whole-tile behavior.
+	cardFront(tokenId) {
+		const front = document.createElement("div");
+		front.setAttribute("class", "cardFront");
+		front.addEventListener("click", () => {
+			// A flipped card's front is rotated away; never load from
+			// a click that reached it anyway
+			if (this.flippedTokenId === String(tokenId)) {
+				return;
+			}
+			this.callbacks.onPick(tokenId);
+		});
+		const art = document.createElement("div");
+		art.setAttribute("class", "cardArt");
+		const label = document.createElement("span");
+		label.innerText = tokenId;
+		art.appendChild(label);
+		front.appendChild(art);
+		const stats = document.createElement("div");
+		stats.setAttribute("class", "cardStats");
+		const id = document.createElement("div");
+		id.setAttribute("class", "cardId");
+		id.innerText = "#" + tokenId;
+		stats.appendChild(id);
+		// Filled async by fillCardStats from the local corpus
+		const statLine = document.createElement("div");
+		statLine.setAttribute("class", "cardStatLine");
+		stats.appendChild(statLine);
+		front.appendChild(stats);
+		const actions = document.createElement("div");
+		actions.setAttribute("class", "cardActions");
+		const load = document.createElement("div");
+		load.setAttribute("class", "cardLoad");
+		load.innerText = Strings.cards.load;
+		load.addEventListener("click", (event) => {
+			event.stopPropagation();
+			this.callbacks.onPick(tokenId);
+		});
+		actions.appendChild(load);
+		actions.appendChild(this.flipButton(tokenId, "ⓘ"));
+		front.appendChild(actions);
+		return front;
+	}
+
+	/// The flip affordance: ⓘ on the front, ✕ on the back. Pure
+	/// glyphs (iconography, not prose); the tooltip is editorial.
+	flipButton(tokenId, glyph) {
+		const flip = document.createElement("div");
+		flip.setAttribute("class", "cardFlip");
+		flip.setAttribute("title", Strings.cards.details);
+		flip.innerText = glyph;
+		flip.addEventListener("click", (event) => {
+			event.stopPropagation();
+			this.flipCard(tokenId);
+		});
+		return flip;
+	}
+
+	/// Fill a card front's tier frame and stat strip from the local
+	/// corpus (zero chain calls). A rebuild mid-lookup must not
+	/// stamp a stale card.
+	async fillCardStats(tokenId, card) {
+		const generation = this.buildGeneration;
+		let info = null;
+		try {
+			info = await this.traitComposer.tokenInfo(tokenId);
+		} catch (error) {
+			return;
+		}
+		if (!info || generation !== this.buildGeneration || !card.isConnected) {
+			return;
+		}
+		const tier = tierForScore(info.ranking);
+		// The faces read the frame color from this custom property
+		card.style.setProperty("--cardTier", tier.color);
+		const statLine = card.querySelector(".cardStatLine");
+		statLine.appendChild(rarityIcon(tier.rarity));
+		const text = document.createElement("span");
+		const tag =
+			info.series !== null && info.series !== undefined
+				? Strings.cards.series(info.series)
+				: kindLabel(tokenId, info.kind);
+		text.innerText = `${info.ranking} · ${genderLabel(info.gender)} · ${tag}`;
+		statLine.appendChild(text);
+	}
+
+	/// Flip a card over (or back). At most one card shows its back
+	/// at a time so the grid never becomes a wall of backs.
+	flipCard(tokenId) {
+		const id = String(tokenId);
+		const previous = this.flippedTokenId;
+		if (previous && this.gridItems[previous]) {
+			this.gridItems[previous].classList.remove("flipped");
+		}
+		this.flippedTokenId = null;
+		if (previous === id) {
+			return;
+		}
+		this.flippedTokenId = id;
+		this.gridItems[id].classList.add("flipped");
+		this.buildCardBack(tokenId);
+	}
+
+	/// Build a card's details back on first flip: the identity
+	/// facts (score, gender, series/kind, burn state, Unique-By,
+	/// minter) from the local frozen tables. Failures leave the
+	/// title-only back rather than throwing out of a click.
+	async buildCardBack(tokenId) {
+		if (this.backBuilt[tokenId]) {
+			return;
+		}
+		this.backBuilt[tokenId] = true;
+		const generation = this.buildGeneration;
+		const card = this.gridItems[tokenId];
+		const back = card.querySelector(".cardBack");
+		const top = document.createElement("div");
+		top.setAttribute("class", "cardBackTop");
+		const title = document.createElement("div");
+		title.setAttribute("class", "cardBackTitle");
+		title.innerText = Strings.traits.identityTitle(tokenId);
+		top.appendChild(title);
+		top.appendChild(this.flipButton(tokenId, "✕"));
+		back.appendChild(top);
+		let info = null;
+		let ub = null;
+		let burnedMask = null;
+		let minter = null;
+		try {
+			info = await this.traitComposer.tokenInfo(tokenId);
+			ub = await this.traitComposer.ubFor(tokenId);
+			burnedMask = await this.traitComposer.burnedFor(tokenId);
+			minter = await this.traitComposer.minterFor(tokenId);
+		} catch (error) {
+			return;
+		}
+		if (!info || generation !== this.buildGeneration || !back.isConnected) {
+			return;
+		}
+		const line = (className, text) => {
+			const element = document.createElement("div");
+			element.setAttribute("class", className);
+			element.innerText = text;
+			back.appendChild(element);
+			return element;
+		};
+		const tier = tierForScore(info.ranking);
+		const score = document.createElement("div");
+		score.setAttribute("class", "cardBackLine cardBackScore");
+		score.appendChild(rarityIcon(tier.rarity));
+		const scoreText = document.createElement("span");
+		scoreText.innerText = Strings.traits.score(info.ranking, tier.name);
+		scoreText.style.color = tier.color;
+		score.appendChild(scoreText);
+		back.appendChild(score);
+		const facts = [genderLabel(info.gender), kindLabel(tokenId, info.kind)];
+		if (info.series !== null && info.series !== undefined) {
+			facts.push(Strings.traits.series(info.series));
+		}
+		line("cardBackLine", facts.join(" · "));
+		// Burn state mirrors the identity card: mint condition or a
+		// count (replicants have no burn concept - mask is null)
+		if (burnedMask === 0) {
+			line("cardBackLine", Strings.traits.mintCondition);
+		} else if (burnedMask !== null) {
+			let burnedCount = 0;
+			for (let gene = 0; gene < 12; gene++) {
+				if (burnedMask & (1 << gene)) {
+					burnedCount++;
+				}
+			}
+			const burned = document.createElement("div");
+			burned.setAttribute("class", "cardBackLine cardBackBurned");
+			burned.appendChild(flameIcon());
+			const burnedText = document.createElement("span");
+			burnedText.innerText = Strings.traits.burnedCount(burnedCount);
+			burned.appendChild(burnedText);
+			back.appendChild(burned);
+		}
+		if (ub) {
+			line("cardBackLine", Strings.traits.uniqueByCombos(ub.u2, ub.u3));
+		}
+		if (minter) {
+			const minterLine = document.createElement("a");
+			minterLine.setAttribute("class", "cardMinter");
+			minterLine.href = "https://etherscan.io/address/" + minter;
+			minterLine.target = "_blank";
+			minterLine.rel = "noopener noreferrer";
+			minterLine.innerText = Strings.traits.mintedBy(
+				minter.slice(0, 6) + "…" + minter.slice(-4),
+			);
+			minterLine.setAttribute("title", minter);
+			// A link tap must not bubble into card behaviors
+			minterLine.addEventListener("click", (event) => event.stopPropagation());
+			back.appendChild(minterLine);
 		}
 	}
 
@@ -215,9 +429,9 @@ export default class ProfileSection {
 					return;
 				}
 				this.thumbnailCache[tokenId] = true;
-				const item = this.gridItems[tokenId];
-				item.innerHTML = "";
-				item.appendChild(svgToImage(svgString));
+				const art = this.gridItems[tokenId].querySelector(".cardArt");
+				art.innerHTML = "";
+				art.appendChild(svgToImage(svgString));
 			} catch (error) {
 				// Leave the token id label as the fallback thumbnail
 				if (generation !== this.buildGeneration) {
@@ -242,6 +456,8 @@ export default class ProfileSection {
 		this.ownedTokenIds = [];
 		this.thumbnailCache = {};
 		this.gridItems = {};
+		this.backBuilt = {};
+		this.flippedTokenId = null;
 		// currentTokenId survives: logout does not change what is
 		// displayed, and a reconnect to the same token short-circuits
 		// the load (no finishLoad -> no setCurrent), so the rebuilt

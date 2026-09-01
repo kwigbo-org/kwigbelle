@@ -33,6 +33,12 @@ export const StringsMeta = {
 			title: "Profile drawer (wallet)",
 			note: "Wallet connection states and the owned-Avastars grid.",
 		},
+		cards: {
+			title: "Wallet trading cards",
+			note:
+				"The owned-Avastars cards in the profile drawer " +
+				"(docs/tads/wallet-cards.md).",
+		},
 		load: {
 			title: "Load Avastar",
 			note: "The settings-drawer section for viewing any token.",
@@ -117,6 +123,13 @@ export const StringsMeta = {
 		"profile.walletFallbackName":
 			"Fallback name in the wallet chooser when a wallet " +
 			"doesn't announce one.",
+		"cards.load": "The load button on a wallet card's front.",
+		"cards.details":
+			"Tooltip of the small flip affordance on a wallet card " +
+			"(front and back).",
+		"cards.series":
+			"Compact series tag on a card front, e.g. “S2”; the " +
+			"placeholder is the series number.",
 		"load.note": "Explainer at the top of the Load Avastar section.",
 		"load.placeholder": "Placeholder of the token-id input.",
 		"load.button": "The load button.",

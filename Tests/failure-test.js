@@ -76,7 +76,7 @@ async function run(name, opts) {
 	// Let the layer blob images finish loading and drawing
 	await page.waitForTimeout(1500);
 	const state = await page.evaluate(() => ({
-		gridTiles: document.querySelectorAll("#profileGrid .profileTile").length,
+		gridTiles: document.querySelectorAll("#profileGrid .profileCard").length,
 		canvasDrawn: (() => {
 			const c = document.getElementById("mainCanvas");
 			const px = c

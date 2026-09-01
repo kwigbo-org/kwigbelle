@@ -161,7 +161,9 @@ const { check, strings } = require("./check.js");
 		"wrong title: " + card.title,
 	);
 	check(
-		card.chips.includes("Prime") && card.chips.includes("Gen 1 · Series 2"),
+		card.chips.includes("Prime") &&
+			card.chips.includes("Gen 1 · Series 2") &&
+			card.chips.includes("Female"),
 		"wrong chips: " + JSON.stringify(card.chips),
 	);
 	check(
@@ -307,9 +309,12 @@ const { check, strings } = require("./check.js");
 	);
 	const replicant = await readCard();
 	console.log("25500 card:", JSON.stringify(replicant));
+	// 25500 is one of the 697 gender-0 tokens (all replicants):
+	// the gender chip reads Non-binary, never a blank
 	check(
-		replicant.chips.includes("Replicant"),
-		"replicant chip missing: " + JSON.stringify(replicant.chips),
+		replicant.chips.includes("Replicant") &&
+			replicant.chips.includes("Non-binary"),
+		"replicant chips missing kind/gender: " + JSON.stringify(replicant.chips),
 	);
 	check(
 		!replicant.chips.some((c) => c.includes("Series")),
@@ -354,7 +359,8 @@ const { check, strings } = require("./check.js");
 	console.log("50 card:", JSON.stringify(founder));
 	check(
 		founder.chips.includes("Founder") &&
-			founder.chips.includes("Gen 1 · Series 0"),
+			founder.chips.includes("Gen 1 · Series 0") &&
+			founder.chips.includes("Female"),
 		"founder chips wrong: " + JSON.stringify(founder.chips),
 	);
 	check(

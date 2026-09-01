@@ -122,7 +122,7 @@ announce();
 	// the grid silently with no button and no chooser
 	await page.reload();
 	await page.waitForFunction(
-		() => document.querySelectorAll("#profileGrid .profileTile").length === 3,
+		() => document.querySelectorAll("#profileGrid .profileCard").length === 3,
 		{ timeout: 20000 },
 	);
 	const buttonAfter = await page.evaluate(

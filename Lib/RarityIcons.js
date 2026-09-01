@@ -101,6 +101,19 @@ export function kindLabel(tokenId, kind) {
 	return "Prime";
 }
 
+/// Token gender labels (contract enum: 0 any / 1 male / 2
+/// female). Collection vocabulary at its design-token source, not
+/// editorial copy (docs/tads/wallet-cards.md Decision 5). All 697
+/// gender-0 tokens are replicants; they read as "Non-binary"
+/// (operator decision 2026-09-01) - no surface ever shows a blank.
+const GENDERS = ["Non-binary", "Male", "Female"];
+
+/// - Parameter gender: The token's gender (0-2)
+/// - Returns: The display label; unknown values read as gender 0
+export function genderLabel(gender) {
+	return GENDERS[gender] || GENDERS[0];
+}
+
 /// A small flame glyph for burned-trait marks. Fills with
 /// currentColor so the CSS --burned token is the ONE definition of
 /// the ember orange (containers set `color: var(--burned)`).

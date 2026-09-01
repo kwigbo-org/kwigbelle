@@ -78,9 +78,9 @@ window.ethereum = {
 	// highlight settles on 8014 only once the silent swap lands)
 	await page.waitForFunction(
 		() =>
-			document.querySelectorAll("#profileGrid .profileTile").length === 3 &&
+			document.querySelectorAll("#profileGrid .profileCard").length === 3 &&
 			document.getElementById("preloader")?.style.opacity === "0" &&
-			document.querySelector(".profileTile.current")?.dataset.token === "8014",
+			document.querySelector(".profileCard.current")?.dataset.token === "8014",
 		{ timeout: 20000 },
 	);
 
@@ -92,7 +92,7 @@ window.ethereum = {
 			.classList.contains("connected"),
 		// Lazy thumbnails: no wallet renders before the drawer opens
 		thumbs: document.querySelectorAll("#profileGrid img").length,
-		currentLabel: document.querySelector(".profileTile.current").dataset.token,
+		currentLabel: document.querySelector(".profileCard.current").dataset.token,
 	}));
 	console.log("before open:", JSON.stringify(closed));
 	// The handle carries the always-visible presence dot
@@ -143,14 +143,138 @@ window.ethereum = {
 	);
 	await page.screenshot({ path: "profile-open.png" });
 
+	// Trading cards (docs/tads/wallet-cards.md): tier frame + stat
+	// strip fill from the local corpus. 8014: score 36 Uncommon
+	// (#2ECC71), female prime S2. 25470: score 45 Rare (#F5A623),
+	// gender-0 replicant -> Non-binary, never a blank.
+	const cardFront = (token) =>
+		page.evaluate((id) => {
+			const card = document.querySelector(`.profileCard[data-token="${id}"]`);
+			const front = card.querySelector(".cardFront");
+			return {
+				id: card.querySelector(".cardId").innerText,
+				stats: card.querySelector(".cardStatLine").innerText,
+				frame: getComputedStyle(front).borderColor,
+				icons: card.querySelectorAll(".cardStatLine .rarityIcon").length,
+				loadLabel: card.querySelector(".cardLoad").innerText,
+			};
+		}, String(token));
+	await page.waitForFunction(
+		() =>
+			[...document.querySelectorAll(".cardStatLine")].every(
+				(line) => line.innerText.length > 0,
+			),
+		{ timeout: 15000 },
+	);
+	const front8014 = await cardFront(8014);
+	const front25470 = await cardFront(25470);
+	console.log("card fronts:", JSON.stringify({ front8014, front25470 }));
+	check(front8014.id === "#8014", "card id wrong: " + front8014.id);
+	check(
+		front8014.stats === "36 · Female · " + Strings.cards.series(2),
+		"8014 stat strip wrong: " + front8014.stats,
+	);
+	check(
+		front8014.frame === "rgb(46, 204, 113)",
+		"8014 tier frame not Uncommon green: " + front8014.frame,
+	);
+	check(front8014.icons === 1, "stat strip missing its tier icon");
+	check(
+		front8014.loadLabel === Strings.cards.load,
+		"load button label wrong: " + front8014.loadLabel,
+	);
+	check(
+		front25470.stats === "45 · Non-binary · Replicant",
+		"gender-0 replicant strip wrong: " + front25470.stats,
+	);
+	check(
+		front25470.frame === "rgb(245, 166, 35)",
+		"25470 tier frame not Rare amber: " + front25470.frame,
+	);
+
+	// Flip 8014: the back builds lazily with the identity facts
+	// (zero burns -> mint condition, UB anchors u2=1/u3=41, the
+	// frozen minter as an etherscan link)
+	const minters = require("../Tools/data/minters.json");
+	const minter8014 = minters.addresses[minters.minterIndex["8014"]];
+	await page
+		.locator('.profileCard[data-token="8014"] .cardFront .cardFlip')
+		.click();
+	await page.waitForFunction(
+		(expected) =>
+			document.querySelector('.profileCard[data-token="8014"] .cardBackTitle')
+				?.innerText === expected &&
+			!!document.querySelector('.profileCard[data-token="8014"] .cardMinter'),
+		Strings.traits.identityTitle(8014),
+		{ timeout: 15000 },
+	);
+	const back8014 = await page.evaluate(() => {
+		const card = document.querySelector('.profileCard[data-token="8014"]');
+		return {
+			flipped: card.classList.contains("flipped"),
+			lines: [...card.querySelectorAll(".cardBackLine")].map(
+				(line) => line.innerText,
+			),
+			minter: card.querySelector(".cardMinter").innerText,
+			minterHref: card.querySelector(".cardMinter").href,
+		};
+	});
+	console.log("8014 back:", JSON.stringify(back8014));
+	check(back8014.flipped, "flip affordance did not flip the card");
+	check(
+		back8014.lines.includes(Strings.traits.score(36, "Uncommon")),
+		"back missing the score line: " + JSON.stringify(back8014.lines),
+	);
+	check(
+		back8014.lines.includes("Female · Prime · " + Strings.traits.series(2)),
+		"back missing the facts line: " + JSON.stringify(back8014.lines),
+	);
+	check(
+		back8014.lines.includes(Strings.traits.mintCondition),
+		"back missing mint condition: " + JSON.stringify(back8014.lines),
+	);
+	check(
+		back8014.lines.includes(Strings.traits.uniqueByCombos(1, 41)),
+		"back missing the UB line: " + JSON.stringify(back8014.lines),
+	);
+	check(
+		back8014.minter ===
+			Strings.traits.mintedBy(
+				minter8014.slice(0, 6) + "…" + minter8014.slice(-4),
+			) && back8014.minterHref === "https://etherscan.io/address/" + minter8014,
+		"back minter link wrong: " + JSON.stringify(back8014),
+	);
+
+	// One card at a time: flipping 25470 flips 8014 home; the ✕ on
+	// the back flips the last one home too
+	await page
+		.locator('.profileCard[data-token="25470"] .cardFront .cardFlip')
+		.click();
+	await page.waitForFunction(
+		() =>
+			document.querySelectorAll(".profileCard.flipped").length === 1 &&
+			document
+				.querySelector('.profileCard[data-token="25470"]')
+				.classList.contains("flipped"),
+		{ timeout: 5000 },
+	);
+	await page
+		.locator('.profileCard[data-token="25470"] .cardBack .cardFlip')
+		.click();
+	await page.waitForFunction(
+		() => document.querySelectorAll(".profileCard.flipped").length === 0,
+		{ timeout: 5000 },
+	);
+	console.log("flip discipline holds");
+
 	// Pick the second Avastar: loads it and moves
 	// the highlight
-	await page.locator("#profileGrid .profileTile").nth(1).click();
+	await page.locator("#profileGrid .profileCard").nth(1).click();
 	// The drawer stays OPEN across a pick (operator QA 2026-08-28)
 	await page.waitForFunction(
 		() =>
 			document.getElementById("preloader")?.style.opacity === "0" &&
-			document.querySelector(".profileTile.current")?.dataset.token !== "8014",
+			document.querySelector(".profileCard.current")?.dataset.token !== "8014",
 		{ timeout: 15000 },
 	);
 	check(
@@ -161,8 +285,8 @@ window.ethereum = {
 	);
 	await page.waitForTimeout(500);
 	const picked = await page.evaluate(() => ({
-		current: document.querySelector(".profileTile.current")?.dataset.token,
-		currents: document.querySelectorAll(".profileTile.current").length,
+		current: document.querySelector(".profileCard.current")?.dataset.token,
+		currents: document.querySelectorAll(".profileCard.current").length,
 	}));
 	console.log("picked:", JSON.stringify(picked));
 	check(
@@ -171,6 +295,21 @@ window.ethereum = {
 	);
 	check(picked.currents === 1, "more than one tile highlighted");
 	await page.screenshot({ path: "profile-picked.png" });
+
+	// The Load button picks too (and the drawer still stays open)
+	await page.locator('.profileCard[data-token="25470"] .cardLoad').click();
+	await page.waitForFunction(
+		() =>
+			document.getElementById("preloader")?.style.opacity === "0" &&
+			document.querySelector(".profileCard.current")?.dataset.token === "25470",
+		{ timeout: 15000 },
+	);
+	check(
+		await page.evaluate(() =>
+			document.getElementById("sidePanel").classList.contains("open"),
+		),
+		"Load button pick closed the drawer",
+	);
 
 	// Log out: the drawer returns to Link Wallet, the badge and
 	// grid clear, and the choice persists
@@ -182,7 +321,7 @@ window.ethereum = {
 		badge: document
 			.getElementById("profileHandle")
 			.classList.contains("connected"),
-		tiles: document.querySelectorAll("#profileGrid .profileTile").length,
+		tiles: document.querySelectorAll("#profileGrid .profileCard").length,
 		stored: localStorage.getItem("kwigbelle.wallet"),
 		flag: localStorage.getItem("kwigbelle.disconnected"),
 	}));
@@ -204,7 +343,7 @@ window.ethereum = {
 	);
 	await page.waitForTimeout(800);
 	const afterReload = await page.evaluate(() => ({
-		tiles: document.querySelectorAll("#profileGrid .profileTile").length,
+		tiles: document.querySelectorAll("#profileGrid .profileCard").length,
 		badge: document
 			.getElementById("profileHandle")
 			.classList.contains("connected"),
@@ -221,11 +360,11 @@ window.ethereum = {
 	await page.click(".connectButton");
 	await page.waitForFunction(
 		() =>
-			document.querySelectorAll("#profileGrid .profileTile").length === 3 &&
+			document.querySelectorAll("#profileGrid .profileCard").length === 3 &&
 			document
 				.getElementById("profileHandle")
 				.classList.contains("connected") &&
-			document.querySelector(".profileTile.current")?.dataset.token ===
+			document.querySelector(".profileCard.current")?.dataset.token ===
 				"8014" &&
 			document.getElementById("preloader")?.style.opacity === "0",
 		{ timeout: 20000 },
@@ -241,8 +380,8 @@ window.ethereum = {
 	await page.click(".connectButton");
 	await page.waitForFunction(
 		() =>
-			document.querySelectorAll("#profileGrid .profileTile").length === 3 &&
-			document.querySelector(".profileTile.current")?.dataset.token === "8014",
+			document.querySelectorAll("#profileGrid .profileCard").length === 3 &&
+			document.querySelector(".profileCard.current")?.dataset.token === "8014",
 		{ timeout: 20000 },
 	);
 	console.log("same-token reconnect keeps the highlight");

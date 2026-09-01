@@ -87,41 +87,169 @@
 
 #profileGrid {
 	display: grid;
-	grid-template-columns: repeat(auto-fill, 64px);
-	gap: 10px;
-	/* Room so the tiles' shadows aren't clipped by the column */
+	grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+	gap: 12px;
+	/* Room so the cards' shadows and highlight aren't clipped */
 	padding: 4px;
 }
 
-.profileTile {
-	width: 64px;
-	height: 64px;
-	border-radius: 50%;
-	border: 2px solid var(--border);
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
-	background: rgba(21, 4, 55, 0.6);
-	overflow: hidden;
+/* Wallet trading cards (docs/tads/wallet-cards.md): tier-framed
+   flip cards. --cardTier is set per token from RarityIcons; the
+   faces read it for their frame color. */
+.profileCard {
+	aspect-ratio: 5 / 7;
+	perspective: 700px;
+	position: relative;
 	cursor: pointer;
-	display: flex;
-	align-items: center;
-	justify-content: center;
 	-webkit-tap-highlight-color: transparent;
 }
 
-.profileTile.current {
-	border-color: var(--heading);
+.profileCard.current {
+	outline: 2px solid var(--heading);
+	outline-offset: 2px;
+	border-radius: 10px;
 }
 
-.profileTile img {
+.cardInner {
+	position: absolute;
+	inset: 0;
+	transform-style: preserve-3d;
+	transition: transform 0.45s ease;
+}
+
+.profileCard.flipped .cardInner {
+	transform: rotateY(180deg);
+}
+
+.cardFront,
+.cardBack {
+	position: absolute;
+	inset: 0;
+	backface-visibility: hidden;
+	-webkit-backface-visibility: hidden;
+	border-radius: 10px;
+	border: 2px solid var(--cardTier, var(--border));
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+	background: rgba(21, 4, 55, 0.75);
+	overflow: hidden;
+	display: flex;
+	flex-direction: column;
+}
+
+.cardBack {
+	transform: rotateY(180deg);
+	padding: 8px;
+	gap: 5px;
+	overflow-y: auto;
+	background: rgba(21, 4, 55, 0.95);
+}
+
+.cardArt {
+	flex: 1;
+	min-height: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	overflow: hidden;
+}
+
+.cardArt img {
 	width: 100%;
 	height: 100%;
+	object-fit: cover;
 	pointer-events: none;
 }
 
-.profileTile span {
+.cardArt span {
 	font-size: 13px;
 	color: var(--text);
 	pointer-events: none;
+}
+
+.cardStats {
+	padding: 4px 8px 0;
+}
+
+.cardId {
+	font-size: 13px;
+	font-weight: 600;
+	color: var(--heading);
+}
+
+.cardStatLine {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	min-height: 15px;
+	font-size: 11px;
+	color: var(--muted);
+	white-space: nowrap;
+}
+
+.cardStatLine .rarityIcon {
+	width: 11px;
+	height: 11px;
+	flex-shrink: 0;
+}
+
+.cardActions {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 4px 8px 7px;
+}
+
+.cardLoad {
+	padding: 2px 12px;
+	border: 1px solid var(--cardTier, var(--border));
+	border-radius: 12px;
+	font-size: 11px;
+	color: var(--text);
+}
+
+.cardFlip {
+	min-width: 22px;
+	text-align: center;
+	font-size: 13px;
+	color: var(--muted);
+}
+
+.cardBackTop {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.cardBackTitle {
+	font-size: 12px;
+	font-weight: 600;
+	color: var(--heading);
+}
+
+.cardBackLine {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	font-size: 10px;
+	color: var(--muted);
+}
+
+.cardBackLine .rarityIcon {
+	width: 11px;
+	height: 11px;
+	flex-shrink: 0;
+}
+
+.cardBackBurned {
+	color: var(--burned);
+}
+
+.cardMinter {
+	font-size: 10px;
+	color: var(--muted);
+	text-decoration: underline;
+	text-underline-offset: 2px;
+	-webkit-tap-highlight-color: transparent;
 }
 
 .connectButton {
@@ -266,6 +394,11 @@
 @media (prefers-reduced-motion: reduce) {
 	.panelHandle.statusDot.connected::after {
 		animation: none;
+	}
+
+	/* Card flips become an instant face swap */
+	.cardInner {
+		transition: none;
 	}
 }
 
