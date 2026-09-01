@@ -127,7 +127,8 @@ const { check } = require("./check.js");
 	);
 	check(
 		card.minter ===
-			`Minted by ${minter8014.slice(0, 6)}\u2026${minter8014.slice(-4)}` &&
+			`Originally scrolled for & teleported (minted) by ` +
+				`${minter8014.slice(0, 6)}\u2026${minter8014.slice(-4)}` &&
 			card.minterTitle === minter8014,
 		"minter line wrong: " + JSON.stringify([card.minter, card.minterTitle]),
 	);
