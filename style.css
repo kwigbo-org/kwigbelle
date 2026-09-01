@@ -219,6 +219,8 @@
 
 .cardFilter {
 	width: 100%;
+	/* width:100% + padding must not overflow the drawer column */
+	box-sizing: border-box;
 	padding: 8px 12px;
 	border-radius: 10px;
 	border: 1px solid var(--border-soft);
@@ -468,6 +470,8 @@
 	width: 100%;
 	height: 100%;
 	overflow-y: auto;
+	/* Drawers scroll vertically only - no sideways wiggle */
+	overflow-x: hidden;
 	box-sizing: border-box;
 	padding: 12px;
 	display: none;

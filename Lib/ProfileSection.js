@@ -145,8 +145,8 @@ export default class ProfileSection {
 	}
 
 	/// Build the owned-Avastars grid as trading cards
-	/// (docs/tads/wallet-cards.md): stats front + Load, ⓘ flips to
-	/// a details back
+	/// (docs/tads/wallet-cards.md): tap-to-load stats front, ⓘ
+	/// flips to a details back
 	///
 	/// - Parameter tokenIds: The owned token ids to list
 	buildGrid(tokenIds) {
@@ -209,9 +209,9 @@ export default class ProfileSection {
 		}
 	}
 
-	/// A card's front face: the composed art, the stat strip, the
-	/// Load button, and the ⓘ flip affordance. A tap anywhere else
-	/// on the front loads too — the old whole-tile behavior.
+	/// A card's front face: the composed art, the stat strip, and
+	/// the ⓘ flip affordance floating over the art corner. The
+	/// whole front is the tap-to-load surface (operator QA).
 	cardFront(tokenId) {
 		const front = document.createElement("div");
 		front.setAttribute("class", "cardFront");
@@ -304,12 +304,18 @@ export default class ProfileSection {
 	async applyFilter() {
 		const query = this.filterInput.value.trim().toLowerCase();
 		const generation = this.buildGeneration;
+		// Rapid typing overlaps async calls (the first uncached pass
+		// awaits per token): only the NEWEST invocation may write
+		// visibility, or a stale query's results land last (review
+		// catch, all four panels)
+		this.filterSeq = (this.filterSeq || 0) + 1;
+		const seq = this.filterSeq;
 		for (const tokenId of this.ownedTokenIds) {
 			let match = query === "";
 			if (!match) {
 				if (this.searchText[tokenId] === undefined) {
 					this.searchText[tokenId] = await this.buildSearchText(tokenId);
-					if (generation !== this.buildGeneration) {
+					if (generation !== this.buildGeneration || seq !== this.filterSeq) {
 						return;
 					}
 				}
@@ -362,6 +368,9 @@ export default class ProfileSection {
 		if (previous === id) {
 			return;
 		}
+		if (!this.gridItems[id]) {
+			return;
+		}
 		this.flippedTokenId = id;
 		this.gridItems[id].classList.add("flipped");
 		this.buildCardBack(tokenId);
@@ -380,7 +389,13 @@ export default class ProfileSection {
 		// back title-only forever (review catch)
 		this.backBuilt[tokenId] = true;
 		const generation = this.buildGeneration;
+		// A logout/rebuild between the tap and this build can have
+		// removed the card (review catch): never throw from a click
 		const card = this.gridItems[tokenId];
+		if (!card) {
+			delete this.backBuilt[tokenId];
+			return;
+		}
 		const back = card.querySelector(".cardBack");
 		let info = null;
 		let ub = null;
@@ -472,7 +487,14 @@ export default class ProfileSection {
 			// A token the library cannot compose keeps a factual back
 			// with no trait list (same degradation as the main render)
 		}
-		if (minter) {
+		// picksFor awaited above: re-check the guards so a stale
+		// session never appends to a detached back (review catch)
+		if (generation !== this.buildGeneration || !back.isConnected) {
+			return;
+		}
+		// Hardening: only a well-formed address becomes an outbound
+		// link (the committed table is trusted, but cheap to verify)
+		if (minter && /^0x[0-9a-fA-F]{40}$/.test(minter)) {
 			const minterLine = document.createElement("a");
 			minterLine.setAttribute("class", "cardMinter");
 			minterLine.href = "https://etherscan.io/address/" + minter;
