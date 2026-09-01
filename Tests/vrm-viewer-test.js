@@ -11,7 +11,7 @@
 const fs = require("fs");
 const path = require("path");
 const { chromium } = require("playwright-core");
-const { check } = require("./check.js");
+const { check, strings } = require("./check.js");
 
 const FIXTURE_DIR = path.join(__dirname, "fixtures");
 const FIXTURE = path.join(FIXTURE_DIR, "Avastar_Prime_8014.vrm");
@@ -55,6 +55,7 @@ async function ensureFixture() {
 }
 
 (async () => {
+	const Strings = strings();
 	await ensureFixture();
 	const model = fs.readFileSync(FIXTURE);
 
@@ -148,8 +149,10 @@ async function ensureFixture() {
 	check(gatewayHits === 1, "expected exactly one model fetch");
 	const buttonIn3D = await page.locator(".vrmViewButton").innerText();
 	check(
-		buttonIn3D === "Back to Vector Avastar",
-		"section button should read Back to Vector Avastar in 3D mode: " +
+		buttonIn3D === Strings.vrm.backToVector,
+		"section button should read " +
+			Strings.vrm.backToVector +
+			" in 3D mode: " +
 			buttonIn3D,
 	);
 	check(
@@ -174,7 +177,7 @@ async function ensureFixture() {
 		"vector canvas did not resume drawing after 3D exit",
 	);
 	check(
-		(await page.locator(".vrmViewButton").innerText()) === "View in 3D",
+		(await page.locator(".vrmViewButton").innerText()) === Strings.vrm.viewIn3D,
 		"section button should read View in 3D back in vector mode",
 	);
 
@@ -211,17 +214,17 @@ async function ensureFixture() {
 	}));
 	console.log("loading overlay:", JSON.stringify(overlay));
 	check(
-		overlay.text.includes("Loading 3D model"),
+		overlay.text.startsWith(Strings.vrm.loadingFullProgress("").trimEnd()),
 		"overlay text wrong: " + overlay.text,
 	);
 	check(overlay.hasBar, "loading overlay has no progress bar");
 	check(
-		overlay.hint === "Tap to Cancel",
+		overlay.hint === Strings.vrm.tapToCancel,
 		"overlay cancel hint wrong: " + overlay.hint,
 	);
 	check(
-		overlay.cancelLabel === "Cancel Loading",
-		"section button should read Cancel Loading mid-fetch: " +
+		overlay.cancelLabel === Strings.vrm.cancelLoading,
+		"section button should read the cancel label mid-fetch: " +
 			overlay.cancelLabel,
 	);
 	// Cancel by tapping the overlay itself
@@ -232,7 +235,7 @@ async function ensureFixture() {
 		"cancelled fetch still mounted the 3D view",
 	);
 	check(
-		(await page.locator(".vrmViewButton").innerText()) === "View in 3D",
+		(await page.locator(".vrmViewButton").innerText()) === Strings.vrm.viewIn3D,
 		"section button not back to View in 3D after cancel",
 	);
 	check(
@@ -261,7 +264,7 @@ async function ensureFixture() {
 		"stale 3D fetch mounted over a newer token load",
 	);
 	check(
-		(await page.locator(".vrmViewButton").innerText()) === "View in 3D",
+		(await page.locator(".vrmViewButton").innerText()) === Strings.vrm.viewIn3D,
 		"section button stuck after a superseding token load",
 	);
 	check(

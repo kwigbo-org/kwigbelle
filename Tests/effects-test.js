@@ -14,9 +14,10 @@
 // a drag into moving the face as one piece where an unlocked drag
 // spreads it by depth; and the toggles persist across a reload.
 const { chromium } = require("playwright-core");
-const { check } = require("./check.js");
+const { check, strings } = require("./check.js");
 
 (async () => {
+	const Strings = strings();
 	const browser = await chromium.launch({ channel: "chrome", headless: true });
 	const page = await browser.newPage({ viewport: { width: 800, height: 600 } });
 	const errors = [];
@@ -49,13 +50,13 @@ const { check } = require("./check.js");
 	);
 	console.log("effect rows:", JSON.stringify(rows));
 	for (const label of [
-		"Pause Motion",
-		"Motion",
-		"Follow",
-		"Lock Layers",
-		"Wave",
-		"Trails",
-		"Tilt Follow",
+		Strings.effects.pauseMotion,
+		Strings.effects.motion,
+		Strings.effects.follow,
+		Strings.effects.lockLayers,
+		Strings.effects.wave,
+		Strings.effects.trails,
+		Strings.effects.tiltFollow,
 	]) {
 		check(rows.includes(label), `missing effects control: ${label}`);
 	}
@@ -111,18 +112,18 @@ const { check } = require("./check.js");
 	// Lock layers ships ON (operator QA): a fresh visitor's drag
 	// moves the face as one piece until they opt out
 	check(
-		await toggle("Lock Layers").isChecked(),
+		await toggle(Strings.effects.lockLayers).isChecked(),
 		"Lock Layers should default ON",
 	);
 
 	// Static baseline: Motion 0 + Follow 0 -> the rig settles to rest
-	await setSlider("Motion", 0);
-	await setSlider("Follow", 0);
+	await setSlider(Strings.effects.motion, 0);
+	await setSlider(Strings.effects.follow, 0);
 	await waitForRest("baseline at Motion 0 / Follow 0");
 	console.log("baseline at rest:", JSON.stringify(await rigState()));
 
 	// WAVE animates the resting rig (unscaled by Motion), stops off
-	await toggle("Wave").check();
+	await toggle(Strings.effects.wave).check();
 	await page.waitForFunction(
 		() =>
 			window.kwigbelleScene.layerSprings.springs.some(
@@ -131,7 +132,7 @@ const { check } = require("./check.js");
 		{ timeout: 5000 },
 	);
 	console.log("wave moving:", JSON.stringify(await rigState()));
-	await toggle("Wave").uncheck();
+	await toggle(Strings.effects.wave).uncheck();
 	await waitForRest("after Wave off");
 
 	// POKE: with Motion 0 AND Follow 0 only the impulse can move
@@ -193,7 +194,7 @@ const { check } = require("./check.js");
 	await page.waitForTimeout(350);
 	const cleanCount = await intermediateCount();
 	await waitForRest("clean-motion sample");
-	await toggle("Trails").check();
+	await toggle(Strings.effects.trails).check();
 	await page.mouse.click(260, 300);
 	await page.waitForTimeout(350);
 	const trailsCount = await intermediateCount();
@@ -206,7 +207,7 @@ const { check } = require("./check.js");
 		`trails left no ghosts (${cleanCount} -> ${trailsCount})`,
 	);
 	check(cornerAfter === 255, "backdrop obscured while Trails on");
-	await toggle("Trails").uncheck();
+	await toggle(Strings.effects.trails).uncheck();
 	await page.waitForTimeout(600);
 	check((await cornerAlpha()) === 255, "backdrop did not survive Trails off");
 	await waitForRest("after trails scene");
@@ -214,8 +215,8 @@ const { check } = require("./check.js");
 	// TILT: enable, feed a baseline then a tilted reading; the rig
 	// holds a steady offset (Follow drives the reach), and returns
 	// to rest at neutral
-	await setSlider("Follow", 1);
-	await toggle("Tilt Follow").check();
+	await setSlider(Strings.effects.follow, 1);
+	await toggle(Strings.effects.tiltFollow).check();
 	await page.evaluate(() => {
 		window.dispatchEvent(
 			new DeviceOrientationEvent("deviceorientation", { beta: 40, gamma: 0 }),
@@ -241,7 +242,7 @@ const { check } = require("./check.js");
 		);
 	});
 	await waitForRest("back at neutral tilt");
-	await toggle("Tilt Follow").uncheck();
+	await toggle(Strings.effects.tiltFollow).uncheck();
 
 	// LOCK LAYERS (docs/tads/info-tab.md Decision 4): dragging with
 	// the toggle off separates the layers by depth-scaled reach;
@@ -278,7 +279,7 @@ const { check } = require("./check.js");
 	await waitForRest("after locked drag");
 
 	// Opt out and hold the same drag: the stack spreads by depth
-	await toggle("Lock Layers").uncheck();
+	await toggle(Strings.effects.lockLayers).uncheck();
 	await page.mouse.move(200, 300);
 	await page.mouse.down();
 	await page.waitForFunction(
@@ -294,13 +295,13 @@ const { check } = require("./check.js");
 	);
 	await page.mouse.up();
 	await waitForRest("after unlocked drag");
-	await setSlider("Follow", 0);
+	await setSlider(Strings.effects.follow, 0);
 
 	// PERSISTENCE: set the toggles, reload, expect them restored
-	await toggle("Lock Layers").check();
-	await toggle("Wave").check();
-	await toggle("Trails").check();
-	await toggle("Tilt Follow").check();
+	await toggle(Strings.effects.lockLayers).check();
+	await toggle(Strings.effects.wave).check();
+	await toggle(Strings.effects.trails).check();
+	await toggle(Strings.effects.tiltFollow).check();
 	const stored = await page.evaluate(() =>
 		JSON.parse(localStorage.getItem("kwigbelle.effects")),
 	);
@@ -328,10 +329,16 @@ const { check } = require("./check.js");
 		return state;
 	});
 	console.log("restored toggles:", JSON.stringify(restored));
-	check(restored["Lock Layers"] === true, "Lock Layers not restored");
-	check(restored["Wave"] === true, "Wave not restored");
-	check(restored["Trails"] === true, "Trails not restored");
-	check(restored["Tilt Follow"] === true, "Tilt Follow not restored");
+	check(
+		restored[Strings.effects.lockLayers] === true,
+		"Lock layers not restored",
+	);
+	check(restored[Strings.effects.wave] === true, "Wave not restored");
+	check(restored[Strings.effects.trails] === true, "Trails not restored");
+	check(
+		restored[Strings.effects.tiltFollow] === true,
+		"Tilt follow not restored",
+	);
 
 	console.log("errors:", errors.length ? errors : "none");
 	check(errors.length === 0, "page errors: " + JSON.stringify(errors));

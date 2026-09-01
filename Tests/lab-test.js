@@ -4,9 +4,10 @@
 // restores the exact baseline pixels, Reset all works, and loading
 // another token clears overrides.
 const { chromium } = require("playwright-core");
-const { check } = require("./check.js");
+const { check, strings } = require("./check.js");
 
 (async () => {
+	const Strings = strings();
 	const browser = await chromium.launch({ channel: "chrome", headless: true });
 	const page = await browser.newPage({ viewport: { width: 800, height: 600 } });
 	const errors = [];
@@ -183,7 +184,7 @@ const { check } = require("./check.js");
 	}));
 	console.log("override state:", JSON.stringify(overrideState));
 	check(
-		overrideState.was.includes(`Original Trait: ${originalName}`),
+		overrideState.was.includes(Strings.traits.was(originalName)),
 		`original trait "${originalName}" not shown: ` + overrideState.was,
 	);
 	check(overrideState.undoCount === 1, "expected exactly one undo control");

@@ -1,5 +1,5 @@
 const { chromium } = require("playwright-core");
-const { check } = require("./check.js");
+const { check, strings } = require("./check.js");
 
 // Wallet authorized for the site but pinned to Base (0x2105).
 // wallet_switchEthereumChain updates the chain (persisted in
@@ -50,6 +50,7 @@ window.ethereum = {
 `;
 
 (async () => {
+	const Strings = strings();
 	const browser = await chromium.launch({ channel: "chrome", headless: true });
 	const page = await browser.newPage({ viewport: { width: 800, height: 600 } });
 	const alerts = [];
@@ -78,7 +79,7 @@ window.ethereum = {
 	const label = await page.locator(".connectButton").innerText();
 	console.log("button label:", JSON.stringify(label));
 	check(
-		label.includes("Switch to Mainnet"),
+		label.includes(Strings.profile.switchNetwork),
 		"wrong-network button label: " + JSON.stringify(label),
 	);
 	await page.screenshot({ path: "switch-button.png" });
