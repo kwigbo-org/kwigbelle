@@ -87,8 +87,8 @@
 
 #profileGrid {
 	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-	gap: 12px;
+	grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+	gap: 14px;
 	/* Room so the cards' shadows and highlight aren't clipped */
 	padding: 4px;
 }
@@ -128,7 +128,7 @@
 	backface-visibility: hidden;
 	-webkit-backface-visibility: hidden;
 	border-radius: 10px;
-	border: 2px solid var(--cardTier, var(--border));
+	border: 3px solid var(--cardTier, var(--border));
 	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
 	background: rgba(21, 4, 55, 0.75);
 	overflow: hidden;
@@ -167,28 +167,30 @@
 }
 
 .cardStats {
-	padding: 4px 8px 0;
+	padding: 6px 10px 0;
 }
 
 .cardId {
-	font-size: 13px;
-	font-weight: 600;
-	color: var(--heading);
+	font-size: 17px;
+	font-weight: 700;
+	/* The token's tier owns the card: id in the frame color */
+	color: var(--cardTier, var(--heading));
 }
 
 .cardStatLine {
 	display: flex;
 	align-items: center;
-	gap: 4px;
-	min-height: 15px;
-	font-size: 11px;
-	color: var(--muted);
+	gap: 5px;
+	min-height: 18px;
+	font-size: 13px;
+	font-weight: 600;
+	color: var(--text);
 	white-space: nowrap;
 }
 
 .cardStatLine .rarityIcon {
-	width: 11px;
-	height: 11px;
+	width: 13px;
+	height: 13px;
 	flex-shrink: 0;
 }
 
@@ -196,22 +198,24 @@
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
-	padding: 4px 8px 7px;
+	padding: 6px 10px 9px;
 }
 
+/* Filled tier pill: the one punchy action on the card */
 .cardLoad {
-	padding: 2px 12px;
-	border: 1px solid var(--cardTier, var(--border));
-	border-radius: 12px;
-	font-size: 11px;
-	color: var(--text);
+	padding: 4px 18px;
+	background: var(--cardTier, var(--border));
+	border-radius: 14px;
+	font-size: 13px;
+	font-weight: 700;
+	color: #150437;
 }
 
 .cardFlip {
-	min-width: 22px;
+	min-width: 26px;
 	text-align: center;
-	font-size: 13px;
-	color: var(--muted);
+	font-size: 16px;
+	color: var(--text);
 }
 
 .cardBackTop {
@@ -221,22 +225,22 @@
 }
 
 .cardBackTitle {
-	font-size: 12px;
-	font-weight: 600;
-	color: var(--heading);
+	font-size: 15px;
+	font-weight: 700;
+	color: var(--cardTier, var(--heading));
 }
 
 .cardBackLine {
 	display: flex;
 	align-items: center;
-	gap: 4px;
-	font-size: 10px;
-	color: var(--muted);
+	gap: 5px;
+	font-size: 12px;
+	color: var(--text);
 }
 
 .cardBackLine .rarityIcon {
-	width: 11px;
-	height: 11px;
+	width: 13px;
+	height: 13px;
 	flex-shrink: 0;
 }
 
@@ -244,8 +248,41 @@
 	color: var(--burned);
 }
 
+.cardTraits {
+	display: flex;
+	flex-direction: column;
+	gap: 3px;
+	margin-top: 2px;
+	padding-top: 5px;
+	border-top: 1px solid var(--border-soft);
+}
+
+.cardTraitRow {
+	display: flex;
+	align-items: center;
+	gap: 5px;
+	font-size: 11px;
+	color: var(--text);
+	white-space: nowrap;
+}
+
+.cardTraitRow span {
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.cardTraitRow .rarityIcon {
+	width: 11px;
+	height: 11px;
+	flex-shrink: 0;
+}
+
+.cardTraitRow .flameIcon {
+	color: var(--burned);
+}
+
 .cardMinter {
-	font-size: 10px;
+	font-size: 11px;
 	color: var(--muted);
 	text-decoration: underline;
 	text-underline-offset: 2px;

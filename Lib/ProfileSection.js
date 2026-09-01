@@ -372,6 +372,33 @@ export default class ProfileSection {
 		if (ub) {
 			line("cardBackLine", Strings.traits.uniqueByCombos(ub.u2, ub.u3));
 		}
+		// Full trait list (operator QA 2026-09-01): all 12 traits,
+		// tier-marked, burned genes carrying their flame. Gene names
+		// ride as tooltips - the card is too small for both columns.
+		try {
+			const picks = await this.traitComposer.picksFor(tokenId);
+			if (generation === this.buildGeneration && back.isConnected) {
+				const list = document.createElement("div");
+				list.setAttribute("class", "cardTraits");
+				picks.forEach((pick, gene) => {
+					const row = document.createElement("div");
+					row.setAttribute("class", "cardTraitRow");
+					row.setAttribute("title", pick.geneName);
+					row.appendChild(rarityIcon(pick.rarity));
+					const name = document.createElement("span");
+					name.innerText = pick.name;
+					row.appendChild(name);
+					if (burnedMask !== null && burnedMask & (1 << gene)) {
+						row.appendChild(flameIcon());
+					}
+					list.appendChild(row);
+				});
+				back.appendChild(list);
+			}
+		} catch (error) {
+			// A token the library cannot compose keeps a factual back
+			// with no trait list (same degradation as the main render)
+		}
 		if (minter) {
 			const minterLine = document.createElement("a");
 			minterLine.setAttribute("class", "cardMinter");

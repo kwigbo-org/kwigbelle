@@ -215,12 +215,27 @@ window.ethereum = {
 			lines: [...card.querySelectorAll(".cardBackLine")].map(
 				(line) => line.innerText,
 			),
+			traits: [...card.querySelectorAll(".cardTraitRow")].map(
+				(row) => row.innerText,
+			),
+			traitIcons: card.querySelectorAll(".cardTraitRow .rarityIcon").length,
 			minter: card.querySelector(".cardMinter").innerText,
 			minterHref: card.querySelector(".cardMinter").href,
 		};
 	});
 	console.log("8014 back:", JSON.stringify(back8014));
 	check(back8014.flipped, "flip affordance did not flip the card");
+	// Full trait list (operator QA): all 12, gene-ordered, each
+	// with a tier icon; 8014's gene 0 is Mellow Apricot
+	check(
+		back8014.traits.length === 12 && back8014.traitIcons === 12,
+		"back trait list wrong: " + JSON.stringify(back8014.traits),
+	);
+	check(
+		back8014.traits[0] === "Mellow Apricot" &&
+			back8014.traits[11] === "Pigtails",
+		"trait rows out of gene order: " + JSON.stringify(back8014.traits),
+	);
 	check(
 		back8014.lines.includes(Strings.traits.score(36, "Uncommon")),
 		"back missing the score line: " + JSON.stringify(back8014.lines),
