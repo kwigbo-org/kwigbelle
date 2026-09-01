@@ -205,13 +205,24 @@ export default class ProfileSection {
 			const pagerRow = document.createElement("div");
 			pagerRow.setAttribute("class", "cardPagerRow");
 			pagerRow.style.display = "none";
+			// Back-and-forth arrow nav (operator QA: no words) - both
+			// directions labeled for screen readers, wrapping
+			const prev = document.createElement("button");
+			prev.setAttribute("class", "cardPager cardPagerPrev");
+			prev.setAttribute("type", "button");
+			prev.setAttribute("title", Strings.cards.prevPage);
+			prev.setAttribute("aria-label", Strings.cards.prevPage);
+			prev.innerText = "◂";
+			pagerRow.appendChild(prev);
 			const pageNum = document.createElement("span");
 			pageNum.setAttribute("class", "cardPageNum");
 			pagerRow.appendChild(pageNum);
 			const pager = document.createElement("button");
-			pager.setAttribute("class", "cardPager");
+			pager.setAttribute("class", "cardPager cardPagerNext");
 			pager.setAttribute("type", "button");
-			pager.innerText = Strings.cards.nextPage;
+			pager.setAttribute("title", Strings.cards.nextPage);
+			pager.setAttribute("aria-label", Strings.cards.nextPage);
+			pager.innerText = "▸";
 			pagerRow.appendChild(pager);
 			back.appendChild(pagerRow);
 			inner.appendChild(back);
@@ -562,7 +573,8 @@ export default class ProfileSection {
 	wirePager(card, pages) {
 		const pagerRow = card.querySelector(".cardPagerRow");
 		const pageNum = card.querySelector(".cardPageNum");
-		const pager = card.querySelector(".cardPager");
+		const pager = card.querySelector(".cardPagerNext");
+		const prev = card.querySelector(".cardPagerPrev");
 		let current = 0;
 		const show = () => {
 			pages.forEach((page, index) => {
@@ -581,6 +593,11 @@ export default class ProfileSection {
 		pager.addEventListener("click", (event) => {
 			event.stopPropagation();
 			current = (current + 1) % pages.length;
+			show();
+		});
+		prev.addEventListener("click", (event) => {
+			event.stopPropagation();
+			current = (current - 1 + pages.length) % pages.length;
 			show();
 		});
 	}

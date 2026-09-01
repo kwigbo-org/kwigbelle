@@ -245,8 +245,15 @@ window.ethereum = {
 				liveRegion: card
 					.querySelector(".cardBackPages")
 					.getAttribute("aria-live"),
-				pagerTag: card.querySelector(".cardPager").tagName,
-				pagerText: card.querySelector(".cardPager").innerText,
+				pagerTag: card.querySelector(".cardPagerNext").tagName,
+				pagerLabel: card
+					.querySelector(".cardPagerNext")
+					.getAttribute("aria-label"),
+				pagerText: card.querySelector(".cardPagerNext").innerText,
+				prevTag: card.querySelector(".cardPagerPrev").tagName,
+				prevLabel: card
+					.querySelector(".cardPagerPrev")
+					.getAttribute("aria-label"),
 				pageNum: card.querySelector(".cardPageNum").innerText,
 				activeTraitRows: pages[active]
 					? pages[active].querySelectorAll(".cardTraitRow").length
@@ -261,14 +268,17 @@ window.ethereum = {
 	);
 	check(
 		page1.pagerTag === "BUTTON" &&
-			page1.pagerText === Strings.cards.nextPage &&
+			page1.prevTag === "BUTTON" &&
+			page1.prevLabel === Strings.cards.prevPage &&
+			page1.pagerLabel === Strings.cards.nextPage &&
+			page1.pagerText === "▸" &&
 			page1.liveRegion === "polite" &&
 			page1.pageNum === "1 / 3" &&
 			JSON.stringify(page1.ariaHidden) ===
 				JSON.stringify(["false", "true", "true"]),
 		"pager accessibility wrong: " + JSON.stringify(page1),
 	);
-	await page.locator('.profileCard[data-token="8014"] .cardPager').click();
+	await page.locator('.profileCard[data-token="8014"] .cardPagerNext').click();
 	const page2 = await readPager();
 	check(
 		page2.active === 1 &&
@@ -276,13 +286,23 @@ window.ethereum = {
 			page2.pageNum === "2 / 3",
 		"Next Page did not advance: " + JSON.stringify(page2),
 	);
-	await page.locator('.profileCard[data-token="8014"] .cardPager').click();
-	await page.locator('.profileCard[data-token="8014"] .cardPager').click();
+	await page.locator('.profileCard[data-token="8014"] .cardPagerNext').click();
+	await page.locator('.profileCard[data-token="8014"] .cardPagerNext').click();
 	const wrapped = await readPager();
 	check(
 		wrapped.active === 0 && wrapped.pageNum === "1 / 3",
 		"pager did not wrap home: " + JSON.stringify(wrapped),
 	);
+	// Back-and-forth (operator QA): ◂ from page 1 wraps to the
+	// last page, then steps backward normally
+	await page.locator('.profileCard[data-token="8014"] .cardPagerPrev').click();
+	const back3 = await readPager();
+	check(
+		back3.active === 2 && back3.pageNum === "3 / 3",
+		"prev did not wrap to the last page: " + JSON.stringify(back3),
+	);
+	await page.locator('.profileCard[data-token="8014"] .cardPagerPrev').click();
+	check((await readPager()).active === 1, "prev did not step backward");
 	// Full trait list (operator QA): all 12, gene-ordered, each
 	// with a tier icon; 8014's gene 0 is Mellow Apricot
 	check(

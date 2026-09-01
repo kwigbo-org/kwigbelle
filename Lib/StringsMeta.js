@@ -131,8 +131,12 @@ export const StringsMeta = {
 			"Tooltip of the small flip affordance on a wallet card " +
 			"(front and back).",
 		"cards.nextPage":
-			"The button at the bottom of a card back that cycles " +
-			"through its detail pages.",
+			"Accessible label and tooltip of the ▸ arrow that " +
+			"advances a card back's detail pages (the button itself " +
+			"shows only the arrow).",
+		"cards.prevPage":
+			"Accessible label and tooltip of the ◂ arrow that steps " +
+			"a card back's pages backward (arrow only, no words).",
 		"cards.series":
 			"Compact series tag on a card front, e.g. “S2”; the " +
 			"placeholder is the series number.",

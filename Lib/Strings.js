@@ -105,7 +105,8 @@ export const Strings = {
 	cards: {
 		filter: "Filter by trait, id, tier…",
 		details: "Card details",
-		nextPage: "Next Page ▸",
+		nextPage: "Next Page",
+		prevPage: "Last Page",
 		series: (series) => `S${series}`,
 	},
 	// Load Avastar. The settings-drawer section for viewing any
