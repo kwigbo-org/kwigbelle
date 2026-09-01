@@ -259,12 +259,20 @@
 	position: absolute;
 	top: 5px;
 	right: 6px;
-	width: 24px;
-	height: 24px;
-	line-height: 24px;
+	width: 26px;
+	height: 26px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
 	border-radius: 50%;
 	background: rgba(21, 4, 55, 0.85);
 	border: 1px solid var(--border-soft);
+}
+
+.cardFlipIcon {
+	display: block;
+	width: 18px;
+	height: 18px;
 }
 
 .cardFilter {

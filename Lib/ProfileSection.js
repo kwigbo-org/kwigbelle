@@ -1,5 +1,6 @@
 import { Strings } from "./Strings.js";
 import { svgToImage } from "./UIHelpers.js";
+import SidePanel from "./SidePanel.js";
 import {
 	rarityIcon,
 	tierForScore,
@@ -270,13 +271,21 @@ export default class ProfileSection {
 		return front;
 	}
 
-	/// The flip affordance: ⓘ on the front, ✕ on the back. Pure
-	/// glyphs (iconography, not prose); the tooltip is editorial.
+	/// The flip affordance: the info tab's solid i-in-circle on the
+	/// front (operator QA: the text ⓘ sat off-center and read too
+	/// thin over art), ✕ on the back. Iconography, not prose; the
+	/// tooltip is editorial.
 	flipButton(tokenId, glyph) {
 		const flip = document.createElement("div");
 		flip.setAttribute("class", "cardFlip");
 		flip.setAttribute("title", Strings.cards.details);
-		flip.innerText = glyph;
+		if (glyph === "ⓘ") {
+			const icon = SidePanel.infoIcon();
+			icon.setAttribute("class", "cardFlipIcon");
+			flip.appendChild(icon);
+		} else {
+			flip.innerText = glyph;
+		}
 		flip.addEventListener("click", (event) => {
 			event.stopPropagation();
 			this.flipCard(tokenId);
