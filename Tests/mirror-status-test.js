@@ -75,7 +75,7 @@ const STATUS = {
 	// 404s shows pending (red); the row lives in the 3D model section
 	await page.click("#panelHandle");
 	await page.waitForFunction(
-		() => document.querySelector(".vrmBackupText")?.innerText === "Backed up",
+		() => document.querySelector(".vrmBackupText")?.innerText === "Backed Up",
 		{ timeout: 5000 },
 	);
 	check(
@@ -88,7 +88,7 @@ const STATUS = {
 	await page.press("#loadTokenInput", "Enter");
 	await page.waitForFunction(
 		() =>
-			document.querySelector(".vrmBackupText")?.innerText === "Pending backup",
+			document.querySelector(".vrmBackupText")?.innerText === "Pending Backup",
 		{ timeout: 15000 },
 	);
 	check(
@@ -100,7 +100,7 @@ const STATUS = {
 	await page.fill("#loadTokenInput", "8014");
 	await page.press("#loadTokenInput", "Enter");
 	await page.waitForFunction(
-		() => document.querySelector(".vrmBackupText")?.innerText === "Backed up",
+		() => document.querySelector(".vrmBackupText")?.innerText === "Backed Up",
 		{ timeout: 15000 },
 	);
 

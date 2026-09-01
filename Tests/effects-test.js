@@ -49,13 +49,13 @@ const { check } = require("./check.js");
 	);
 	console.log("effect rows:", JSON.stringify(rows));
 	for (const label of [
-		"Pause motion",
+		"Pause Motion",
 		"Motion",
 		"Follow",
-		"Lock layers",
+		"Lock Layers",
 		"Wave",
 		"Trails",
-		"Tilt follow",
+		"Tilt Follow",
 	]) {
 		check(rows.includes(label), `missing effects control: ${label}`);
 	}
@@ -111,8 +111,8 @@ const { check } = require("./check.js");
 	// Lock layers ships ON (operator QA): a fresh visitor's drag
 	// moves the face as one piece until they opt out
 	check(
-		await toggle("Lock layers").isChecked(),
-		"Lock layers should default ON",
+		await toggle("Lock Layers").isChecked(),
+		"Lock Layers should default ON",
 	);
 
 	// Static baseline: Motion 0 + Follow 0 -> the rig settles to rest
@@ -215,7 +215,7 @@ const { check } = require("./check.js");
 	// holds a steady offset (Follow drives the reach), and returns
 	// to rest at neutral
 	await setSlider("Follow", 1);
-	await toggle("Tilt follow").check();
+	await toggle("Tilt Follow").check();
 	await page.evaluate(() => {
 		window.dispatchEvent(
 			new DeviceOrientationEvent("deviceorientation", { beta: 40, gamma: 0 }),
@@ -241,7 +241,7 @@ const { check } = require("./check.js");
 		);
 	});
 	await waitForRest("back at neutral tilt");
-	await toggle("Tilt follow").uncheck();
+	await toggle("Tilt Follow").uncheck();
 
 	// LOCK LAYERS (docs/tads/info-tab.md Decision 4): dragging with
 	// the toggle off separates the layers by depth-scaled reach;
@@ -278,7 +278,7 @@ const { check } = require("./check.js");
 	await waitForRest("after locked drag");
 
 	// Opt out and hold the same drag: the stack spreads by depth
-	await toggle("Lock layers").uncheck();
+	await toggle("Lock Layers").uncheck();
 	await page.mouse.move(200, 300);
 	await page.mouse.down();
 	await page.waitForFunction(
@@ -297,10 +297,10 @@ const { check } = require("./check.js");
 	await setSlider("Follow", 0);
 
 	// PERSISTENCE: set the toggles, reload, expect them restored
-	await toggle("Lock layers").check();
+	await toggle("Lock Layers").check();
 	await toggle("Wave").check();
 	await toggle("Trails").check();
-	await toggle("Tilt follow").check();
+	await toggle("Tilt Follow").check();
 	const stored = await page.evaluate(() =>
 		JSON.parse(localStorage.getItem("kwigbelle.effects")),
 	);
@@ -328,10 +328,10 @@ const { check } = require("./check.js");
 		return state;
 	});
 	console.log("restored toggles:", JSON.stringify(restored));
-	check(restored["Lock layers"] === true, "Lock layers not restored");
+	check(restored["Lock Layers"] === true, "Lock Layers not restored");
 	check(restored["Wave"] === true, "Wave not restored");
 	check(restored["Trails"] === true, "Trails not restored");
-	check(restored["Tilt follow"] === true, "Tilt follow not restored");
+	check(restored["Tilt Follow"] === true, "Tilt Follow not restored");
 
 	console.log("errors:", errors.length ? errors : "none");
 	check(errors.length === 0, "page errors: " + JSON.stringify(errors));

@@ -183,7 +183,7 @@ const { check } = require("./check.js");
 	}));
 	console.log("override state:", JSON.stringify(overrideState));
 	check(
-		overrideState.was.includes(`was: ${originalName}`),
+		overrideState.was.includes(`Original Trait: ${originalName}`),
 		`original trait "${originalName}" not shown: ` + overrideState.was,
 	);
 	check(overrideState.undoCount === 1, "expected exactly one undo control");

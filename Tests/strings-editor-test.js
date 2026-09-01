@@ -239,7 +239,7 @@ const { check } = require("./check.js");
 	await page.waitForFunction(
 		() =>
 			document.querySelector('textarea[data-key="load.button"]')?.value ===
-			"Load",
+			"Load Avastar",
 		{ timeout: 10000 },
 	);
 

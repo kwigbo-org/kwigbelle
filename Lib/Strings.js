@@ -30,128 +30,128 @@ export const Strings = {
 	// in the right-side drawers. Careful: renaming one resets
 	// whether visitors had it collapsed or expanded, one time.
 	panel: {
-		howRarityWorks: "How rarity works",
+		howRarityWorks: "How Avastars Rarity Works",
 		overview: "Overview",
 		traits: "Traits",
 		loadAvastar: "Load Avastar",
 		effects: "Effects",
-		vrm: "3D model",
+		vrm: "3D Model",
 	},
 	// How rarity works (explainer). The educational text in the
-	// info drawer. FROZEN FACTS: score bands, the lottery range,
+	// info drawer. FROZEN FACTS: score bands, the prime id range,
 	// and burn mechanics are verified chain truth - rewording is
 	// fine, changing any number is not.
 	info: {
 		scoreIntro:
-			"Every Avastar carries a rarity score from 1 to 100, assigned by the contract at mint from the rarity of its 12 traits. The score places it in one of five tiers:",
+			"Every Avastar carries a rarity score from 1 to 100. This was calculated by the contract at mint using the rarity of each Avastar’s 12 traits. The score places it in one of five tiers:",
 		traitTiers:
-			"Each trait has its own contract-assigned tier, shown on its card below — each card's outline is tinted by its tier.",
+			"Each trait has its own contract-assigned tier, shown on its card below. Each card's outline is tinted in the color that corresponds with its tier.",
 		uniqueBy:
-			"Unique By counts trait combinations no other Avastar wears: a pair (or triple) of this Avastar's traits found on no other Series 1–5 lottery prime (#200–25,199). Founders, Exclusives, and Replicants didn't play the mint lottery, so they carry no Unique By line.",
+			"This “Unique By” rating counts trait combinations that no other Avastar Prime (Generation 1, Series 1-5, id#200-25,199) has. A pair of these traits is represented as “UB2” (triple, “UB3” etc.).  \n\nNote: We specify Avastar Primes here, as UB Scoring only tallies randomly generated Avastars, which consist solely of Primes. \nMore on this:\nAvastar Primes were minted by utilizing a randomly-generated, scroll-to-choose & mint process. See what that looked like [here➡️](https://avastars.io/scroll-simulator)\n\nFounders & Exclusives had “hand-picked” trait combinations, and were designed & minted before the official launch of the Avastars project, so they are not used in the calculation of UB Scores. Replicants were assembled (minted) by burning hand-picked trait copies off of already minted Avastar Primes, after the end of Avastar Prime minting. Thus they are also not included here.",
 		// Leading space intentional: rendered inline right after the
 		// flame icon (InfoSections.js). Note this comment does not
 		// survive an editor-page regeneration - re-add it when
 		// landing a regenerated file.
 		burned:
-			" When a replicant was minted, each trait it borrowed was burned on its prime. The prime's art is unchanged, but a burned trait could never mint another replicant — and with the factory closed and the contract locked, burn marks are frozen forever. A prime with no burns is in mint condition.",
+			" Every Avastar Prime originally contained one set of 12 facial traits, and, one copy of each of those traits.  In order to create a Replicant, the Replicant Scientist (minter) had to burn 12 trait copies from a combination of 2-5 Avastar Primes. Once a Replicant was minted, each trait copy it took from an Avastar Prime was burned on that Prime. A burned trait copy could never be used again.  With the Replicant Factory now closed (the Replicant minting contract is locked), burn marks are frozen. An Avastar Prime with NO burned traits is in mint condition.",
 	},
 	// Identity card & trait cards. The info drawer's Overview
 	// card and per-trait cards.
 	traits: {
-		identityTitle: (tokenId) => `Avastar #${tokenId}`,
-		identityTitleUnknown: "Avastar",
+		identityTitle: (tokenId) => `Avastar ID#${tokenId}`,
+		identityTitleUnknown: "Avastar Unknown",
 		series: (series) => `Gen 1 · Series ${series}`,
-		mintCondition: "Mint condition",
+		mintCondition: "Mint Condition",
 		mintedBy: (address) =>
-			`Originally scrolled for & teleported (minted) by ${address}`,
+			`Originally Scrolled & Teleported (minted) by ${address}`,
 		score: (ranking, tierName) => `Score ${ranking} · ${tierName}`,
-		burnedCount: (count) => `${count} of 12 traits burned`,
+		burnedCount: (count) => `${count} of 12 Trait Copies Burned`,
 		uniqueByCombos: (u2, u3) =>
-			`Unique-By combos: 2-trait ${u2} · 3-trait ${u3}`,
-		uniqueByQualifier: "(all 12 traits, among Series 1-5 primes)",
-		unavailable: "Trait data unavailable for this display",
+			`Unique-By Combos: 2-Trait ${u2} · 3-Trait ${u3}`,
+		uniqueByQualifier: "(All 12 traits, among Series 1-5 Primes)",
+		unavailable: "Oops! Trait data unavailable for this display 🫣",
 		threeDNote:
-			"The 3D model shows the original on-chain Avastar. Trait preview and visibility apply to the vector view.",
-		resetAll: "↺ Reset all traits",
-		previewOnly: "Preview only — nothing is changed on chain.",
+			"The 3D model view shows the original on-chain Avastar, and ID-accurate background traits. Trait preview and visibility apply to the vector view only.",
+		resetAll: "↺ Reset All Traits to Original",
+		previewOnly: "PREVIEW ONLY — nothing is changed on-chain. 😮‍💨",
 		edit: "✎ Edit",
-		was: (name) => `was: ${name}`,
+		was: (name) => `Original Trait: ${name}`,
 		undo: "↺ undo",
 		burnedTag: "Burned",
 	},
 	// Trait chooser. The popup for picking a different trait on
 	// a card.
 	modal: {
-		allGenders: "all genders",
-		filterPlaceholder: "Filter by name",
-		anyRarity: "Any rarity",
-		anySeries: "Any series",
+		allGenders: "All Genders",
+		filterPlaceholder: "Filter By Trait Name",
+		anyRarity: "Any Rarity",
+		anySeries: "Any Series",
 		seriesOption: (value) => `Series ${value + 1}`,
 	},
 	// Profile drawer (wallet). Wallet connection states and the
 	// owned-Avastars grid.
 	profile: {
 		noWallet:
-			"No Ethereum wallet detected. Install one to see your own Avastars here.",
+			"No Ethereum wallet detected. Connect one to see your own Avastars here.",
 		connected: "Connected",
-		logout: "Log out",
+		logout: "Log Out",
 		switchNetwork: "🔗 Switch to Mainnet",
 		linkWallet: "🔗 Link Wallet",
-		emptyWallet: "No Avastars in this wallet.",
+		emptyWallet: "Oops! No Avastars exist in this wallet.",
 		walletFallbackName: "Wallet",
 	},
 	// Load Avastar. The settings-drawer section for viewing any
 	// token.
 	load: {
-		note: "View any of the 26,617 Avastars by token id — no wallet needed.",
-		placeholder: "Token id",
-		button: "Load",
-		errorNotNumeric: "Enter a numeric token id",
-		errorCheckFailed: "Could not check that token id — try again",
-		errorUnknown: (tokenId) => `No Avastar has token id ${tokenId}`,
+		note: "View any of the 26,617 Avastars by Token ID#— no wallet needed.",
+		placeholder: "Token ID#",
+		button: "Load Avastar",
+		errorNotNumeric: "Enter a Numeric Token ID",
+		errorCheckFailed: "Could not check that Token ID. Please try again.",
+		errorUnknown: (tokenId) => `No Avastar exists with Token ID # ${tokenId}`,
 	},
 	// Effects controls. Labels of the motion/effects toggles and
 	// sliders.
 	effects: {
-		pauseMotion: "Pause motion",
+		pauseMotion: "Pause Motion",
 		motion: "Motion",
 		follow: "Follow",
-		lockLayers: "Lock layers",
+		lockLayers: "Lock Layers",
 		wave: "Wave",
 		trails: "Trails",
-		tiltFollow: "Tilt follow",
+		tiltFollow: "Tilt Follow",
 	},
 	// 3D model section & loading. The 3D model panel section,
 	// the center-screen loading overlay, and the failure toast.
 	vrm: {
 		note: "Every Avastar has an assigned 3D model (VRM), fetched from IPFS on demand (~9MB).",
-		mirrorInfoTooltip: "VRM backup status",
+		mirrorInfoTooltip: "VRM Backup Status",
 		download: "⬇ Download VRM",
 		downloadState: (text) => `⬇ ${text}`,
 		viewIn3D: "View in 3D",
-		backToVector: "Back to vector",
-		cancelLoading: "Cancel loading",
-		loadingShort: "Loading model…",
+		backToVector: "Back to Vector Avastar",
+		cancelLoading: "Cancel Loading",
+		loadingShort: "Loading model…please standby…",
 		loadingShortProgress: (progress) => `Loading model… ${progress}`,
-		loadingFull: "Loading 3D model…",
+		loadingFull: "Loading 3D model…please standby…",
 		loadingFullProgress: (progress) => `Loading 3D model… ${progress}`,
-		tapToCancel: "Tap to cancel",
-		unavailable: "3D model unavailable",
-		backupChecking: "Checking backup…",
-		backedUp: "Backed up",
-		backupPending: "Pending backup",
+		tapToCancel: "Tap to Cancel",
+		unavailable: "3D Model Currently Unavailable…probably napping…ZZZzzz…",
+		backupChecking: "Checking Backup…",
+		backedUp: "Backed Up",
+		backupPending: "Pending Backup",
 	},
 	// VRM backup modal. The popup behind the ⓘ button in the 3D
 	// model section.
 	mirror: {
-		title: "VRM backup",
-		checking: "Checking the mirror…",
+		title: "VRM Backup",
+		checking: "Checking the Mirror…",
 		notPublished:
 			"The backup status isn't published yet - the mirror capture hasn't reported from this site's bucket.",
 		headline: (captured, total, percent) =>
 			`${captured} of ${total} models backed up (${percent}%)`,
 		gbMirrored: (gb) => `${gb} GB safely mirrored`,
-		knownMissingTitle: "Known missing",
+		knownMissingTitle: "Known Missing",
 		knownRange: (from, until, count) =>
 			`#${from} – #${until} · ${count} tokens`,
 		reasonSource: "Missing from the IPFS source — raised with the project",
