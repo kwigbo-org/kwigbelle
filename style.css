@@ -272,8 +272,8 @@
 .cardFlipIcon {
 	display: block;
 	/* Fills the chip: the dark backing shows only as a thin ring */
-	width: 21px;
-	height: 21px;
+	width: 22.5px;
+	height: 22.5px;
 }
 
 .cardFilter {
