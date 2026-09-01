@@ -150,9 +150,9 @@ async function ensureFixture() {
 	const buttonIn3D = await page.locator(".vrmViewButton").innerText();
 	check(
 		buttonIn3D === Strings.vrm.backToVector,
-		"section button should not read " +
-			buttonIn3D +
-			" in 3D mode; got " +
+		"section button should read " +
+			Strings.vrm.backToVector +
+			" in 3D mode: " +
 			buttonIn3D,
 	);
 	check(

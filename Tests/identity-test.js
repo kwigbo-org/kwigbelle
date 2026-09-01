@@ -9,7 +9,7 @@ const { chromium } = require("playwright-core");
 const { check, strings } = require("./check.js");
 
 (async () => {
-	const Strings = await strings();
+	const Strings = strings();
 	const browser = await chromium.launch({ channel: "chrome", headless: true });
 	const page = await browser.newPage({ viewport: { width: 800, height: 600 } });
 	const errors = [];
