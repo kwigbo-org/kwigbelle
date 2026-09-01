@@ -10,10 +10,35 @@ import { TIERS, rarityIcon, flameIcon } from "./RarityIcons.js";
 /// band edges (<33 / <41 / <50 / <60 / 60+)
 const TIER_RANGES = ["1–32", "33–40", "41–49", "50–59", "60–100"];
 
+/// Explainer strings support two bits of structure the editor can
+/// type directly: newlines (innerText renders them as breaks) and
+/// [text](url) links. Everything is built as DOM nodes - no
+/// innerHTML - so string content can never inject markup.
+const LINK_PATTERN = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g;
+
+function appendText(element, text) {
+	if (!text) return;
+	const span = document.createElement("span");
+	span.innerText = text;
+	element.appendChild(span);
+}
+
 function paragraph(text) {
 	const element = document.createElement("p");
 	element.setAttribute("class", "infoText");
-	element.innerText = text;
+	let last = 0;
+	for (const match of text.matchAll(LINK_PATTERN)) {
+		appendText(element, text.slice(last, match.index));
+		const link = document.createElement("a");
+		link.setAttribute("class", "infoLink");
+		link.href = match[2];
+		link.target = "_blank";
+		link.rel = "noopener noreferrer";
+		link.innerText = match[1];
+		element.appendChild(link);
+		last = match.index + match[0].length;
+	}
+	appendText(element, text.slice(last));
 	return element;
 }
 

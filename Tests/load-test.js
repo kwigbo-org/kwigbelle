@@ -78,7 +78,7 @@ const { check } = require("./check.js");
 	};
 	const junk = await submit("abc");
 	check(
-		junk.error.includes("numeric"),
+		junk.error.toLowerCase().includes("numeric"),
 		"non-numeric id not rejected: " + junk.error,
 	);
 	const unknown = await submit("999999");

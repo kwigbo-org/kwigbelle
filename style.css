@@ -312,6 +312,13 @@
 	color: var(--muted);
 }
 
+.infoLink {
+	color: inherit;
+	text-decoration: underline;
+	text-underline-offset: 3px;
+	-webkit-tap-highlight-color: transparent;
+}
+
 .infoTierList {
 	display: flex;
 	flex-direction: column;

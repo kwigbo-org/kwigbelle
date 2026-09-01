@@ -1,7 +1,7 @@
 // VRM viewer (docs/tads/vrm-viewer.md Step 3, entry points
 // reshaped by docs/tads/profile-drawer.md): the panel's "View in
 // 3D" button fetches with progress and renders a non-blank WebGL
-// canvas, "Back to vector" restores the vector view, the byte
+// canvas, "Back to Vector Avastar" restores the vector view, the byte
 // cache makes the second entry instant, a tap on the loading
 // overlay cancels, and a token load mid-fetch supersedes the 3D
 // entry entirely. All network is routed to a local fixture; the
@@ -148,8 +148,8 @@ async function ensureFixture() {
 	check(gatewayHits === 1, "expected exactly one model fetch");
 	const buttonIn3D = await page.locator(".vrmViewButton").innerText();
 	check(
-		buttonIn3D === "Back to vector",
-		"section button should read Back to vector in 3D mode: " + buttonIn3D,
+		buttonIn3D === "Back to Vector Avastar",
+		"section button should read Back to Vector Avastar in 3D mode: " + buttonIn3D,
 	);
 	check(
 		!(await page.evaluate(() =>
@@ -215,12 +215,12 @@ async function ensureFixture() {
 	);
 	check(overlay.hasBar, "loading overlay has no progress bar");
 	check(
-		overlay.hint === "Tap to cancel",
+		overlay.hint === "Tap to Cancel",
 		"overlay cancel hint wrong: " + overlay.hint,
 	);
 	check(
-		overlay.cancelLabel === "Cancel loading",
-		"section button should read Cancel loading mid-fetch: " +
+		overlay.cancelLabel === "Cancel Loading",
+		"section button should read Cancel Loading mid-fetch: " +
 			overlay.cancelLabel,
 	);
 	// Cancel by tapping the overlay itself

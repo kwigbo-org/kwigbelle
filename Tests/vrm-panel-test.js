@@ -216,7 +216,7 @@ async function launch(withWallet) {
 		check(limits.noteShown, "read-only note missing in 3D");
 		check(limits.cardCount === 12, "expected all 12 baseline cards in 3D");
 		check(
-			limits.viewButton === "Back to vector",
+			limits.viewButton === "Back to Vector Avastar",
 			"section button label wrong in 3D",
 		);
 

@@ -17,7 +17,7 @@ export const StringsMeta = {
 			title: "How rarity works (explainer)",
 			note:
 				"The educational text in the info drawer. FROZEN FACTS: " +
-				"score bands, the lottery range, and burn mechanics are " +
+				"score bands, the prime id range, and burn mechanics are " +
 				"verified chain truth - rewording is fine, changing any " +
 				"number is not.",
 		},
@@ -62,7 +62,10 @@ export const StringsMeta = {
 		"info.scoreIntro":
 			"First paragraph of the explainer, right above the five " + "tier rows.",
 		"info.traitTiers": "Paragraph after the tier list, about per-trait tiers.",
-		"info.uniqueBy": "Paragraph explaining the Unique By line.",
+		"info.uniqueBy":
+			"Paragraphs explaining the Unique By line. Blank lines " +
+			"(two enters) start a new paragraph, and [text](url) " +
+			"renders as a link.",
 		"info.burned":
 			"The burned-traits note beside the small flame icon. It " +
 			"starts with a space on purpose - the text follows the " +
@@ -75,7 +78,7 @@ export const StringsMeta = {
 			"Identity card chip shown when a prime has no burned traits.",
 		"traits.mintedBy":
 			"Identity card line with the original minter's shortened " +
-			"address, e.g. \u201cOriginally scrolled for & teleported " +
+			"address, e.g. \u201cOriginally Scrolled & Teleported " +
 			"(minted) by 0x47c9\u20260ec7\u201d.",
 		"traits.score": "Identity card line, e.g. “Score 62 · Legendary”.",
 		"traits.burnedCount": "Identity card line, e.g. “3 of 12 traits burned”.",

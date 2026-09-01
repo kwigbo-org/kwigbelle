@@ -112,12 +112,12 @@ window.ethereum = {
 	);
 	check(
 		JSON.stringify(drawerLayout.info) ===
-			JSON.stringify(["How rarity works", "Overview", "Traits"]),
+			JSON.stringify(["How Avastars Rarity Works", "Overview", "Traits"]),
 		"info drawer sections wrong: " + JSON.stringify(drawerLayout.info),
 	);
 	check(
 		JSON.stringify(drawerLayout.settings) ===
-			JSON.stringify(["Load Avastar", "Effects", "3D model"]),
+			JSON.stringify(["Load Avastar", "Effects", "3D Model"]),
 		"settings drawer sections wrong: " + JSON.stringify(drawerLayout.settings),
 	);
 
@@ -240,20 +240,20 @@ window.ethereum = {
 			}
 			section.querySelector(".panelSectionHeader").click();
 		}, title);
-	await toggleSection("3D model");
+	await toggleSection("3D Model");
 	check(
-		(await sectionState("3D model")) === true,
+		(await sectionState("3D Model")) === true,
 		"3D model section did not collapse",
 	);
 	// "How rarity works" defaults to collapsed (operator QA); an
 	// explicit expand must override the default across reloads
 	check(
-		(await sectionState("How rarity works")) === true,
+		(await sectionState("How Avastars Rarity Works")) === true,
 		"rarity explainer did not start collapsed",
 	);
-	await toggleSection("How rarity works");
+	await toggleSection("How Avastars Rarity Works");
 	check(
-		(await sectionState("How rarity works")) === false,
+		(await sectionState("How Avastars Rarity Works")) === false,
 		"rarity explainer did not expand",
 	);
 	await page.reload();
@@ -267,7 +267,7 @@ window.ethereum = {
 		.inputValue();
 	console.log("motion after reload:", motionAfter);
 	check(motionAfter === "0", "motion setting did not survive reload");
-	const collapsedAfter = await sectionState("3D model");
+	const collapsedAfter = await sectionState("3D Model");
 	const effectsAfter = await sectionState("Effects");
 	console.log(
 		`after reload: 3D model collapsed=${collapsedAfter} Effects collapsed=${effectsAfter}`,
@@ -275,7 +275,7 @@ window.ethereum = {
 	check(collapsedAfter === true, "collapsed section did not survive reload");
 	check(effectsAfter === false, "untouched section came back collapsed");
 	check(
-		(await sectionState("How rarity works")) === false,
+		(await sectionState("How Avastars Rarity Works")) === false,
 		"expanded default-collapsed section reverted after reload",
 	);
 	check(
@@ -284,9 +284,9 @@ window.ethereum = {
 	);
 	// Expand it again (and persist that) so the later steps see the
 	// section layout they expect
-	await toggleSection("3D model");
+	await toggleSection("3D Model");
 	check(
-		(await sectionState("3D model")) === false,
+		(await sectionState("3D Model")) === false,
 		"3D model section did not re-expand",
 	);
 

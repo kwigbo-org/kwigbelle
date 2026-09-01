@@ -42,7 +42,7 @@ const { check } = require("./check.js");
 		].find(
 			(s) =>
 				s.querySelector(".panelSectionHeader span").textContent ===
-				"How rarity works",
+				"How Avastars Rarity Works",
 		);
 		if (!section) return null;
 		return {
@@ -60,7 +60,7 @@ const { check } = require("./check.js");
 	});
 	check(
 		explainer !== null,
-		"How rarity works section missing from info drawer",
+		"How Avastars Rarity Works section missing from info drawer",
 	);
 	console.log("explainer tiers:", JSON.stringify(explainer.tiers));
 	check(
@@ -80,11 +80,37 @@ const { check } = require("./check.js");
 	);
 	check(
 		explainer.text.includes("1 to 100") &&
-			explainer.text.includes("#200–25,199") &&
+			explainer.text.includes("#200-25,199") &&
 			explainer.text.includes("mint condition"),
 		"explainer is missing frozen facts",
 	);
 	check(explainer.collapsed, "rarity explainer should start collapsed");
+
+	// [text](url) strings render as real anchors (InfoSections
+	// paragraph builder) - the scroll-simulator link in Unique By
+	const infoLink = await page.evaluate(() => {
+		const link = document.querySelector("#infoSections .infoLink");
+		return link
+			? {
+					href: link.href,
+					text: link.textContent,
+					target: link.target,
+					rel: link.rel,
+					literal: document
+						.querySelector("#infoSections")
+						.textContent.includes("](http"),
+				}
+			: null;
+	});
+	check(
+		infoLink !== null &&
+			infoLink.href === "https://avastars.io/scroll-simulator" &&
+			infoLink.text.includes("here") &&
+			infoLink.target === "_blank" &&
+			infoLink.rel === "noopener noreferrer" &&
+			!infoLink.literal,
+		"explainer link not rendered as an anchor: " + JSON.stringify(infoLink),
+	);
 
 	const readCard = () =>
 		page.evaluate(() => ({
@@ -116,7 +142,7 @@ const { check } = require("./check.js");
 	);
 	const card = await readCard();
 	console.log("8014 card:", JSON.stringify(card));
-	check(card.title === "Avastar #8014", "wrong title: " + card.title);
+	check(card.title === "Avastar ID#8014", "wrong title: " + card.title);
 	check(
 		card.chips.includes("Prime") && card.chips.includes("Gen 1 · Series 2"),
 		"wrong chips: " + JSON.stringify(card.chips),
@@ -127,7 +153,7 @@ const { check } = require("./check.js");
 	);
 	check(
 		card.minter ===
-			`Originally scrolled for & teleported (minted) by ` +
+			`Originally Scrolled & Teleported (minted) by ` +
 				`${minter8014.slice(0, 6)}\u2026${minter8014.slice(-4)}` &&
 			card.minterTitle === minter8014,
 		"minter line wrong: " + JSON.stringify([card.minter, card.minterTitle]),
@@ -183,7 +209,7 @@ const { check } = require("./check.js");
 		burnedTags: document.querySelectorAll(".traitRow .traitBurned").length,
 	}));
 	console.log("8014 mint state:", JSON.stringify(mintState));
-	check(mintState.chip === "Mint condition", "mint chip wrong/missing");
+	check(mintState.chip === "Mint Condition", "mint chip wrong/missing");
 	check(!mintState.burnedLine, "mint-condition prime shows a burned line");
 	check(mintState.burnedTags === 0, "mint-condition prime shows burned tags");
 
@@ -196,11 +222,11 @@ const { check } = require("./check.js");
 	}));
 	console.log("UB:", JSON.stringify(ubLine));
 	check(
-		ubLine.line === "Unique-By combos: 2-trait 1 · 3-trait 41",
+		ubLine.line === "Unique-By Combos: 2-Trait 1 · 3-Trait 41",
 		"wrong UB line: " + ubLine.line,
 	);
 	check(
-		ubLine.note.includes("Series 1-5 primes"),
+		ubLine.note.includes("Series 1-5 Primes"),
 		"UB qualifier missing: " + ubLine.note,
 	);
 
@@ -256,7 +282,7 @@ const { check } = require("./check.js");
 	await page.waitForFunction(
 		() =>
 			document.querySelector(".identityTitle")?.textContent ===
-			"Avastar #25500",
+			"Avastar ID#25500",
 		{ timeout: 15000 },
 	);
 	const replicant = await readCard();
@@ -300,7 +326,7 @@ const { check } = require("./check.js");
 	await page.press("#loadTokenInput", "Enter");
 	await page.waitForFunction(
 		() =>
-			document.querySelector(".identityTitle")?.textContent === "Avastar #50",
+			document.querySelector(".identityTitle")?.textContent === "Avastar ID#50",
 		{ timeout: 15000 },
 	);
 	const founder = await readCard();
@@ -341,7 +367,7 @@ const { check } = require("./check.js");
 	await page.press("#loadTokenInput", "Enter");
 	await page.waitForFunction(
 		() =>
-			document.querySelector(".identityTitle")?.textContent === "Avastar #8700",
+			document.querySelector(".identityTitle")?.textContent === "Avastar ID#8700",
 		{ timeout: 15000 },
 	);
 	await page.waitForSelector(".identityBurned", {
@@ -357,7 +383,7 @@ const { check } = require("./check.js");
 	}));
 	console.log("8700 burned state:", JSON.stringify(burned));
 	check(
-		burned.line === "5 of 12 traits burned",
+		burned.line === "5 of 12 Trait Copies Burned",
 		"wrong burned line: " + burned.line,
 	);
 	check(!burned.mintChip, "burned prime shows the mint chip");
