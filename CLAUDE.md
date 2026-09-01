@@ -34,25 +34,28 @@ as one piece), the depth-coherent idle retune, and the backdrop's
 own canvas (visible through Trails and behind the 3D view);
 remaining: PR C (wallet-provider transfer history), plus the
 2026-08-28 identity revision (minter line w/ etherscan link,
-tier-colored card outlines, pick keeps the drawer open). ALSO IN
-PROGRESS: docs/tads/vrm-mirror.md — back up all ~26.6k VRMs
-(~285GB; ipfs.io/dweb.link are SHUTTING DOWN, pinata is the sole
-source) to s3://kwigbelle/vrm/. Capture tooling shipped (PRs
-#26/#27/#29/#31/#32: guardrail, parallel workers + run lock,
-shared 429 cooldown, stall auto-rest, --gateway, --from/--until
-two-front split + --merge); a TWO-FRONT capture is mid-flight
-(instance = kubo bitswap lane, tokens 0–13,999; operator's laptop
-= pinata HTTP, 14,000–26,616 — flaky-uplink SSL EOFs absorbed by
-retries), >57% done. MIRROR-FIRST SERVING IS MERGED (PR #39;
-0c103a3 restored): fetchVRM tries kwigbelle.com/vrm/ first,
-gateway race is the fallback; the ⓘ status modal + per-token
-backed-up/pending dot read the same ABSOLUTE mirror. Operator ops
-DONE: bucket CORS (GET/HEAD, origin list, ExposeHeaders),
-stage.kwigbelle.com (CloudFront, CachingDisabled, website-endpoint
-origin), prod distro vrm/* behavior (Origin in cache key +
-CORS-S3Origin) after a live cache-poisoning repro. Endgame when
-capture completes: merge manifests (--merge), --verify 50, commit
-the manifest. COMPLETE: docs/tads/strings.md — Lib/Strings.js
+tier-colored card outlines, pick keeps the drawer open). COMPLETE
+(2026-09-01): docs/tads/vrm-mirror.md — the VRM backup. Every
+fetchable model is mirrored: 26,330 of the 26,530 that exist
+(281+ GB) in s3://kwigbelle/vrm/, with the merged
+--verify-passed manifest committed (Tools/data/vrm-manifest.json,
+-diff). The 287 absent are NOT losses of ours: 23000–23199 (200)
+are a Pinata-side 404 inside a live pin (raised with the original
+project — if anyone produces the files they go straight into the
+bucket, no IPFS needed) and 26530–26616 (87) were minted after
+the collection's one VRM generation batch, so no model ever
+existed. Both blocks render with reasons in the site's ⓘ backup
+modal ("Known missing", PRs #44–#46) and the capture tool grew
+--skip for the dead block (PR #47). If either block is ever
+restored upstream: one capture run (no --skip) folds it in, then
+re-merge/re-commit the manifest and drop the modal's
+KNOWN_MISSING entry. MIRROR-FIRST SERVING IS MERGED (PR #39):
+fetchVRM tries kwigbelle.com/vrm/ first, gateway race is the
+fallback; the ⓘ status modal + per-token backed-up/pending dot
+read the same ABSOLUTE mirror. Operator ops DONE: bucket CORS,
+stage.kwigbelle.com (CloudFront, CachingDisabled,
+website-endpoint origin), prod distro vrm/* behavior (Origin in
+cache key + CORS-S3Origin) after a live cache-poisoning repro. COMPLETE: docs/tads/strings.md — Lib/Strings.js
 (all editorial copy) + avastars-editor.html (self-serve mobile
 copy editor, native share; hand the editor that link). Parked:
 PR #1 wallet LOWs (likely mooted — WalletConnectUI was deleted in

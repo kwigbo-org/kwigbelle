@@ -1,6 +1,6 @@
 # TAD: VRM mirror — back up all Avastar models to operator-owned storage and serve from it
 
-- **Status:** IN REVIEW
+- **Status:** COMPLETE (2026-09-01)
 - **Driver:** Operator (2026-08-25): "we need to get these vrms
   backed up so they don't disapear. That was a lot of hard work
   that noone is managing right now." Preceded by a live outage
@@ -235,3 +235,16 @@ None.
   later run without the flag retries them if Pinata restores the
   block. Pending/ETA and the status line account for skips;
   selftest covers parsing and membership.
+- 2026-09-01 — CAPTURE COMPLETE. Front B finished at 12,330 (its
+  exact ceiling) after the --skip run cleared the last 39
+  stragglers; S3 audit confirms the missing set is precisely
+  23000-23199 (200, Pinata-side) + 26530-26616 (87, never
+  generated). Endgame executed: front A's manifest merged into
+  front B's on the server (26,330 entries, 87 gaps), --verify 50
+  passed, merged manifest copied to the laptop and COMMITTED
+  (this PR) - the durable record: 26,330 / 26,530 fetchable
+  models, 281+ GB, sha256 per file. The two absent blocks remain
+  open human threads (project contact for the 200; only the
+  project can generate the 87); if either lands, one capture run
+  without --skip folds it in, then re-merge/re-commit. Status:
+  IN PROGRESS -> COMPLETE.
