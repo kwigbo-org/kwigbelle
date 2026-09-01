@@ -99,6 +99,10 @@ const { check } = require("./check.js");
 					literal: document
 						.querySelector("#infoSections")
 						.textContent.includes("](http"),
+					// scoreIntro 1 + traitTiers 1 + uniqueBy 3 blank-line
+					// blocks + burned note = 6 real <p> paragraphs
+					paragraphs: document.querySelectorAll("#infoSections .infoText")
+						.length,
 				}
 			: null;
 	});
@@ -108,7 +112,8 @@ const { check } = require("./check.js");
 			infoLink.text.includes("here") &&
 			infoLink.target === "_blank" &&
 			infoLink.rel === "noopener noreferrer" &&
-			!infoLink.literal,
+			!infoLink.literal &&
+			infoLink.paragraphs === 6,
 		"explainer link not rendered as an anchor: " + JSON.stringify(infoLink),
 	);
 
