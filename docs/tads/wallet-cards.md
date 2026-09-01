@@ -28,7 +28,10 @@
   the card BACK is largely that content restyled.
 - `RarityIcons.js` is the single design-token source for tier
   icons/colors and kind labels; tier-tinted outlines are already
-  house style on trait cards and identity cards.
+  house style on the trait cards (the identity card keeps a
+  neutral border today — the trading card's tier frame is new,
+  tinted by the TOKEN's tier the way trait cards tint by trait
+  tier).
 
 ## Decisions
 
