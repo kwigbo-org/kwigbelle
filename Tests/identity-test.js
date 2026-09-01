@@ -126,8 +126,11 @@ const { check } = require("./check.js");
 		"wrong score line: " + card.score,
 	);
 	check(
+		// Copy per the content editor's first pass (2026-09-01):
+		// Avastars lore vocabulary for the mint act
 		card.minter ===
-			`Minted by ${minter8014.slice(0, 6)}\u2026${minter8014.slice(-4)}` &&
+			`Originally scrolled for & teleported (minted) by ` +
+				`${minter8014.slice(0, 6)}\u2026${minter8014.slice(-4)}` &&
 			card.minterTitle === minter8014,
 		"minter line wrong: " + JSON.stringify([card.minter, card.minterTitle]),
 	);

@@ -26,7 +26,9 @@
 /// copy is a ternary OF whole templates (none currently; the
 /// validator still counts placeholder occurrences per branch).
 export const Strings = {
-	// Drawer section titles (the stacked right-edge panel)
+	// Panel section titles. Headers of the collapsible sections
+	// in the right-side drawers. Careful: renaming one resets
+	// whether visitors had it collapsed or expanded, one time.
 	panel: {
 		howRarityWorks: "How rarity works",
 		overview: "Overview",
@@ -35,42 +37,29 @@ export const Strings = {
 		effects: "Effects",
 		vrm: "3D model",
 	},
-
-	// Info drawer: the "How rarity works" explainer. FROZEN FACTS -
-	// score bands, lottery range, and burn mechanics are verified
-	// chain truth (docs/tads/design-cues.md, burned-traits.md);
-	// rewording is fine, changing numbers is not.
+	// How rarity works (explainer). The educational text in the
+	// info drawer. FROZEN FACTS: score bands, the lottery range,
+	// and burn mechanics are verified chain truth - rewording is
+	// fine, changing any number is not.
 	info: {
 		scoreIntro:
-			"Every Avastar carries a rarity score from 1 to 100, " +
-			"assigned by the contract at mint from the rarity of its " +
-			"12 traits. The score places it in one of five tiers:",
+			"Every Avastar carries a rarity score from 1 to 100, assigned by the contract at mint from the rarity of its 12 traits. The score places it in one of five tiers:",
 		traitTiers:
-			"Each trait has its own contract-assigned tier, shown on " +
-			"its card below — each card's outline is tinted by its " +
-			"tier.",
+			"Each trait has its own contract-assigned tier, shown on its card below — each card's outline is tinted by its tier.",
 		uniqueBy:
-			"Unique By counts trait combinations no other Avastar " +
-			"wears: a pair (or triple) of this Avastar's traits found " +
-			"on no other Series 1–5 lottery prime (#200–25,199). " +
-			"Founders, Exclusives, and Replicants didn't play the " +
-			"mint lottery, so they carry no Unique By line.",
-		// Leading space on purpose: it follows the flame icon inline
+			"Unique By counts trait combinations no other Avastar wears: a pair (or triple) of this Avastar's traits found on no other Series 1–5 lottery prime (#200–25,199). Founders, Exclusives, and Replicants didn't play the mint lottery, so they carry no Unique By line.",
 		burned:
-			" When a replicant was minted, each trait it borrowed was " +
-			"burned on its prime. The prime's art is unchanged, but a " +
-			"burned trait could never mint another replicant — and with " +
-			"the factory closed and the contract locked, burn marks are " +
-			"frozen forever. A prime with no burns is in mint condition.",
+			" When a replicant was minted, each trait it borrowed was burned on its prime. The prime's art is unchanged, but a burned trait could never mint another replicant — and with the factory closed and the contract locked, burn marks are frozen forever. A prime with no burns is in mint condition.",
 	},
-
-	// Info drawer: identity card + trait cards
+	// Identity card & trait cards. The info drawer's Overview
+	// card and per-trait cards.
 	traits: {
 		identityTitle: (tokenId) => `Avastar #${tokenId}`,
 		identityTitleUnknown: "Avastar",
 		series: (series) => `Gen 1 · Series ${series}`,
 		mintCondition: "Mint condition",
-		mintedBy: (address) => `Minted by ${address}`,
+		mintedBy: (address) =>
+			`Originally scrolled for & teleported (minted) by ${address}`,
 		score: (ranking, tierName) => `Score ${ranking} · ${tierName}`,
 		burnedCount: (count) => `${count} of 12 traits burned`,
 		uniqueByCombos: (u2, u3) =>
@@ -78,8 +67,7 @@ export const Strings = {
 		uniqueByQualifier: "(all 12 traits, among Series 1-5 primes)",
 		unavailable: "Trait data unavailable for this display",
 		threeDNote:
-			"The 3D model shows the original on-chain Avastar. Trait " +
-			"preview and visibility apply to the vector view.",
+			"The 3D model shows the original on-chain Avastar. Trait preview and visibility apply to the vector view.",
 		resetAll: "↺ Reset all traits",
 		previewOnly: "Preview only — nothing is changed on chain.",
 		edit: "✎ Edit",
@@ -87,8 +75,8 @@ export const Strings = {
 		undo: "↺ undo",
 		burnedTag: "Burned",
 	},
-
-	// Trait chooser modal
+	// Trait chooser. The popup for picking a different trait on
+	// a card.
 	modal: {
 		allGenders: "all genders",
 		filterPlaceholder: "Filter by name",
@@ -96,12 +84,11 @@ export const Strings = {
 		anySeries: "Any series",
 		seriesOption: (value) => `Series ${value + 1}`,
 	},
-
-	// Profile drawer: wallet states + owned grid
+	// Profile drawer (wallet). Wallet connection states and the
+	// owned-Avastars grid.
 	profile: {
 		noWallet:
-			"No Ethereum wallet detected. Install one to see your own " +
-			"Avastars here.",
+			"No Ethereum wallet detected. Install one to see your own Avastars here.",
 		connected: "Connected",
 		logout: "Log out",
 		switchNetwork: "🔗 Switch to Mainnet",
@@ -109,8 +96,8 @@ export const Strings = {
 		emptyWallet: "No Avastars in this wallet.",
 		walletFallbackName: "Wallet",
 	},
-
-	// Load Avastar section
+	// Load Avastar. The settings-drawer section for viewing any
+	// token.
 	load: {
 		note: "View any of the 26,617 Avastars by token id — no wallet needed.",
 		placeholder: "Token id",
@@ -119,8 +106,8 @@ export const Strings = {
 		errorCheckFailed: "Could not check that token id — try again",
 		errorUnknown: (tokenId) => `No Avastar has token id ${tokenId}`,
 	},
-
-	// Effects section control labels
+	// Effects controls. Labels of the motion/effects toggles and
+	// sliders.
 	effects: {
 		pauseMotion: "Pause motion",
 		motion: "Motion",
@@ -130,12 +117,10 @@ export const Strings = {
 		trails: "Trails",
 		tiltFollow: "Tilt follow",
 	},
-
-	// 3D model section + loading overlay + failure toast
+	// 3D model section & loading. The 3D model panel section,
+	// the center-screen loading overlay, and the failure toast.
 	vrm: {
-		note:
-			"Every Avastar has an assigned 3D model (VRM), fetched from " +
-			"IPFS on demand (~9MB).",
+		note: "Every Avastar has an assigned 3D model (VRM), fetched from IPFS on demand (~9MB).",
 		mirrorInfoTooltip: "VRM backup status",
 		download: "⬇ Download VRM",
 		downloadState: (text) => `⬇ ${text}`,
@@ -152,14 +137,13 @@ export const Strings = {
 		backedUp: "Backed up",
 		backupPending: "Pending backup",
 	},
-
-	// Mirror status modal (the ⓘ in the 3D model section)
+	// VRM backup modal. The popup behind the ⓘ button in the 3D
+	// model section.
 	mirror: {
 		title: "VRM backup",
 		checking: "Checking the mirror…",
 		notPublished:
-			"The backup status isn't published yet - the mirror " +
-			"capture hasn't reported from this site's bucket.",
+			"The backup status isn't published yet - the mirror capture hasn't reported from this site's bucket.",
 		headline: (captured, total, percent) =>
 			`${captured} of ${total} models backed up (${percent}%)`,
 		gbMirrored: (gb) => `${gb} GB safely mirrored`,
@@ -169,9 +153,6 @@ export const Strings = {
 		reasonSource: "Missing from the IPFS source — raised with the project",
 		reasonNeverMade:
 			"Minted after the last batch — a 3D model was never generated",
-		note:
-			"The models live on IPFS with a single remaining public " +
-			"source; this backup preserves every model that can " +
-			"still be fetched.",
+		note: "The models live on IPFS with a single remaining public source; this backup preserves every model that can still be fetched.",
 	},
 };
