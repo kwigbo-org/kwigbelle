@@ -48,6 +48,10 @@ export const Strings = {
 			"Each trait has its own contract-assigned tier, shown on its card below — each card's outline is tinted by its tier.",
 		uniqueBy:
 			"Unique By counts trait combinations no other Avastar wears: a pair (or triple) of this Avastar's traits found on no other Series 1–5 lottery prime (#200–25,199). Founders, Exclusives, and Replicants didn't play the mint lottery, so they carry no Unique By line.",
+		// Leading space intentional: rendered inline right after the
+		// flame icon (InfoSections.js). Note this comment does not
+		// survive an editor-page regeneration - re-add it when
+		// landing a regenerated file.
 		burned:
 			" When a replicant was minted, each trait it borrowed was burned on its prime. The prime's art is unchanged, but a burned trait could never mint another replicant — and with the factory closed and the contract locked, burn marks are frozen forever. A prime with no burns is in mint condition.",
 	},

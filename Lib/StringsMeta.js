@@ -75,7 +75,8 @@ export const StringsMeta = {
 			"Identity card chip shown when a prime has no burned traits.",
 		"traits.mintedBy":
 			"Identity card line with the original minter's shortened " +
-			"address, e.g. \u201cMinted by 0x47c9\u20260ec7\u201d.",
+			"address, e.g. \u201cOriginally scrolled for & teleported " +
+			"(minted) by 0x47c9\u20260ec7\u201d.",
 		"traits.score": "Identity card line, e.g. “Score 62 · Legendary”.",
 		"traits.burnedCount": "Identity card line, e.g. “3 of 12 traits burned”.",
 		"traits.uniqueByCombos":
