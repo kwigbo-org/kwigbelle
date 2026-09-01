@@ -367,7 +367,8 @@ const { check } = require("./check.js");
 	await page.press("#loadTokenInput", "Enter");
 	await page.waitForFunction(
 		() =>
-			document.querySelector(".identityTitle")?.textContent === "Avastar ID#8700",
+			document.querySelector(".identityTitle")?.textContent ===
+			"Avastar ID#8700",
 		{ timeout: 15000 },
 	);
 	await page.waitForSelector(".identityBurned", {

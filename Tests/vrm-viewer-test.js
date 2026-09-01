@@ -149,7 +149,8 @@ async function ensureFixture() {
 	const buttonIn3D = await page.locator(".vrmViewButton").innerText();
 	check(
 		buttonIn3D === "Back to Vector Avastar",
-		"section button should read Back to Vector Avastar in 3D mode: " + buttonIn3D,
+		"section button should read Back to Vector Avastar in 3D mode: " +
+			buttonIn3D,
 	);
 	check(
 		!(await page.evaluate(() =>
