@@ -144,14 +144,48 @@
 	background: rgba(21, 4, 55, 0.95);
 }
 
-/* The details scroll in here; the ▾ keeps its own lane below */
-.cardBackScroll {
+/* Vertical detail pages; one shows at a time, the pager cycles */
+.cardBackPages {
 	flex: 1;
 	min-height: 0;
-	overflow-y: auto;
-	display: flex;
+	position: relative;
+}
+
+.cardBackPage {
+	display: none;
 	flex-direction: column;
-	gap: 5px;
+	gap: 7px;
+	height: 100%;
+	overflow-y: auto;
+}
+
+.cardBackPage.active {
+	display: flex;
+}
+
+.cardPagerRow {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+}
+
+.cardPageNum {
+	font-size: 12px;
+	color: var(--muted);
+}
+
+.cardPager {
+	padding: 5px 14px;
+	border-radius: 14px;
+	border: 1px solid var(--cardTier, var(--border));
+	background: var(--surface);
+	color: var(--text);
+	font-family: inherit;
+	font-size: 13px;
+	font-weight: 700;
+	cursor: pointer;
+	-webkit-tap-highlight-color: transparent;
 }
 
 .cardArt {
@@ -219,12 +253,18 @@
 }
 
 /* The ⓘ floats over the art corner; the whole front is the
-   tap-to-load surface */
+   tap-to-load surface. Solid dark chip so it reads on light art
+   (operator QA). */
 .cardFront > .cardFlip {
 	position: absolute;
 	top: 5px;
-	right: 8px;
-	text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+	right: 6px;
+	width: 24px;
+	height: 24px;
+	line-height: 24px;
+	border-radius: 50%;
+	background: rgba(21, 4, 55, 0.85);
+	border: 1px solid var(--border-soft);
 }
 
 .cardFilter {
@@ -254,7 +294,7 @@
 }
 
 .cardBackTitle {
-	font-size: 15px;
+	font-size: 16px;
 	font-weight: 700;
 	color: var(--cardTier, var(--heading));
 }
@@ -264,8 +304,8 @@
 	/* Wrapped lines hang from the icon top, with air between rows
 	   (operator QA r2) */
 	align-items: flex-start;
-	gap: 5px;
-	font-size: 12px;
+	gap: 6px;
+	font-size: 13px;
 	line-height: 1.45;
 	text-wrap: balance;
 	color: var(--text);
@@ -293,8 +333,8 @@
 .cardTraitRow {
 	display: flex;
 	align-items: center;
-	gap: 5px;
-	font-size: 11px;
+	gap: 6px;
+	font-size: 13px;
 	color: var(--text);
 	white-space: nowrap;
 }
@@ -305,34 +345,13 @@
 }
 
 .cardTraitRow .rarityIcon {
-	width: 11px;
-	height: 11px;
+	width: 13px;
+	height: 13px;
 	flex-shrink: 0;
 }
 
 .cardTraitRow .flameIcon {
 	color: var(--burned);
-}
-
-/* Scroll-for-more: pinned at the back's bottom edge while
-   content overflows; hides at the bottom (JS toggles .hidden) */
-.cardMore {
-	align-self: center;
-	flex-shrink: 0;
-	padding: 0 12px;
-	border-radius: 10px;
-	border: 1px solid var(--border-soft);
-	background: rgba(21, 4, 55, 0.92);
-	color: var(--text);
-	font-size: 12px;
-	line-height: 18px;
-	cursor: pointer;
-	transition: opacity 0.2s;
-}
-
-.cardMore.hidden {
-	opacity: 0;
-	pointer-events: none;
 }
 
 .cardBackLine .rarityIcon,
@@ -342,7 +361,7 @@
 }
 
 .cardMinter {
-	font-size: 11px;
+	font-size: 12px;
 	color: var(--muted);
 	text-decoration: underline;
 	text-underline-offset: 2px;

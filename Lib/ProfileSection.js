@@ -194,11 +194,25 @@ export default class ProfileSection {
 			top.appendChild(title);
 			top.appendChild(this.flipButton(tokenId, "✕"));
 			back.appendChild(top);
-			// Details scroll INSIDE this wrapper; the ▾ lives below it
-			// in its own lane so it never overlaps content
-			const scroll = document.createElement("div");
-			scroll.setAttribute("class", "cardBackScroll");
-			back.appendChild(scroll);
+			// The details are vertical PAGES (operator QA): the wrapper
+			// announces page swaps to screen readers, the pager button
+			// below cycles them
+			const pages = document.createElement("div");
+			pages.setAttribute("class", "cardBackPages");
+			pages.setAttribute("aria-live", "polite");
+			back.appendChild(pages);
+			const pagerRow = document.createElement("div");
+			pagerRow.setAttribute("class", "cardPagerRow");
+			pagerRow.style.display = "none";
+			const pageNum = document.createElement("span");
+			pageNum.setAttribute("class", "cardPageNum");
+			pagerRow.appendChild(pageNum);
+			const pager = document.createElement("button");
+			pager.setAttribute("class", "cardPager");
+			pager.setAttribute("type", "button");
+			pager.innerText = Strings.cards.nextPage;
+			pagerRow.appendChild(pager);
+			back.appendChild(pagerRow);
 			inner.appendChild(back);
 			card.appendChild(inner);
 			this.gridItems[tokenId] = card;
@@ -401,7 +415,7 @@ export default class ProfileSection {
 			delete this.backBuilt[tokenId];
 			return;
 		}
-		const back = card.querySelector(".cardBackScroll");
+		const back = card.querySelector(".cardBackPages");
 		let info = null;
 		let ub = null;
 		let burnedMask = null;
@@ -422,11 +436,24 @@ export default class ProfileSection {
 			delete this.backBuilt[tokenId];
 			return;
 		}
+		// Vertical pages (operator QA): page 1 = the identity facts,
+		// then the 12 traits six to a page. Each page is a labeled
+		// group; the pager below cycles them.
+		const pageElements = [];
+		const addPage = () => {
+			const page = document.createElement("div");
+			page.setAttribute("class", "cardBackPage");
+			page.setAttribute("role", "group");
+			back.appendChild(page);
+			pageElements.push(page);
+			return page;
+		};
+		const factsPage = addPage();
 		const line = (className, text) => {
 			const element = document.createElement("div");
 			element.setAttribute("class", className);
 			element.innerText = text;
-			back.appendChild(element);
+			factsPage.appendChild(element);
 			return element;
 		};
 		const tier = tierForScore(info.ranking);
@@ -437,7 +464,7 @@ export default class ProfileSection {
 		scoreText.innerText = Strings.traits.score(info.ranking, tier.name);
 		scoreText.style.color = tier.color;
 		score.appendChild(scoreText);
-		back.appendChild(score);
+		factsPage.appendChild(score);
 		const facts = [genderLabel(info.gender), kindLabel(tokenId, info.kind)];
 		if (info.series !== null && info.series !== undefined) {
 			facts.push(Strings.traits.series(info.series));
@@ -460,7 +487,7 @@ export default class ProfileSection {
 			const burnedText = document.createElement("span");
 			burnedText.innerText = Strings.traits.burnedCount(burnedCount);
 			burned.appendChild(burnedText);
-			back.appendChild(burned);
+			factsPage.appendChild(burned);
 		}
 		if (ub) {
 			line("cardBackLine", Strings.traits.uniqueByCombos(ub.u2, ub.u3));
@@ -471,22 +498,26 @@ export default class ProfileSection {
 		try {
 			const picks = await this.traitComposer.picksFor(tokenId);
 			if (generation === this.buildGeneration && back.isConnected) {
-				const list = document.createElement("div");
-				list.setAttribute("class", "cardTraits");
-				picks.forEach((pick, gene) => {
-					const row = document.createElement("div");
-					row.setAttribute("class", "cardTraitRow");
-					row.setAttribute("title", pick.geneName);
-					row.appendChild(rarityIcon(pick.rarity));
-					const name = document.createElement("span");
-					name.innerText = pick.name;
-					row.appendChild(name);
-					if (burnedMask !== null && burnedMask & (1 << gene)) {
-						row.appendChild(flameIcon());
-					}
-					list.appendChild(row);
-				});
-				back.appendChild(list);
+				for (let start = 0; start < picks.length; start += 6) {
+					const page = addPage();
+					const list = document.createElement("div");
+					list.setAttribute("class", "cardTraits");
+					picks.slice(start, start + 6).forEach((pick, index) => {
+						const gene = start + index;
+						const row = document.createElement("div");
+						row.setAttribute("class", "cardTraitRow");
+						row.setAttribute("title", pick.geneName);
+						row.appendChild(rarityIcon(pick.rarity));
+						const name = document.createElement("span");
+						name.innerText = pick.name;
+						row.appendChild(name);
+						if (burnedMask !== null && burnedMask & (1 << gene)) {
+							row.appendChild(flameIcon());
+						}
+						list.appendChild(row);
+					});
+					page.appendChild(list);
+				}
 			}
 		} catch (error) {
 			// A token the library cannot compose keeps a factual back
@@ -511,39 +542,38 @@ export default class ProfileSection {
 			minterLine.setAttribute("title", minter);
 			// A link tap must not bubble into card behaviors
 			minterLine.addEventListener("click", (event) => event.stopPropagation());
-			back.appendChild(minterLine);
+			factsPage.appendChild(minterLine);
 		}
-		this.attachScrollMore(back);
+		this.wirePager(card, pageElements);
 	}
 
-	/// The scroll-for-more affordance (operator QA 2026-09-01): a ▾
-	/// in its own lane BELOW the scrolling details - never over the
-	/// content (operator QA r2) - doubling as a page-down button; it
-	/// fades once the bottom is reached.
-	attachScrollMore(scroll) {
-		const more = document.createElement("div");
-		more.setAttribute("class", "cardMore");
-		more.setAttribute("title", Strings.cards.more);
-		more.innerText = "▾";
-		more.addEventListener("click", (event) => {
-			event.stopPropagation();
-			const instant = window.matchMedia(
-				"(prefers-reduced-motion: reduce)",
-			).matches;
-			scroll.scrollBy({
-				top: scroll.clientHeight * 0.7,
-				behavior: instant ? "auto" : "smooth",
+	/// Show one back page and wire the Next Page button to cycle
+	/// through them (wrapping). Screen readers hear the swap via the
+	/// wrapper's aria-live and each page's positional label.
+	wirePager(card, pages) {
+		const pagerRow = card.querySelector(".cardPagerRow");
+		const pageNum = card.querySelector(".cardPageNum");
+		const pager = card.querySelector(".cardPager");
+		let current = 0;
+		const show = () => {
+			pages.forEach((page, index) => {
+				const active = index === current;
+				page.classList.toggle("active", active);
+				page.setAttribute("aria-hidden", active ? "false" : "true");
+				page.setAttribute("aria-label", `${index + 1} / ${pages.length}`);
 			});
-		});
-		scroll.parentElement.appendChild(more);
-		const update = () => {
-			const atBottom =
-				scroll.scrollTop + scroll.clientHeight >= scroll.scrollHeight - 8;
-			const scrollable = scroll.scrollHeight > scroll.clientHeight + 8;
-			more.classList.toggle("hidden", atBottom || !scrollable);
+			pageNum.innerText = `${current + 1} / ${pages.length}`;
 		};
-		scroll.addEventListener("scroll", update);
-		update();
+		show();
+		if (pages.length < 2) {
+			return;
+		}
+		pagerRow.style.display = "";
+		pager.addEventListener("click", (event) => {
+			event.stopPropagation();
+			current = (current + 1) % pages.length;
+			show();
+		});
 	}
 
 	/// Highlight the tile of the currently displayed token

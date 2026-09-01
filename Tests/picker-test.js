@@ -231,26 +231,57 @@ window.ethereum = {
 	});
 	console.log("8014 back:", JSON.stringify(back8014));
 	check(back8014.flipped, "flip affordance did not flip the card");
-	// Scroll-for-more (operator QA): the ▾ exists on a built back
-	// and its visibility mirrors whether the back actually
-	// overflows (hidden when everything already fits)
-	const more = await page.evaluate(() => {
-		const scroll = document.querySelector(
-			'.profileCard[data-token="8014"] .cardBackScroll',
-		);
-		const button = document.querySelector(
-			'.profileCard[data-token="8014"] .cardMore',
-		);
-		return button
-			? {
-					hidden: button.classList.contains("hidden"),
-					scrollable: scroll.scrollHeight > scroll.clientHeight + 8,
-				}
-			: null;
-	});
+	// Vertical pages (operator QA): facts page + two trait pages,
+	// a real <button> pager cycling with wrap, aria-live announced
+	const readPager = () =>
+		page.evaluate(() => {
+			const card = document.querySelector('.profileCard[data-token="8014"]');
+			const pages = [...card.querySelectorAll(".cardBackPage")];
+			const active = pages.findIndex((p) => p.classList.contains("active"));
+			return {
+				count: pages.length,
+				active,
+				ariaHidden: pages.map((p) => p.getAttribute("aria-hidden")),
+				liveRegion: card
+					.querySelector(".cardBackPages")
+					.getAttribute("aria-live"),
+				pagerTag: card.querySelector(".cardPager").tagName,
+				pagerText: card.querySelector(".cardPager").innerText,
+				pageNum: card.querySelector(".cardPageNum").innerText,
+				activeTraitRows: pages[active]
+					? pages[active].querySelectorAll(".cardTraitRow").length
+					: -1,
+			};
+		});
+	const page1 = await readPager();
+	console.log("pager:", JSON.stringify(page1));
 	check(
-		more !== null && more.hidden === !more.scrollable,
-		"scroll-more indicator wrong: " + JSON.stringify(more),
+		page1.count === 3 && page1.active === 0 && page1.activeTraitRows === 0,
+		"back pages wrong: " + JSON.stringify(page1),
+	);
+	check(
+		page1.pagerTag === "BUTTON" &&
+			page1.pagerText === Strings.cards.nextPage &&
+			page1.liveRegion === "polite" &&
+			page1.pageNum === "1 / 3" &&
+			JSON.stringify(page1.ariaHidden) ===
+				JSON.stringify(["false", "true", "true"]),
+		"pager accessibility wrong: " + JSON.stringify(page1),
+	);
+	await page.locator('.profileCard[data-token="8014"] .cardPager').click();
+	const page2 = await readPager();
+	check(
+		page2.active === 1 &&
+			page2.activeTraitRows === 6 &&
+			page2.pageNum === "2 / 3",
+		"Next Page did not advance: " + JSON.stringify(page2),
+	);
+	await page.locator('.profileCard[data-token="8014"] .cardPager').click();
+	await page.locator('.profileCard[data-token="8014"] .cardPager').click();
+	const wrapped = await readPager();
+	check(
+		wrapped.active === 0 && wrapped.pageNum === "1 / 3",
+		"pager did not wrap home: " + JSON.stringify(wrapped),
 	);
 	// Full trait list (operator QA): all 12, gene-ordered, each
 	// with a tier icon; 8014's gene 0 is Mellow Apricot
