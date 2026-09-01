@@ -19,9 +19,10 @@
   (burn masks), `minters.json` (original minter).
   `TraitComposer.tokenInfo` already returns kind/series/ranking/
   gender; `ubFor`/`burnedFor`/`minterFor` cover the rest.
-- Gender is stored per token (contract enum: 1 = male, 2 =
-  female) and drives the trait chooser's filter, but no display
-  surface renders it — not the identity card, not the grid.
+- Gender is stored per token (contract enum: 0 = any / 1 = male /
+  2 = female — 697 tokens are gender 0) and drives the trait
+  chooser's filter, but no display surface renders it — not the
+  identity card, not the grid.
 - The identity card in the info drawer (TraitsSection) already
   composes chips, score/tier, minter link, Unique-By, burn state —
   the card BACK is largely that content restyled.
@@ -61,9 +62,12 @@
 5. **Gender display fix, site-wide.** Gender also joins the
    identity card in the info drawer as a chip (e.g. "Female") —
    the "genders are missing" gap closes on both surfaces. Label
-   map (1 → Male, 2 → Female) lives in `RarityIcons.js` beside
-   the kind labels — collection vocabulary at its design-token
-   source, per the strings TAD's editorial-copy boundary.
+   map (0 → Any, 1 → Male, 2 → Female) lives in `RarityIcons.js`
+   beside the kind labels — collection vocabulary at its
+   design-token source, per the strings TAD's editorial-copy
+   boundary. Gender 0 is a real collection fact (697 tokens), so
+   it renders as "Any" everywhere the label appears — no surface
+   ever shows a blank.
 6. **All card copy via Strings.js.** Every new editorial label
    (the Load button text, back-face field labels, the flip
    affordance tooltip) is born in `Strings.js` + `StringsMeta.js`
@@ -95,7 +99,8 @@
   flipped card at a time, reduced-motion instant swap.
 - Load from card front + Load button: token loads, drawer stays
   open, `current` highlight moves.
-- Identity card gender chip renders for a known token.
+- Identity card gender chip renders for a known token, and a
+  gender-0 token shows "Any" (never a blank).
 - Existing picker/profile tests keep passing (connect, logout,
   thumbnails, badge).
 
