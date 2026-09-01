@@ -32,9 +32,21 @@ profile and settings (traits moved there + rarity explainer), the
 shipped the Lock-layers effect (default on: drag moves the face
 as one piece), the depth-coherent idle retune, and the backdrop's
 own canvas (visible through Trails and behind the 3D view);
-remaining: PR C (wallet-provider transfer history), plus the
-2026-08-28 identity revision (minter line w/ etherscan link,
-tier-colored card outlines, pick keeps the drawer open). COMPLETE
+the 2026-08-28 identity revision shipped too (PR #40: minter
+line w/ etherscan link, tier-colored card outlines, pick keeps
+the drawer open); remaining: PR C (wallet-provider transfer
+history). PENDING OPERATOR DECISIONS (2026-09-01): (a) the
+"lottery" terminology is WRONG — minting was the SCROLL, a page
+that randomly generated candidate Avastars the minter CHOSE from
+("scrolled for & teleported"); the Unique-By explainer string +
+~15 code/test comments still say "lottery" and need the
+correction (frozen TADs keep their historical wording; open
+question: agent wording vs content-editor voice pass); (b) a
+proposed minimal-uniqueness card line for the 698 scroll-minted
+primes with u2=u3=0 (computed: 690 bottom out at a unique
+4-combo, 8 at 5 — #394/#1365/#2063/#4208/#4448/#5166/#5634/
+#18547 — none deeper; no two primes share a full outfit).
+COMPLETE
 (2026-09-01): docs/tads/vrm-mirror.md — the VRM backup. Every
 fetchable model is mirrored: 26,330 of the 26,530 that exist
 (281+ GB) in s3://kwigbelle/vrm/, with the merged
@@ -55,9 +67,14 @@ fallback; the ⓘ status modal + per-token backed-up/pending dot
 read the same ABSOLUTE mirror. Operator ops DONE: bucket CORS,
 stage.kwigbelle.com (CloudFront, CachingDisabled,
 website-endpoint origin), prod distro vrm/* behavior (Origin in
-cache key + CORS-S3Origin) after a live cache-poisoning repro. COMPLETE: docs/tads/strings.md — Lib/Strings.js
-(all editorial copy) + avastars-editor.html (self-serve mobile
-copy editor, native share; hand the editor that link). Parked:
+cache key + CORS-S3Origin) after a live cache-poisoning repro.
+COMPLETE: docs/tads/strings.md — Lib/Strings.js (all editorial
+copy) + avastars-editor.html (self-serve mobile copy editor,
+native share); the pipeline is PROVEN LIVE — the editor's first
+pass landed via the share flow (PR #49, mintedBy lore copy;
+NOTE: regeneration drops per-key inline comments, re-add the
+info.burned leading-space guard whenever a regenerated file
+lands). Parked:
 PR #1 wallet LOWs (likely mooted — WalletConnectUI was deleted in
 PR #16; re-verify against ProfileSection before resurrecting).
 
