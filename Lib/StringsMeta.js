@@ -123,7 +123,10 @@ export const StringsMeta = {
 		"profile.walletFallbackName":
 			"Fallback name in the wallet chooser when a wallet " +
 			"doesn't announce one.",
-		"cards.load": "The load button on a wallet card's front.",
+		"cards.filter":
+			"Placeholder of the filter box above the wallet cards - " +
+			"it matches trait names, token ids, tiers, kind, and " +
+			"gender.",
 		"cards.details":
 			"Tooltip of the small flip affordance on a wallet card " +
 			"(front and back).",

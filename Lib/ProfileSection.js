@@ -67,6 +67,13 @@ export default class ProfileSection {
 		this.status = document.createElement("div");
 		this.status.setAttribute("id", "profileStatus");
 		this.container.appendChild(this.status);
+		this.filterInput = document.createElement("input");
+		this.filterInput.setAttribute("class", "cardFilter");
+		this.filterInput.setAttribute("type", "text");
+		this.filterInput.setAttribute("placeholder", Strings.cards.filter);
+		this.filterInput.style.display = "none";
+		this.filterInput.addEventListener("input", () => this.applyFilter());
+		this.container.appendChild(this.filterInput);
 		this.grid = document.createElement("div");
 		this.grid.setAttribute("id", "profileGrid");
 		this.container.appendChild(this.grid);
@@ -155,6 +162,9 @@ export default class ProfileSection {
 		this.gridItems = {};
 		this.backBuilt = {};
 		this.flippedTokenId = null;
+		this.searchText = {};
+		this.filterInput.value = "";
+		this.filterInput.style.display = tokenIds.length > 0 ? "" : "none";
 		this.grid.innerHTML = "";
 		if (tokenIds.length === 0) {
 			const note = document.createElement("div");
@@ -174,6 +184,16 @@ export default class ProfileSection {
 			inner.appendChild(this.cardFront(tokenId));
 			const back = document.createElement("div");
 			back.setAttribute("class", "cardBack");
+			// The title/✕ row exists from birth so a failed details
+			// build never strands a flipped card without a way home
+			const top = document.createElement("div");
+			top.setAttribute("class", "cardBackTop");
+			const title = document.createElement("div");
+			title.setAttribute("class", "cardBackTitle");
+			title.innerText = Strings.traits.identityTitle(tokenId);
+			top.appendChild(title);
+			top.appendChild(this.flipButton(tokenId, "✕"));
+			back.appendChild(top);
 			inner.appendChild(back);
 			card.appendChild(inner);
 			this.gridItems[tokenId] = card;
@@ -215,23 +235,19 @@ export default class ProfileSection {
 		id.setAttribute("class", "cardId");
 		id.innerText = "#" + tokenId;
 		stats.appendChild(id);
-		// Filled async by fillCardStats from the local corpus
+		// Special kinds get their own louder line (operator QA);
+		// primes stay quiet - their series tag lives in the strip.
+		// Filled async by fillCardStats from the local corpus.
+		const kind = document.createElement("div");
+		kind.setAttribute("class", "cardKind");
+		stats.appendChild(kind);
 		const statLine = document.createElement("div");
 		statLine.setAttribute("class", "cardStatLine");
 		stats.appendChild(statLine);
 		front.appendChild(stats);
-		const actions = document.createElement("div");
-		actions.setAttribute("class", "cardActions");
-		const load = document.createElement("div");
-		load.setAttribute("class", "cardLoad");
-		load.innerText = Strings.cards.load;
-		load.addEventListener("click", (event) => {
-			event.stopPropagation();
-			this.callbacks.onPick(tokenId);
-		});
-		actions.appendChild(load);
-		actions.appendChild(this.flipButton(tokenId, "ⓘ"));
-		front.appendChild(actions);
+		// The ⓘ floats over the art corner - the whole front is the
+		// tap-to-load surface (operator QA: no Load button)
+		front.appendChild(this.flipButton(tokenId, "ⓘ"));
 		return front;
 	}
 
@@ -266,15 +282,72 @@ export default class ProfileSection {
 		const tier = tierForScore(info.ranking);
 		// The faces read the frame color from this custom property
 		card.style.setProperty("--cardTier", tier.color);
+		const label = kindLabel(tokenId, info.kind);
+		if (label !== "Prime") {
+			card.querySelector(".cardKind").innerText = label;
+		}
 		const statLine = card.querySelector(".cardStatLine");
 		statLine.appendChild(rarityIcon(tier.rarity));
 		const text = document.createElement("span");
-		const tag =
-			info.series !== null && info.series !== undefined
-				? Strings.cards.series(info.series)
-				: kindLabel(tokenId, info.kind);
-		text.innerText = `${info.ranking} · ${genderLabel(info.gender)} · ${tag}`;
+		const parts = [String(info.ranking), genderLabel(info.gender)];
+		if (info.series !== null && info.series !== undefined) {
+			parts.push(Strings.cards.series(info.series));
+		}
+		text.innerText = parts.join(" · ");
 		statLine.appendChild(text);
+	}
+
+	/// Filter the cards by free text (operator QA 2026-09-01):
+	/// matches token id, kind, gender, tier, series tag, and every
+	/// trait name. The haystack builds lazily per token from the
+	/// local corpus and is cached until the next grid build.
+	async applyFilter() {
+		const query = this.filterInput.value.trim().toLowerCase();
+		const generation = this.buildGeneration;
+		for (const tokenId of this.ownedTokenIds) {
+			let match = query === "";
+			if (!match) {
+				if (this.searchText[tokenId] === undefined) {
+					this.searchText[tokenId] = await this.buildSearchText(tokenId);
+					if (generation !== this.buildGeneration) {
+						return;
+					}
+				}
+				match = this.searchText[tokenId].includes(query);
+			}
+			const card = this.gridItems[tokenId];
+			if (card) {
+				card.style.display = match ? "" : "none";
+			}
+		}
+	}
+
+	/// The searchable text for one token - all local, no fetches
+	/// beyond the already-cached corpus tables
+	async buildSearchText(tokenId) {
+		const parts = ["#" + tokenId, String(tokenId)];
+		try {
+			const info = await this.traitComposer.tokenInfo(tokenId);
+			if (info) {
+				const tier = tierForScore(info.ranking);
+				parts.push(
+					kindLabel(tokenId, info.kind),
+					genderLabel(info.gender),
+					tier.name,
+					String(info.ranking),
+				);
+				if (info.series !== null && info.series !== undefined) {
+					parts.push(Strings.cards.series(info.series));
+				}
+			}
+			const picks = await this.traitComposer.picksFor(tokenId);
+			for (const pick of picks) {
+				parts.push(pick.name, pick.geneName);
+			}
+		} catch (error) {
+			// A token the library cannot compose is findable by id only
+		}
+		return parts.join(" ").toLowerCase();
 	}
 
 	/// Flip a card over (or back). At most one card shows its back
@@ -302,18 +375,13 @@ export default class ProfileSection {
 		if (this.backBuilt[tokenId]) {
 			return;
 		}
+		// The flag blocks a concurrent second build; a FAILED build
+		// clears it so the next flip retries instead of leaving the
+		// back title-only forever (review catch)
 		this.backBuilt[tokenId] = true;
 		const generation = this.buildGeneration;
 		const card = this.gridItems[tokenId];
 		const back = card.querySelector(".cardBack");
-		const top = document.createElement("div");
-		top.setAttribute("class", "cardBackTop");
-		const title = document.createElement("div");
-		title.setAttribute("class", "cardBackTitle");
-		title.innerText = Strings.traits.identityTitle(tokenId);
-		top.appendChild(title);
-		top.appendChild(this.flipButton(tokenId, "✕"));
-		back.appendChild(top);
 		let info = null;
 		let ub = null;
 		let burnedMask = null;
@@ -324,9 +392,14 @@ export default class ProfileSection {
 			burnedMask = await this.traitComposer.burnedFor(tokenId);
 			minter = await this.traitComposer.minterFor(tokenId);
 		} catch (error) {
+			delete this.backBuilt[tokenId];
 			return;
 		}
-		if (!info || generation !== this.buildGeneration || !back.isConnected) {
+		if (generation !== this.buildGeneration || !back.isConnected) {
+			return;
+		}
+		if (!info) {
+			delete this.backBuilt[tokenId];
 			return;
 		}
 		const line = (className, text) => {
@@ -485,6 +558,9 @@ export default class ProfileSection {
 		this.gridItems = {};
 		this.backBuilt = {};
 		this.flippedTokenId = null;
+		this.searchText = {};
+		this.filterInput.value = "";
+		this.filterInput.style.display = "none";
 		// currentTokenId survives: logout does not change what is
 		// displayed, and a reconnect to the same token short-circuits
 		// the load (no finishLoad -> no setCurrent), so the rebuilt

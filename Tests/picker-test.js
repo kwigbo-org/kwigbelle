@@ -153,10 +153,12 @@ window.ethereum = {
 			const front = card.querySelector(".cardFront");
 			return {
 				id: card.querySelector(".cardId").innerText,
+				// textContent: the kind line is CSS-uppercased
+				kind: card.querySelector(".cardKind").textContent,
 				stats: card.querySelector(".cardStatLine").innerText,
 				frame: getComputedStyle(front).borderColor,
 				icons: card.querySelectorAll(".cardStatLine .rarityIcon").length,
-				loadLabel: card.querySelector(".cardLoad").innerText,
+				loadButtons: card.querySelectorAll(".cardLoad").length,
 			};
 		}, String(token));
 	await page.waitForFunction(
@@ -179,13 +181,17 @@ window.ethereum = {
 		"8014 tier frame not Uncommon green: " + front8014.frame,
 	);
 	check(front8014.icons === 1, "stat strip missing its tier icon");
+	// No Load button (operator QA): the whole front is the tap
+	check(front8014.loadButtons === 0, "the retired Load button is back");
+	check(front8014.kind === "", "prime card carries a kind line");
 	check(
-		front8014.loadLabel === Strings.cards.load,
-		"load button label wrong: " + front8014.loadLabel,
-	);
-	check(
-		front25470.stats === "45 · Non-binary · Replicant",
+		front25470.stats === "45 · Non-binary",
 		"gender-0 replicant strip wrong: " + front25470.stats,
+	);
+	// Special kinds get their own louder line (operator QA)
+	check(
+		front25470.kind === "Replicant",
+		"replicant kind line wrong: " + front25470.kind,
 	);
 	check(
 		front25470.frame === "rgb(245, 166, 35)",
@@ -311,8 +317,8 @@ window.ethereum = {
 	check(picked.currents === 1, "more than one tile highlighted");
 	await page.screenshot({ path: "profile-picked.png" });
 
-	// The Load button picks too (and the drawer still stays open)
-	await page.locator('.profileCard[data-token="25470"] .cardLoad').click();
+	// Tapping the art itself picks too (and the drawer stays open)
+	await page.locator('.profileCard[data-token="25470"] .cardArt').click();
 	await page.waitForFunction(
 		() =>
 			document.getElementById("preloader")?.style.opacity === "0" &&
@@ -323,8 +329,61 @@ window.ethereum = {
 		await page.evaluate(() =>
 			document.getElementById("sidePanel").classList.contains("open"),
 		),
-		"Load button pick closed the drawer",
+		"art-tap pick closed the drawer",
 	);
+
+	// Filter (operator QA): free text over trait names, ids, kind,
+	// tier, gender. Toothpick is 8014's mouth and unique in this
+	// wallet (25470 shares Pigtails - replicants borrow prime
+	// traits); both replicants match "replicant"; clearing
+	// restores all three.
+	const visibleCards = () =>
+		page.evaluate(() =>
+			[...document.querySelectorAll(".profileCard")]
+				.filter((card) => card.style.display !== "none")
+				.map((card) => card.dataset.token),
+		);
+	check(
+		await page.evaluate(
+			(expected) =>
+				document.querySelector(".cardFilter")?.placeholder === expected,
+			Strings.cards.filter,
+		),
+		"filter placeholder wrong",
+	);
+	await page.locator(".cardFilter").fill("toothpick");
+	await page.waitForFunction(
+		() =>
+			[...document.querySelectorAll(".profileCard")].filter(
+				(card) => card.style.display !== "none",
+			).length === 1,
+		{ timeout: 10000 },
+	);
+	check(
+		JSON.stringify(await visibleCards()) === JSON.stringify(["8014"]),
+		"trait filter wrong: " + JSON.stringify(await visibleCards()),
+	);
+	await page.locator(".cardFilter").fill("replicant");
+	await page.waitForFunction(
+		() =>
+			[...document.querySelectorAll(".profileCard")].filter(
+				(card) => card.style.display !== "none",
+			).length === 2,
+		{ timeout: 10000 },
+	);
+	check(
+		JSON.stringify(await visibleCards()) === JSON.stringify(["25495", "25470"]),
+		"kind filter wrong: " + JSON.stringify(await visibleCards()),
+	);
+	await page.locator(".cardFilter").fill("");
+	await page.waitForFunction(
+		() =>
+			[...document.querySelectorAll(".profileCard")].filter(
+				(card) => card.style.display !== "none",
+			).length === 3,
+		{ timeout: 10000 },
+	);
+	console.log("card filter holds");
 
 	// Log out: the drawer returns to Link Wallet, the badge and
 	// grid clear, and the choice persists

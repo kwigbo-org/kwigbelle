@@ -167,7 +167,8 @@
 }
 
 .cardStats {
-	padding: 6px 10px 0;
+	padding: 6px 10px 10px;
+	text-align: center;
 }
 
 .cardId {
@@ -177,9 +178,22 @@
 	color: var(--cardTier, var(--heading));
 }
 
+.cardKind {
+	font-size: 14px;
+	font-weight: 700;
+	color: var(--text);
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+}
+
+.cardKind:empty {
+	display: none;
+}
+
 .cardStatLine {
 	display: flex;
 	align-items: center;
+	justify-content: center;
 	gap: 5px;
 	min-height: 18px;
 	font-size: 13px;
@@ -194,21 +208,24 @@
 	flex-shrink: 0;
 }
 
-.cardActions {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	padding: 6px 10px 9px;
+/* The ⓘ floats over the art corner; the whole front is the
+   tap-to-load surface */
+.cardFront > .cardFlip {
+	position: absolute;
+	top: 5px;
+	right: 8px;
+	text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
 }
 
-/* Filled tier pill: the one punchy action on the card */
-.cardLoad {
-	padding: 4px 18px;
-	background: var(--cardTier, var(--border));
-	border-radius: 14px;
-	font-size: 13px;
-	font-weight: 700;
-	color: #150437;
+.cardFilter {
+	width: 100%;
+	padding: 8px 12px;
+	border-radius: 10px;
+	border: 1px solid var(--border-soft);
+	background: var(--surface);
+	color: var(--text);
+	font-size: 14px;
+	font-family: inherit;
 }
 
 .cardFlip {

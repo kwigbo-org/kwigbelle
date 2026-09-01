@@ -28,7 +28,7 @@ export default class MainScene extends Scene {
 	/// Overridden constructor
 	constructor(rootContainer) {
 		super(rootContainer);
-		console.log("kwigbelle build 2026-09-01.4 (punchy cards + trait list)");
+		console.log("kwigbelle build 2026-09-01.5 (tap-to-load cards + filter)");
 		// Build the UI
 		this.buildUI();
 		// Start loading

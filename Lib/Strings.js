@@ -103,7 +103,7 @@ export const Strings = {
 	// Wallet trading cards. The owned-Avastars cards in the
 	// profile drawer (docs/tads/wallet-cards.md).
 	cards: {
-		load: "Load",
+		filter: "Filter by trait, id, tier…",
 		details: "Card details",
 		series: (series) => `S${series}`,
 	},
