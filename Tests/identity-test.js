@@ -6,9 +6,10 @@
 // card rows and the edit modal; replicants and promos get their
 // kind chips (replicants: no series).
 const { chromium } = require("playwright-core");
-const { check } = require("./check.js");
+const { check, strings } = require("./check.js");
 
 (async () => {
+	const Strings = await strings();
 	const browser = await chromium.launch({ channel: "chrome", headless: true });
 	const page = await browser.newPage({ viewport: { width: 800, height: 600 } });
 	const errors = [];
@@ -36,13 +37,13 @@ const { check } = require("./check.js");
 	// The "How rarity works" explainer (Decision 3): static frozen
 	// facts - the five bands with icons, the lottery-prime Unique-By
 	// population, and the burned/mint-condition vocabulary
-	const explainer = await page.evaluate(() => {
+	const explainer = await page.evaluate((sectionTitle) => {
 		const section = [
 			...document.querySelectorAll("#infoSections .panelSection"),
 		].find(
 			(s) =>
 				s.querySelector(".panelSectionHeader span").textContent ===
-				"How Avastars Rarity Works",
+				sectionTitle,
 		);
 		if (!section) return null;
 		return {
@@ -57,10 +58,10 @@ const { check } = require("./check.js");
 			text: section.textContent,
 			collapsed: section.classList.contains("collapsed"),
 		};
-	});
+	}, Strings.panel.howRarityWorks);
 	check(
 		explainer !== null,
-		"How Avastars Rarity Works section missing from info drawer",
+		"rarity explainer section missing from info drawer",
 	);
 	console.log("explainer tiers:", JSON.stringify(explainer.tiers));
 	check(
@@ -99,13 +100,21 @@ const { check } = require("./check.js");
 					literal: document
 						.querySelector("#infoSections")
 						.textContent.includes("](http"),
-					// scoreIntro 1 + traitTiers 1 + uniqueBy 3 blank-line
-					// blocks + burned note = 6 real <p> paragraphs
 					paragraphs: document.querySelectorAll("#infoSections .infoText")
 						.length,
 				}
 			: null;
 	});
+	// Each blank-line-separated block of the explainer strings is
+	// its own <p>; expected count derives from the strings so a
+	// copy pass cannot break this
+	const blocks = (text) =>
+		text.split(/\n{2,}/).filter((block) => block.trim()).length;
+	const expectedParagraphs =
+		blocks(Strings.info.scoreIntro) +
+		blocks(Strings.info.traitTiers) +
+		blocks(Strings.info.uniqueBy) +
+		1; // the burned note beside the flame icon
 	check(
 		infoLink !== null &&
 			infoLink.href === "https://avastars.io/scroll-simulator" &&
@@ -113,7 +122,7 @@ const { check } = require("./check.js");
 			infoLink.target === "_blank" &&
 			infoLink.rel === "noopener noreferrer" &&
 			!infoLink.literal &&
-			infoLink.paragraphs === 6,
+			infoLink.paragraphs === expectedParagraphs,
 		"explainer link not rendered as an anchor: " + JSON.stringify(infoLink),
 	);
 
@@ -147,20 +156,23 @@ const { check } = require("./check.js");
 	);
 	const card = await readCard();
 	console.log("8014 card:", JSON.stringify(card));
-	check(card.title === "Avastar ID#8014", "wrong title: " + card.title);
+	check(
+		card.title === Strings.traits.identityTitle(8014),
+		"wrong title: " + card.title,
+	);
 	check(
 		card.chips.includes("Prime") && card.chips.includes("Gen 1 · Series 2"),
 		"wrong chips: " + JSON.stringify(card.chips),
 	);
 	check(
-		card.score === "Score 36 · Uncommon",
+		card.score === Strings.traits.score(36, "Uncommon"),
 		"wrong score line: " + card.score,
 	);
 	check(
 		card.minter ===
-			`Originally Scrolled & Teleported (minted) by ` +
-				`${minter8014.slice(0, 6)}\u2026${minter8014.slice(-4)}` &&
-			card.minterTitle === minter8014,
+			Strings.traits.mintedBy(
+				minter8014.slice(0, 6) + "\u2026" + minter8014.slice(-4),
+			) && card.minterTitle === minter8014,
 		"minter line wrong: " + JSON.stringify([card.minter, card.minterTitle]),
 	);
 	check(
@@ -214,7 +226,10 @@ const { check } = require("./check.js");
 		burnedTags: document.querySelectorAll(".traitRow .traitBurned").length,
 	}));
 	console.log("8014 mint state:", JSON.stringify(mintState));
-	check(mintState.chip === "Mint Condition", "mint chip wrong/missing");
+	check(
+		mintState.chip === Strings.traits.mintCondition,
+		"mint chip wrong/missing",
+	);
 	check(!mintState.burnedLine, "mint-condition prime shows a burned line");
 	check(mintState.burnedTags === 0, "mint-condition prime shows burned tags");
 
@@ -227,12 +242,12 @@ const { check } = require("./check.js");
 	}));
 	console.log("UB:", JSON.stringify(ubLine));
 	check(
-		ubLine.line === "Unique-By Combos: 2-Trait 1 · 3-Trait 41",
+		ubLine.line === Strings.traits.uniqueByCombos(1, 41),
 		"wrong UB line: " + ubLine.line,
 	);
 	check(
-		ubLine.note.includes("Series 1-5 Primes"),
-		"UB qualifier missing: " + ubLine.note,
+		ubLine.note === Strings.traits.uniqueByQualifier,
+		"UB qualifier wrong: " + ubLine.note,
 	);
 
 	// Modal option tiles carry icons too
@@ -259,7 +274,7 @@ const { check } = require("./check.js");
 	);
 	const overridden = await readCard();
 	check(
-		overridden.score === "Score 36 · Uncommon" &&
+		overridden.score === Strings.traits.score(36, "Uncommon") &&
 			overridden.chips.includes("Gen 1 · Series 2"),
 		"override changed the token's identity: " + JSON.stringify(overridden),
 	);
@@ -285,9 +300,9 @@ const { check } = require("./check.js");
 	await page.fill("#loadTokenInput", "25500");
 	await page.press("#loadTokenInput", "Enter");
 	await page.waitForFunction(
-		() =>
-			document.querySelector(".identityTitle")?.textContent ===
-			"Avastar ID#25500",
+		(expected) =>
+			document.querySelector(".identityTitle")?.textContent === expected,
+		Strings.traits.identityTitle(25500),
 		{ timeout: 15000 },
 	);
 	const replicant = await readCard();
@@ -301,7 +316,7 @@ const { check } = require("./check.js");
 		"replicant shows a series chip",
 	);
 	check(
-		replicant.score === "Score 61 · Legendary",
+		replicant.score === Strings.traits.score(61, "Legendary"),
 		"wrong replicant score line: " + replicant.score,
 	);
 	// Replicants did not play the mint lottery: no Unique-By line
@@ -330,8 +345,9 @@ const { check } = require("./check.js");
 	await page.fill("#loadTokenInput", "50");
 	await page.press("#loadTokenInput", "Enter");
 	await page.waitForFunction(
-		() =>
-			document.querySelector(".identityTitle")?.textContent === "Avastar ID#50",
+		(expected) =>
+			document.querySelector(".identityTitle")?.textContent === expected,
+		Strings.traits.identityTitle(50),
 		{ timeout: 15000 },
 	);
 	const founder = await readCard();
@@ -342,7 +358,7 @@ const { check } = require("./check.js");
 		"founder chips wrong: " + JSON.stringify(founder.chips),
 	);
 	check(
-		founder.score === "Score 62 · Legendary",
+		founder.score === Strings.traits.score(62, "Legendary"),
 		"wrong founder score line: " + founder.score,
 	);
 	await page.waitForTimeout(600);
@@ -371,9 +387,9 @@ const { check } = require("./check.js");
 	await page.fill("#loadTokenInput", "8700");
 	await page.press("#loadTokenInput", "Enter");
 	await page.waitForFunction(
-		() =>
-			document.querySelector(".identityTitle")?.textContent ===
-			"Avastar ID#8700",
+		(expected) =>
+			document.querySelector(".identityTitle")?.textContent === expected,
+		Strings.traits.identityTitle(8700),
 		{ timeout: 15000 },
 	);
 	await page.waitForSelector(".identityBurned", {
@@ -389,7 +405,7 @@ const { check } = require("./check.js");
 	}));
 	console.log("8700 burned state:", JSON.stringify(burned));
 	check(
-		burned.line === "5 of 12 Trait Copies Burned",
+		burned.line === Strings.traits.burnedCount(5),
 		"wrong burned line: " + burned.line,
 	);
 	check(!burned.mintChip, "burned prime shows the mint chip");

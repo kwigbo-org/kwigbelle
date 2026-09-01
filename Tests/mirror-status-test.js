@@ -5,7 +5,7 @@
 // renders bar + counts; an unpublished status renders the quiet
 // fallback instead. Walletless, no VRM fetch involved.
 const { chromium } = require("playwright-core");
-const { check } = require("./check.js");
+const { check, strings } = require("./check.js");
 
 const STATUS = {
 	total: 26617,
@@ -32,6 +32,7 @@ const STATUS = {
 };
 
 (async () => {
+	const Strings = strings();
 	const browser = await chromium.launch({ channel: "chrome", headless: true });
 	const page = await browser.newPage({ viewport: { width: 800, height: 600 } });
 	const errors = [];
@@ -75,7 +76,9 @@ const STATUS = {
 	// 404s shows pending (red); the row lives in the 3D model section
 	await page.click("#panelHandle");
 	await page.waitForFunction(
-		() => document.querySelector(".vrmBackupText")?.innerText === "Backed Up",
+		(expected) =>
+			document.querySelector(".vrmBackupText")?.innerText === expected,
+		Strings.vrm.backedUp,
 		{ timeout: 5000 },
 	);
 	check(
@@ -87,8 +90,9 @@ const STATUS = {
 	await page.fill("#loadTokenInput", "12345");
 	await page.press("#loadTokenInput", "Enter");
 	await page.waitForFunction(
-		() =>
-			document.querySelector(".vrmBackupText")?.innerText === "Pending Backup",
+		(expected) =>
+			document.querySelector(".vrmBackupText")?.innerText === expected,
+		Strings.vrm.backupPending,
 		{ timeout: 15000 },
 	);
 	check(
@@ -100,7 +104,9 @@ const STATUS = {
 	await page.fill("#loadTokenInput", "8014");
 	await page.press("#loadTokenInput", "Enter");
 	await page.waitForFunction(
-		() => document.querySelector(".vrmBackupText")?.innerText === "Backed Up",
+		(expected) =>
+			document.querySelector(".vrmBackupText")?.innerText === expected,
+		Strings.vrm.backedUp,
 		{ timeout: 15000 },
 	);
 
@@ -136,7 +142,7 @@ const STATUS = {
 		"headline wrong: " + modal.headline,
 	);
 	check(
-		modal.details[0] === "10.00 GB safely mirrored",
+		modal.details[0] === Strings.mirror.gbMirrored("10.00"),
 		"GB line wrong: " + modal.details[0],
 	);
 	// The published gap count must NOT render its own line (operator
@@ -160,7 +166,7 @@ const STATUS = {
 	// unmirrorable ranges render with counts and reasons
 	// .mirrorKnownTitle renders uppercase via CSS
 	check(
-		modal.knownTitle === "KNOWN MISSING",
+		modal.knownTitle === Strings.mirror.knownMissingTitle.toUpperCase(),
 		"known-missing title wrong: " + modal.knownTitle,
 	);
 	check(
@@ -170,7 +176,8 @@ const STATUS = {
 	// The mint-number ranges are the headline (operator direction:
 	// readable at a glance), reasons beneath
 	check(
-		modal.knownRanges[0] === "#23,000 – #23,199 · 200 tokens",
+		modal.knownRanges[0] ===
+			Strings.mirror.knownRange("23,000", "23,199", "200"),
 		"404-block range wrong: " + modal.knownRanges[0],
 	);
 	check(
@@ -178,7 +185,8 @@ const STATUS = {
 		"404-block reason wrong: " + modal.knownReasons[0],
 	);
 	check(
-		modal.knownRanges[1] === "#26,530 – #26,616 · 87 tokens",
+		modal.knownRanges[1] ===
+			Strings.mirror.knownRange("26,530", "26,616", "87"),
 		"never-generated range wrong: " + modal.knownRanges[1],
 	);
 	check(

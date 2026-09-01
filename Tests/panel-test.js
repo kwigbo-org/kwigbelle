@@ -3,7 +3,7 @@
 // trait rows match the composed layers, hiding everything empties
 // the canvas center, and effects settings survive a reload.
 const { chromium } = require("playwright-core");
-const { check } = require("./check.js");
+const { check, strings } = require("./check.js");
 
 // A mock wallet so the picker exists: the in-page token-swap reset
 // (finishLoad -> traitsSection.update) can only be exercised by an
@@ -48,6 +48,7 @@ window.ethereum = {
 `;
 
 (async () => {
+	const Strings = strings();
 	const browser = await chromium.launch({ channel: "chrome", headless: true });
 	const page = await browser.newPage({ viewport: { width: 800, height: 600 } });
 	const errors = [];
@@ -112,12 +113,20 @@ window.ethereum = {
 	);
 	check(
 		JSON.stringify(drawerLayout.info) ===
-			JSON.stringify(["How Avastars Rarity Works", "Overview", "Traits"]),
+			JSON.stringify([
+				Strings.panel.howRarityWorks,
+				Strings.panel.overview,
+				Strings.panel.traits,
+			]),
 		"info drawer sections wrong: " + JSON.stringify(drawerLayout.info),
 	);
 	check(
 		JSON.stringify(drawerLayout.settings) ===
-			JSON.stringify(["Load Avastar", "Effects", "3D Model"]),
+			JSON.stringify([
+				Strings.panel.loadAvastar,
+				Strings.panel.effects,
+				Strings.panel.vrm,
+			]),
 		"settings drawer sections wrong: " + JSON.stringify(drawerLayout.settings),
 	);
 
@@ -209,12 +218,14 @@ window.ethereum = {
 	// collapsed, with the untouched "Effects" still expanded.
 	// (Back to the settings drawer for the effects controls.)
 	await page.click("#panelHandle");
-	await page.getByRole("slider", { name: "Motion" }).evaluate((slider) => {
-		slider.value = "0";
-		// input applies live; change (drag release) persists
-		slider.dispatchEvent(new Event("input", { bubbles: true }));
-		slider.dispatchEvent(new Event("change", { bubbles: true }));
-	});
+	await page
+		.getByRole("slider", { name: Strings.effects.motion })
+		.evaluate((slider) => {
+			slider.value = "0";
+			// input applies live; change (drag release) persists
+			slider.dispatchEvent(new Event("input", { bubbles: true }));
+			slider.dispatchEvent(new Event("change", { bubbles: true }));
+		});
 	const stored = await page.evaluate(() =>
 		JSON.parse(localStorage.getItem("kwigbelle.effects")),
 	);
@@ -240,20 +251,20 @@ window.ethereum = {
 			}
 			section.querySelector(".panelSectionHeader").click();
 		}, title);
-	await toggleSection("3D Model");
+	await toggleSection(Strings.panel.vrm);
 	check(
-		(await sectionState("3D Model")) === true,
+		(await sectionState(Strings.panel.vrm)) === true,
 		"3D model section did not collapse",
 	);
 	// "How rarity works" defaults to collapsed (operator QA); an
 	// explicit expand must override the default across reloads
 	check(
-		(await sectionState("How Avastars Rarity Works")) === true,
+		(await sectionState(Strings.panel.howRarityWorks)) === true,
 		"rarity explainer did not start collapsed",
 	);
-	await toggleSection("How Avastars Rarity Works");
+	await toggleSection(Strings.panel.howRarityWorks);
 	check(
-		(await sectionState("How Avastars Rarity Works")) === false,
+		(await sectionState(Strings.panel.howRarityWorks)) === false,
 		"rarity explainer did not expand",
 	);
 	await page.reload();
@@ -263,30 +274,30 @@ window.ethereum = {
 	);
 	await page.click("#panelHandle");
 	const motionAfter = await page
-		.getByRole("slider", { name: "Motion" })
+		.getByRole("slider", { name: Strings.effects.motion })
 		.inputValue();
 	console.log("motion after reload:", motionAfter);
 	check(motionAfter === "0", "motion setting did not survive reload");
-	const collapsedAfter = await sectionState("3D Model");
-	const effectsAfter = await sectionState("Effects");
+	const collapsedAfter = await sectionState(Strings.panel.vrm);
+	const effectsAfter = await sectionState(Strings.panel.effects);
 	console.log(
 		`after reload: 3D model collapsed=${collapsedAfter} Effects collapsed=${effectsAfter}`,
 	);
 	check(collapsedAfter === true, "collapsed section did not survive reload");
 	check(effectsAfter === false, "untouched section came back collapsed");
 	check(
-		(await sectionState("How Avastars Rarity Works")) === false,
+		(await sectionState(Strings.panel.howRarityWorks)) === false,
 		"expanded default-collapsed section reverted after reload",
 	);
 	check(
-		(await sectionState("Overview")) === false,
+		(await sectionState(Strings.panel.overview)) === false,
 		"Overview section came back collapsed",
 	);
 	// Expand it again (and persist that) so the later steps see the
 	// section layout they expect
-	await toggleSection("3D Model");
+	await toggleSection(Strings.panel.vrm);
 	check(
-		(await sectionState("3D Model")) === false,
+		(await sectionState(Strings.panel.vrm)) === false,
 		"3D model section did not re-expand",
 	);
 

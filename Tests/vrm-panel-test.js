@@ -9,7 +9,7 @@
 const fs = require("fs");
 const path = require("path");
 const { chromium } = require("playwright-core");
-const { check } = require("./check.js");
+const { check, strings } = require("./check.js");
 
 const FIXTURE = path.join(__dirname, "fixtures", "Avastar_Prime_8014.vrm");
 
@@ -103,6 +103,7 @@ async function launch(withWallet) {
 }
 
 (async () => {
+	const Strings = strings();
 	check(
 		fs.existsSync(FIXTURE),
 		"fixture missing - run vrm-viewer-test.js first (it downloads it)",
@@ -190,24 +191,31 @@ async function launch(withWallet) {
 		);
 		await page.setViewportSize({ width: 800, height: 600 });
 		await page.waitForTimeout(400);
-		const limits = await page.evaluate(() => {
-			const sections = [...document.querySelectorAll(".panelSection")];
-			const effects = sections.find(
-				(s) =>
-					s.querySelector(".panelSectionHeader span").textContent === "Effects",
-			);
-			return {
-				effectsHidden: effects.style.display === "none",
-				checkboxes: document.querySelectorAll(".traitRow input").length,
-				editButtons: document.querySelectorAll(".traitEdit").length,
-				undoButtons: document.querySelectorAll(".traitUndo").length,
-				noteShown: [...document.querySelectorAll(".traitNote")].some((n) =>
-					n.innerText.includes("original on-chain Avastar"),
-				),
-				cardCount: document.querySelectorAll(".traitRow").length,
-				viewButton: document.querySelector(".vrmViewButton").innerText,
-			};
-		});
+		const limits = await page.evaluate(
+			(copy) => {
+				const sections = [...document.querySelectorAll(".panelSection")];
+				const effects = sections.find(
+					(s) =>
+						s.querySelector(".panelSectionHeader span").textContent ===
+						copy.effectsTitle,
+				);
+				return {
+					effectsHidden: effects.style.display === "none",
+					checkboxes: document.querySelectorAll(".traitRow input").length,
+					editButtons: document.querySelectorAll(".traitEdit").length,
+					undoButtons: document.querySelectorAll(".traitUndo").length,
+					noteShown: [...document.querySelectorAll(".traitNote")].some(
+						(n) => n.innerText === copy.threeDNote,
+					),
+					cardCount: document.querySelectorAll(".traitRow").length,
+					viewButton: document.querySelector(".vrmViewButton").innerText,
+				};
+			},
+			{
+				effectsTitle: Strings.panel.effects,
+				threeDNote: Strings.traits.threeDNote,
+			},
+		);
 		console.log("3D limits:", JSON.stringify(limits));
 		check(limits.effectsHidden, "Effects section still visible in 3D");
 		check(limits.checkboxes === 0, "visibility checkboxes present in 3D");
@@ -216,7 +224,7 @@ async function launch(withWallet) {
 		check(limits.noteShown, "read-only note missing in 3D");
 		check(limits.cardCount === 12, "expected all 12 baseline cards in 3D");
 		check(
-			limits.viewButton === "Back to Vector Avastar",
+			limits.viewButton === Strings.vrm.backToVector,
 			"section button label wrong in 3D",
 		);
 
@@ -227,18 +235,19 @@ async function launch(withWallet) {
 			timeout: 5000,
 		});
 		await page.waitForTimeout(500);
-		const restored = await page.evaluate(() => {
+		const restored = await page.evaluate((effectsTitle) => {
 			const sections = [...document.querySelectorAll(".panelSection")];
 			const effects = sections.find(
 				(s) =>
-					s.querySelector(".panelSectionHeader span").textContent === "Effects",
+					s.querySelector(".panelSectionHeader span").textContent ===
+					effectsTitle,
 			);
 			return {
 				effectsVisible: effects.style.display !== "none",
 				undoButtons: document.querySelectorAll(".traitUndo").length,
 				editButtons: document.querySelectorAll(".traitEdit").length,
 			};
-		});
+		}, Strings.panel.effects);
 		check(restored.effectsVisible, "Effects did not return after 3D");
 		check(restored.undoButtons === 1, "override lost across the 3D round-trip");
 		check(restored.editButtons > 0, "edit buttons did not return");

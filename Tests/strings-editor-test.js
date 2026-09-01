@@ -6,9 +6,10 @@
 // across a reload. Also asserts meta coverage: every key described,
 // no orphan descriptions.
 const { chromium } = require("playwright-core");
-const { check } = require("./check.js");
+const { check, strings } = require("./check.js");
 
 (async () => {
+	const Strings = strings();
 	const browser = await chromium.launch({ channel: "chrome", headless: true });
 	const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
 	const errors = [];
@@ -169,11 +170,11 @@ const { check } = require("./check.js");
 		"template edit wrong: " + verdict.error,
 	);
 	check(
-		verdict.untouched === "Effects",
+		verdict.untouched === Strings.panel.effects,
 		"untouched string changed: " + verdict.untouched,
 	);
 	check(
-		verdict.template === "#23,000 – #23,199 · 200 tokens",
+		verdict.template === Strings.mirror.knownRange("23,000", "23,199", "200"),
 		"untouched template changed: " + verdict.template,
 	);
 	check(verdict.groups === coverage.groupCount, "generated file lost groups");
@@ -237,9 +238,10 @@ const { check } = require("./check.js");
 	);
 	await page.click(".editorDraftBanner button");
 	await page.waitForFunction(
-		() =>
+		(expected) =>
 			document.querySelector('textarea[data-key="load.button"]')?.value ===
-			"Load Avastar",
+			expected,
+		Strings.load.button,
 		{ timeout: 10000 },
 	);
 

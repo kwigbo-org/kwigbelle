@@ -3,9 +3,10 @@
 // validation for bad ids, Enter-key submit, and the composer split
 // (picksFor + composePicks) preserving compose() output.
 const { chromium } = require("playwright-core");
-const { check } = require("./check.js");
+const { check, strings } = require("./check.js");
 
 (async () => {
+	const Strings = strings();
 	const browser = await chromium.launch({ channel: "chrome", headless: true });
 	// No wallet mock at all: the section must work fully logged out
 	const page = await browser.newPage({ viewport: { width: 800, height: 600 } });
@@ -78,7 +79,7 @@ const { check } = require("./check.js");
 	};
 	const junk = await submit("abc");
 	check(
-		junk.error.toLowerCase().includes("numeric"),
+		junk.error === Strings.load.errorNotNumeric,
 		"non-numeric id not rejected: " + junk.error,
 	);
 	const unknown = await submit("999999");

@@ -4,7 +4,7 @@
 // badge; opening the drawer loads thumbnails lazily; picking a tile
 // loads that token, closes the drawer, and moves the highlight.
 const { chromium } = require("playwright-core");
-const { check } = require("./check.js");
+const { check, strings } = require("./check.js");
 
 const MOCK_PROVIDER = `
 window.__ownedIds = [8014, 25495, 25470];
@@ -48,6 +48,7 @@ window.ethereum = {
 `;
 
 (async () => {
+	const Strings = strings();
 	const browser = await chromium.launch({ channel: "chrome", headless: true });
 	const page = await browser.newPage({ viewport: { width: 800, height: 600 } });
 	const errors = [];
@@ -187,7 +188,7 @@ window.ethereum = {
 	}));
 	console.log("logged out:", JSON.stringify(loggedOut));
 	check(
-		loggedOut.button === "🔗 Link Wallet",
+		loggedOut.button === Strings.profile.linkWallet,
 		"logout did not restore the connect button: " + loggedOut.button,
 	);
 	check(!loggedOut.badge, "handle badge still lit after logout");
