@@ -130,6 +130,9 @@ export const StringsMeta = {
 		"cards.details":
 			"Tooltip of the small flip affordance on a wallet card " +
 			"(front and back).",
+		"cards.more":
+			"Tooltip of the ▾ scroll-for-more button pinned at the " +
+			"bottom of a scrolling card back.",
 		"cards.series":
 			"Compact series tag on a card front, e.g. “S2”; the " +
 			"placeholder is the series number.",

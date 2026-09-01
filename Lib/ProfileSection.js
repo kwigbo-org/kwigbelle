@@ -508,6 +508,37 @@ export default class ProfileSection {
 			minterLine.addEventListener("click", (event) => event.stopPropagation());
 			back.appendChild(minterLine);
 		}
+		this.attachScrollMore(back);
+	}
+
+	/// The scroll-for-more affordance (operator QA 2026-09-01): a ▾
+	/// pinned at the back's bottom edge whenever content overflows,
+	/// doubling as a page-down button; it hides at the bottom. Added
+	/// LAST so the sticky pin sits below every content line.
+	attachScrollMore(back) {
+		const more = document.createElement("div");
+		more.setAttribute("class", "cardMore");
+		more.setAttribute("title", Strings.cards.more);
+		more.innerText = "▾";
+		more.addEventListener("click", (event) => {
+			event.stopPropagation();
+			const instant = window.matchMedia(
+				"(prefers-reduced-motion: reduce)",
+			).matches;
+			back.scrollBy({
+				top: back.clientHeight * 0.7,
+				behavior: instant ? "auto" : "smooth",
+			});
+		});
+		back.appendChild(more);
+		const update = () => {
+			const atBottom =
+				back.scrollTop + back.clientHeight >= back.scrollHeight - 8;
+			const scrollable = back.scrollHeight > back.clientHeight + 8;
+			more.classList.toggle("hidden", atBottom || !scrollable);
+		};
+		back.addEventListener("scroll", update);
+		update();
 	}
 
 	/// Highlight the tile of the currently displayed token

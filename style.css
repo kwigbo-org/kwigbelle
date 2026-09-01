@@ -300,6 +300,29 @@
 	color: var(--burned);
 }
 
+/* Scroll-for-more: pinned at the back's bottom edge while
+   content overflows; hides at the bottom (JS toggles .hidden) */
+.cardMore {
+	position: sticky;
+	bottom: 0;
+	align-self: center;
+	flex-shrink: 0;
+	padding: 0 12px;
+	border-radius: 10px;
+	border: 1px solid var(--border-soft);
+	background: rgba(21, 4, 55, 0.92);
+	color: var(--text);
+	font-size: 12px;
+	line-height: 18px;
+	cursor: pointer;
+	transition: opacity 0.2s;
+}
+
+.cardMore.hidden {
+	opacity: 0;
+	pointer-events: none;
+}
+
 .cardMinter {
 	font-size: 11px;
 	color: var(--muted);

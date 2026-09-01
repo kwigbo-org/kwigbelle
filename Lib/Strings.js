@@ -105,6 +105,7 @@ export const Strings = {
 	cards: {
 		filter: "Filter by trait, id, tier…",
 		details: "Card details",
+		more: "More details",
 		series: (series) => `S${series}`,
 	},
 	// Load Avastar. The settings-drawer section for viewing any

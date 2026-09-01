@@ -231,6 +231,25 @@ window.ethereum = {
 	});
 	console.log("8014 back:", JSON.stringify(back8014));
 	check(back8014.flipped, "flip affordance did not flip the card");
+	// Scroll-for-more (operator QA): the ▾ exists on a built back
+	// and its visibility mirrors whether the back actually
+	// overflows (hidden when everything already fits)
+	const more = await page.evaluate(() => {
+		const back = document.querySelector(
+			'.profileCard[data-token="8014"] .cardBack',
+		);
+		const button = back.querySelector(".cardMore");
+		return button
+			? {
+					hidden: button.classList.contains("hidden"),
+					scrollable: back.scrollHeight > back.clientHeight + 8,
+				}
+			: null;
+	});
+	check(
+		more !== null && more.hidden === !more.scrollable,
+		"scroll-more indicator wrong: " + JSON.stringify(more),
+	);
 	// Full trait list (operator QA): all 12, gene-ordered, each
 	// with a tier icon; 8014's gene 0 is Mellow Apricot
 	check(
