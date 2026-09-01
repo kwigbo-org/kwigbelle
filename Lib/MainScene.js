@@ -28,7 +28,7 @@ export default class MainScene extends Scene {
 	/// Overridden constructor
 	constructor(rootContainer) {
 		super(rootContainer);
-		console.log("kwigbelle build 2026-09-01.7 (card back scroll-more)");
+		console.log("kwigbelle build 2026-09-01.8 (arrow lane + line wrap)");
 		// Build the UI
 		this.buildUI();
 		// Start loading

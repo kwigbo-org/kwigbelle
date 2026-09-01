@@ -140,8 +140,18 @@
 	transform: rotateY(180deg);
 	padding: 8px;
 	gap: 5px;
-	overflow-y: auto;
+	overflow: hidden;
 	background: rgba(21, 4, 55, 0.95);
+}
+
+/* The details scroll in here; the ▾ keeps its own lane below */
+.cardBackScroll {
+	flex: 1;
+	min-height: 0;
+	overflow-y: auto;
+	display: flex;
+	flex-direction: column;
+	gap: 5px;
 }
 
 .cardArt {
@@ -251,9 +261,13 @@
 
 .cardBackLine {
 	display: flex;
-	align-items: center;
+	/* Wrapped lines hang from the icon top, with air between rows
+	   (operator QA r2) */
+	align-items: flex-start;
 	gap: 5px;
 	font-size: 12px;
+	line-height: 1.45;
+	text-wrap: balance;
 	color: var(--text);
 }
 
@@ -303,8 +317,6 @@
 /* Scroll-for-more: pinned at the back's bottom edge while
    content overflows; hides at the bottom (JS toggles .hidden) */
 .cardMore {
-	position: sticky;
-	bottom: 0;
 	align-self: center;
 	flex-shrink: 0;
 	padding: 0 12px;
@@ -321,6 +333,12 @@
 .cardMore.hidden {
 	opacity: 0;
 	pointer-events: none;
+}
+
+.cardBackLine .rarityIcon,
+.cardBackLine .flameIcon {
+	/* Icon centers on the FIRST text line when the text wraps */
+	margin-top: 2px;
 }
 
 .cardMinter {

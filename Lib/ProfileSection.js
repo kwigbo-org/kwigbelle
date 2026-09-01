@@ -194,6 +194,11 @@ export default class ProfileSection {
 			top.appendChild(title);
 			top.appendChild(this.flipButton(tokenId, "✕"));
 			back.appendChild(top);
+			// Details scroll INSIDE this wrapper; the ▾ lives below it
+			// in its own lane so it never overlaps content
+			const scroll = document.createElement("div");
+			scroll.setAttribute("class", "cardBackScroll");
+			back.appendChild(scroll);
 			inner.appendChild(back);
 			card.appendChild(inner);
 			this.gridItems[tokenId] = card;
@@ -396,7 +401,7 @@ export default class ProfileSection {
 			delete this.backBuilt[tokenId];
 			return;
 		}
-		const back = card.querySelector(".cardBack");
+		const back = card.querySelector(".cardBackScroll");
 		let info = null;
 		let ub = null;
 		let burnedMask = null;
@@ -512,10 +517,10 @@ export default class ProfileSection {
 	}
 
 	/// The scroll-for-more affordance (operator QA 2026-09-01): a ▾
-	/// pinned at the back's bottom edge whenever content overflows,
-	/// doubling as a page-down button; it hides at the bottom. Added
-	/// LAST so the sticky pin sits below every content line.
-	attachScrollMore(back) {
+	/// in its own lane BELOW the scrolling details - never over the
+	/// content (operator QA r2) - doubling as a page-down button; it
+	/// fades once the bottom is reached.
+	attachScrollMore(scroll) {
 		const more = document.createElement("div");
 		more.setAttribute("class", "cardMore");
 		more.setAttribute("title", Strings.cards.more);
@@ -525,19 +530,19 @@ export default class ProfileSection {
 			const instant = window.matchMedia(
 				"(prefers-reduced-motion: reduce)",
 			).matches;
-			back.scrollBy({
-				top: back.clientHeight * 0.7,
+			scroll.scrollBy({
+				top: scroll.clientHeight * 0.7,
 				behavior: instant ? "auto" : "smooth",
 			});
 		});
-		back.appendChild(more);
+		scroll.parentElement.appendChild(more);
 		const update = () => {
 			const atBottom =
-				back.scrollTop + back.clientHeight >= back.scrollHeight - 8;
-			const scrollable = back.scrollHeight > back.clientHeight + 8;
+				scroll.scrollTop + scroll.clientHeight >= scroll.scrollHeight - 8;
+			const scrollable = scroll.scrollHeight > scroll.clientHeight + 8;
 			more.classList.toggle("hidden", atBottom || !scrollable);
 		};
-		back.addEventListener("scroll", update);
+		scroll.addEventListener("scroll", update);
 		update();
 	}
 

@@ -235,14 +235,16 @@ window.ethereum = {
 	// and its visibility mirrors whether the back actually
 	// overflows (hidden when everything already fits)
 	const more = await page.evaluate(() => {
-		const back = document.querySelector(
-			'.profileCard[data-token="8014"] .cardBack',
+		const scroll = document.querySelector(
+			'.profileCard[data-token="8014"] .cardBackScroll',
 		);
-		const button = back.querySelector(".cardMore");
+		const button = document.querySelector(
+			'.profileCard[data-token="8014"] .cardMore',
+		);
 		return button
 			? {
 					hidden: button.classList.contains("hidden"),
-					scrollable: back.scrollHeight > back.clientHeight + 8,
+					scrollable: scroll.scrollHeight > scroll.clientHeight + 8,
 				}
 			: null;
 	});
