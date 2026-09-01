@@ -259,21 +259,25 @@
 	position: absolute;
 	top: 5px;
 	right: 6px;
-	width: 24px;
-	height: 24px;
+	/* The icon disc spans 20 of its 24 viewBox units; oversizing
+	   the svg to 24px inside a 20px circle makes the disc fill the
+	   content box exactly, so the dark part is ONLY this 3px ring */
+	width: 20px;
+	height: 20px;
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	border-radius: 50%;
-	background: rgba(21, 4, 55, 0.85);
-	border: 1px solid var(--border-soft);
+	border: 3px solid rgba(21, 4, 55, 0.9);
+	background: rgba(21, 4, 55, 0.9);
+	overflow: hidden;
 }
 
 .cardFlipIcon {
 	display: block;
-	/* Fills the chip: the dark backing shows only as a thin ring */
-	width: 22.5px;
-	height: 22.5px;
+	flex-shrink: 0;
+	width: 24px;
+	height: 24px;
 }
 
 .cardFilter {
