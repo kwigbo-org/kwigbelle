@@ -261,8 +261,11 @@
 	right: 6px;
 	/* The icon disc spans 20 of its 24 viewBox units; oversizing
 	   the svg to 24px inside a 20px circle makes the disc fill the
-	   content box exactly, so the dark part is ONLY this 3px ring */
+	   content box exactly, so the dark part is ONLY this 3px ring.
+	   min-width: 0 beats the base .cardFlip min-width (the back ✕
+	   needs it, but here it stretched the circle into an oval) */
 	width: 20px;
+	min-width: 0;
 	height: 20px;
 	display: flex;
 	align-items: center;
