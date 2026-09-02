@@ -87,41 +87,301 @@
 
 #profileGrid {
 	display: grid;
-	grid-template-columns: repeat(auto-fill, 64px);
-	gap: 10px;
-	/* Room so the tiles' shadows aren't clipped by the column */
+	grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+	gap: 14px;
+	/* Room so the cards' shadows and highlight aren't clipped */
 	padding: 4px;
 }
 
-.profileTile {
-	width: 64px;
-	height: 64px;
-	border-radius: 50%;
-	border: 2px solid var(--border);
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
-	background: rgba(21, 4, 55, 0.6);
-	overflow: hidden;
+/* Wallet trading cards (docs/tads/wallet-cards.md): tier-framed
+   flip cards. --cardTier is set per token from RarityIcons; the
+   faces read it for their frame color. */
+.profileCard {
+	aspect-ratio: 5 / 7;
+	perspective: 700px;
+	position: relative;
 	cursor: pointer;
-	display: flex;
-	align-items: center;
-	justify-content: center;
 	-webkit-tap-highlight-color: transparent;
 }
 
-.profileTile.current {
-	border-color: var(--heading);
+.profileCard.current {
+	outline: 2px solid var(--heading);
+	outline-offset: 2px;
+	border-radius: 10px;
 }
 
-.profileTile img {
+.cardInner {
+	position: absolute;
+	inset: 0;
+	transform-style: preserve-3d;
+	transition: transform 0.45s ease;
+}
+
+.profileCard.flipped .cardInner {
+	transform: rotateY(180deg);
+}
+
+.cardFront,
+.cardBack {
+	position: absolute;
+	inset: 0;
+	backface-visibility: hidden;
+	-webkit-backface-visibility: hidden;
+	border-radius: 10px;
+	border: 3px solid var(--cardTier, var(--border));
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+	background: rgba(21, 4, 55, 0.75);
+	overflow: hidden;
+	display: flex;
+	flex-direction: column;
+}
+
+.cardBack {
+	transform: rotateY(180deg);
+	padding: 8px;
+	gap: 5px;
+	overflow: hidden;
+	background: rgba(21, 4, 55, 0.95);
+}
+
+/* Vertical detail pages; one shows at a time, the pager cycles */
+.cardBackPages {
+	flex: 1;
+	min-height: 0;
+	position: relative;
+}
+
+.cardBackPage {
+	display: none;
+	flex-direction: column;
+	gap: 7px;
+	height: 100%;
+	overflow-y: auto;
+}
+
+.cardBackPage.active {
+	display: flex;
+}
+
+.cardPagerRow {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+}
+
+.cardPageNum {
+	font-size: 12px;
+	color: var(--muted);
+}
+
+.cardPager {
+	padding: 5px 14px;
+	border-radius: 14px;
+	border: 1px solid var(--cardTier, var(--border));
+	background: var(--surface);
+	color: var(--text);
+	font-family: inherit;
+	font-size: 13px;
+	font-weight: 700;
+	cursor: pointer;
+	-webkit-tap-highlight-color: transparent;
+}
+
+.cardArt {
+	flex: 1;
+	min-height: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	overflow: hidden;
+}
+
+.cardArt img {
 	width: 100%;
 	height: 100%;
+	object-fit: cover;
 	pointer-events: none;
 }
 
-.profileTile span {
+.cardArt span {
 	font-size: 13px;
 	color: var(--text);
 	pointer-events: none;
+}
+
+.cardStats {
+	padding: 6px 10px 10px;
+	text-align: center;
+}
+
+.cardId {
+	font-size: 17px;
+	font-weight: 700;
+	/* The token's tier owns the card: id in the frame color */
+	color: var(--cardTier, var(--heading));
+}
+
+.cardKind {
+	font-size: 14px;
+	font-weight: 700;
+	color: var(--text);
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+}
+
+.cardKind:empty {
+	display: none;
+}
+
+.cardStatLine {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 5px;
+	min-height: 18px;
+	font-size: 13px;
+	font-weight: 600;
+	color: var(--text);
+	white-space: nowrap;
+}
+
+.cardStatLine .rarityIcon {
+	width: 13px;
+	height: 13px;
+	flex-shrink: 0;
+}
+
+/* The ⓘ floats over the art corner; the whole front is the
+   tap-to-load surface. Solid dark chip so it reads on light art
+   (operator QA). */
+.cardFront > .cardFlip {
+	position: absolute;
+	top: 5px;
+	right: 6px;
+	/* The icon disc spans 20 of its 24 viewBox units; oversizing
+	   the svg to 24px inside a 20px circle makes the disc fill the
+	   content box exactly, so the dark part is ONLY this 3px ring.
+	   min-width: 0 beats the base .cardFlip min-width (the back ✕
+	   needs it, but here it stretched the circle into an oval) */
+	width: 20px;
+	min-width: 0;
+	height: 20px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 50%;
+	border: 3px solid rgba(21, 4, 55, 0.9);
+	background: rgba(21, 4, 55, 0.9);
+	overflow: hidden;
+}
+
+.cardFlipIcon {
+	display: block;
+	flex-shrink: 0;
+	width: 24px;
+	height: 24px;
+}
+
+.cardFilter {
+	width: 100%;
+	/* width:100% + padding must not overflow the drawer column */
+	box-sizing: border-box;
+	padding: 8px 12px;
+	border-radius: 10px;
+	border: 1px solid var(--border-soft);
+	background: var(--surface);
+	color: var(--text);
+	font-size: 14px;
+	font-family: inherit;
+}
+
+.cardFlip {
+	min-width: 26px;
+	text-align: center;
+	font-size: 16px;
+	color: var(--text);
+}
+
+.cardBackTop {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.cardBackTitle {
+	font-size: 16px;
+	font-weight: 700;
+	color: var(--cardTier, var(--heading));
+}
+
+.cardBackLine {
+	display: flex;
+	/* Wrapped lines hang from the icon top, with air between rows
+	   (operator QA r2) */
+	align-items: flex-start;
+	gap: 6px;
+	font-size: 13px;
+	line-height: 1.45;
+	text-wrap: balance;
+	color: var(--text);
+}
+
+.cardBackLine .rarityIcon {
+	width: 13px;
+	height: 13px;
+	flex-shrink: 0;
+}
+
+.cardBackBurned {
+	color: var(--burned);
+}
+
+.cardTraits {
+	display: flex;
+	flex-direction: column;
+	gap: 3px;
+	margin-top: 2px;
+	padding-top: 5px;
+	border-top: 1px solid var(--border-soft);
+}
+
+.cardTraitRow {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	font-size: 13px;
+	color: var(--text);
+	white-space: nowrap;
+}
+
+.cardTraitRow span {
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.cardTraitRow .rarityIcon {
+	width: 13px;
+	height: 13px;
+	flex-shrink: 0;
+}
+
+.cardTraitRow .flameIcon {
+	color: var(--burned);
+}
+
+.cardBackLine .rarityIcon,
+.cardBackLine .flameIcon {
+	/* Icon centers on the FIRST text line when the text wraps */
+	margin-top: 2px;
+}
+
+.cardMinter {
+	font-size: 12px;
+	color: var(--muted);
+	text-decoration: underline;
+	text-underline-offset: 2px;
+	-webkit-tap-highlight-color: transparent;
 }
 
 .connectButton {
@@ -267,6 +527,11 @@
 	.panelHandle.statusDot.connected::after {
 		animation: none;
 	}
+
+	/* Card flips become an instant face swap */
+	.cardInner {
+		transition: none;
+	}
 }
 
 /* The sliding area every drawer column shares; only the active
@@ -281,6 +546,8 @@
 	width: 100%;
 	height: 100%;
 	overflow-y: auto;
+	/* Drawers scroll vertically only - no sideways wiggle */
+	overflow-x: hidden;
 	box-sizing: border-box;
 	padding: 12px;
 	display: none;

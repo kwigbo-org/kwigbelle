@@ -91,11 +91,11 @@ async function run(name, opts) {
 		await page.click(".connectButton");
 	}
 	await page.waitForFunction(
-		() => document.querySelectorAll("#profileGrid .profileTile").length === 3,
+		() => document.querySelectorAll("#profileGrid .profileCard").length === 3,
 		{ timeout: 15000 },
 	);
 	const items = await page.evaluate(
-		() => document.querySelectorAll("#profileGrid .profileTile").length,
+		() => document.querySelectorAll("#profileGrid .profileCard").length,
 	);
 	console.log(
 		`${name}: grid with ${items} tiles, alerts=${JSON.stringify(alerts)} pageErrors=${JSON.stringify(pageErrors)}`,

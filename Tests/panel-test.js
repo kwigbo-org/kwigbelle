@@ -306,7 +306,7 @@ window.ethereum = {
 	// drawer's grid (real finishLoad -> update path, no
 	// navigation), and the rebuilt rows must all be checked again
 	await page.waitForFunction(
-		() => document.querySelectorAll("#profileGrid .profileTile").length === 3,
+		() => document.querySelectorAll("#profileGrid .profileCard").length === 3,
 		{ timeout: 15000 },
 	);
 	await page.click("#infoHandle");
@@ -325,7 +325,7 @@ window.ethereum = {
 		() => document.querySelectorAll("#profileGrid img").length === 3,
 		{ timeout: 20000 },
 	);
-	await page.locator("#profileGrid .profileTile").nth(1).click();
+	await page.locator("#profileGrid .profileCard").nth(1).click();
 	// Picking an owned Avastar keeps the drawer OPEN (operator QA
 	// 2026-08-28) - browsing the collection continues
 	await page.waitForFunction(

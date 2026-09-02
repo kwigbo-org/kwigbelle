@@ -4,6 +4,7 @@ import {
 	rarityIcon,
 	tierForScore,
 	kindLabel,
+	genderLabel,
 	flameIcon,
 } from "./RarityIcons.js";
 
@@ -253,6 +254,15 @@ export default class TraitsSection {
 			);
 			series.innerText = Strings.traits.series(avastar.series);
 			chips.appendChild(series);
+		}
+		// Token gender (docs/tads/wallet-cards.md Decision 5): a
+		// contract fact for every token - gender 0 reads Non-binary,
+		// never a blank
+		if (avastar.gender !== null && avastar.gender !== undefined) {
+			const gender = document.createElement("span");
+			gender.setAttribute("class", "identityChip genderChip");
+			gender.innerText = genderLabel(avastar.gender);
+			chips.appendChild(gender);
 		}
 		// A prime that never lent a trait to a replicant is in mint
 		// condition — the collection's own vocabulary (metadata

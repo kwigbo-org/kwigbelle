@@ -100,6 +100,15 @@ export const Strings = {
 		emptyWallet: "Oops! No Avastars exist in this wallet.",
 		walletFallbackName: "Wallet",
 	},
+	// Wallet trading cards. The owned-Avastars cards in the
+	// profile drawer (docs/tads/wallet-cards.md).
+	cards: {
+		filter: "Filter by trait, id, tier…",
+		details: "Card details",
+		nextPage: "Next Page",
+		prevPage: "Previous Page",
+		series: (series) => `S${series}`,
+	},
 	// Load Avastar. The settings-drawer section for viewing any
 	// token.
 	load: {
