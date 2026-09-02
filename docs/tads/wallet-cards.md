@@ -103,7 +103,8 @@
 - Load from card front + Load button: token loads, drawer stays
   open, `current` highlight moves.
 - Identity card gender chip renders for a known token, and a
-  gender-0 token shows "Any" (never a blank).
+  gender-0 token shows "Non-binary" (never a blank; the operator
+  renamed the label from the drafted "Any" - see Progress).
 - Existing picker/profile tests keep passing (connect, logout,
   thumbnails, badge).
 
