@@ -1,6 +1,6 @@
 # TAD: Wallet trading cards — the owned grid becomes card tiles
 
-- **Status:** IN REVIEW
+- **Status:** COMPLETE (2026-09-01, PR #54)
 - **Driver:** Operator (2026-09-01): "improved wallet avastars with
   tiles and details. trading card looking with stats. main
   illustrative stats on front with a load button. Info icon with
@@ -110,3 +110,24 @@
 ## Progress
 
 - 2026-09-01: TAD drafted (this document).
+- 2026-09-01: TAD merged (PR #52) with two review corrections:
+  the gender enum includes 0 (697 tokens, all replicants) and
+  tier outlines were trait-card-only house style.
+- 2026-09-01: Shipped (PR #54) after a live stage-QA arc that
+  revised the TAD's shape in places - deviations recorded here as
+  the historical record:
+  - Gender 0 reads "Non-binary", not "Any" (operator decision).
+  - No Load button: the whole card front is the tap-to-load
+    surface; the ⓘ (the info tab's solid icon in a 3px-ring chip)
+    floats over the art corner.
+  - Front details center-aligned; Founder/Exclusive/Replicant get
+    their own uppercase kind line; primes show S<n> in the strip.
+  - The back is vertical PAGES (facts, then traits six per page)
+    with arrow-only ◂/▸ nav wrapping both ways - aria-live pages,
+    real buttons, "Next Page"/"Previous Page" as accessible
+    labels. Scroll-more was tried and replaced.
+  - A free-text filter above the cards (logged-in surface only)
+    matches trait names, gene names, id, kind, gender, tier,
+    score, and S<n>.
+  - Strings-tax prerequisite shipped first (PR #53): tests assert
+    Strings keys, so none of the copy churn above touched tests.
