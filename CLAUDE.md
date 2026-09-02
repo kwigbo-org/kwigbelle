@@ -24,7 +24,11 @@ the VRM 3D viewer (vrm-viewer.md), the avastars.io design match
 polish (burned-traits.md), and pinch-to-zoom (pinch-zoom.md,
 2026-08-29: true vector zoom — live transform during the gesture,
 settled re-raster from retained SVG sources; backdrop never
-zooms; window-level browser page-zoom suppression). IN PROGRESS
+zooms; window-level browser page-zoom suppression), and wallet
+trading cards (wallet-cards.md, 2026-09-01: the owned grid as
+tier-framed flip cards w/ paged detail backs + free-text filter;
+gender displayed site-wide, 0 = Non-binary; tests assert Strings
+keys so copy passes break zero tests). IN PROGRESS
 (operator 2026-08-25):
 docs/tads/info-tab.md — PR A shipped the info drawer between
 profile and settings (traits moved there + rarity explainer), the
@@ -101,8 +105,11 @@ Lib/ZoomView.js            pinch-to-zoom view state (docs/tads/
                            MainScene (window-level)
 Lib/ProfileSection.js      profile drawer: wallet connect flow
                            (multi-wallet chooser, switch/link,
-                           logout) + owned-Avastars grid w/ lazy
-                           library-composed thumbnails
+                           logout) + owned-Avastars TRADING CARDS
+                           (docs/tads/wallet-cards.md): tier-framed
+                           tap-to-load fronts w/ lazy composed art,
+                           paged detail backs (arrow nav, aria-live),
+                           free-text trait/id/tier filter
 Lib/SidePanel.js           right-side drawer stack: stacked handle
                            tabs (profile / info / settings) sharing
                            one sliding column; sections register via
