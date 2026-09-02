@@ -65,11 +65,12 @@
 5. **Gender display fix, site-wide.** Gender also joins the
    identity card in the info drawer as a chip (e.g. "Female") —
    the "genders are missing" gap closes on both surfaces. Label
-   map (0 → Any, 1 → Male, 2 → Female) lives in `RarityIcons.js`
+   map (0 → Non-binary, 1 → Male, 2 → Female) lives in `RarityIcons.js`
    beside the kind labels — collection vocabulary at its
    design-token source, per the strings TAD's editorial-copy
    boundary. Gender 0 is a real collection fact (697 tokens), so
-   it renders as "Any" everywhere the label appears — no surface
+   it renders as "Non-binary" everywhere the label appears (the
+   draft said "Any"; renamed at ship, see Progress) — no surface
    ever shows a blank.
 6. **All card copy via Strings.js.** Every new editorial label
    (the Load button text, back-face field labels, the flip
